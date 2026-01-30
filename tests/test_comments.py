@@ -1,12 +1,9 @@
 """Tests for comment commands."""
 
-import pytest
-from unittest.mock import patch
 from typer.testing import CliRunner
 
-from ytcli.main import app
 from ytcli.commands.comments import time_ago
-from tests.conftest import MOCK_COMMENT, MOCK_NEGATIVE_COMMENT
+from ytcli.main import app
 
 runner = CliRunner()
 
@@ -21,28 +18,28 @@ class TestTimeAgo:
         assert time_ago(now) == "recently"
 
     def test_hours_ago(self):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
 
         dt = datetime.now(timezone.utc) - timedelta(hours=5)
         result = time_ago(dt.isoformat())
         assert "5h ago" in result
 
     def test_days_ago(self):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
 
         dt = datetime.now(timezone.utc) - timedelta(days=3)
         result = time_ago(dt.isoformat())
         assert "3d ago" in result
 
     def test_months_ago(self):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
 
         dt = datetime.now(timezone.utc) - timedelta(days=60)
         result = time_ago(dt.isoformat())
         assert "2mo ago" in result
 
     def test_years_ago(self):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
 
         dt = datetime.now(timezone.utc) - timedelta(days=400)
         result = time_ago(dt.isoformat())

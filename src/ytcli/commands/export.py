@@ -42,14 +42,16 @@ def videos(
             writer = csv.writer(f)
             writer.writerow(["id", "title", "views", "likes", "comments", "published"])
             for v in videos_data:
-                writer.writerow([
-                    v["id"],
-                    v["title"],
-                    v["views"],
-                    v["likes"],
-                    v["comments"],
-                    v["published_at"][:10],
-                ])
+                writer.writerow(
+                    [
+                        v["id"],
+                        v["title"],
+                        v["views"],
+                        v["likes"],
+                        v["comments"],
+                        v["published_at"][:10],
+                    ]
+                )
 
     console.print(f"[green]Exported {len(videos_data)} videos to {output}[/green]")
 
@@ -68,22 +70,28 @@ def comments(
 
     while len(all_comments) < limit:
         try:
-            response = service.commentThreads().list(
-                part="snippet",
-                videoId=video_id,
-                maxResults=min(100, limit - len(all_comments)),
-                pageToken=page_token,
-                order="relevance",
-            ).execute()
+            response = (
+                service.commentThreads()
+                .list(
+                    part="snippet",
+                    videoId=video_id,
+                    maxResults=min(100, limit - len(all_comments)),
+                    pageToken=page_token,
+                    order="relevance",
+                )
+                .execute()
+            )
 
             for item in response.get("items", []):
                 snippet = item["snippet"]["topLevelComment"]["snippet"]
-                all_comments.append({
-                    "author": snippet["authorDisplayName"],
-                    "text": snippet["textOriginal"],
-                    "likes": snippet["likeCount"],
-                    "published": snippet["publishedAt"],
-                })
+                all_comments.append(
+                    {
+                        "author": snippet["authorDisplayName"],
+                        "text": snippet["textOriginal"],
+                        "likes": snippet["likeCount"],
+                        "published": snippet["publishedAt"],
+                    }
+                )
 
             page_token = response.get("nextPageToken")
             if not page_token:
@@ -101,16 +109,20 @@ def report(
     output: Path = typer.Argument(..., help="Output file path"),
 ):
     """Export channel report (JSON)."""
-    from ytcli.commands.videos import fetch_videos
     from ytcli.commands.seo import analyze_seo
+    from ytcli.commands.videos import fetch_videos
 
     service = get_service()
 
     # Channel info
-    channel_response = service.channels().list(
-        part="snippet,statistics",
-        mine=True,
-    ).execute()
+    channel_response = (
+        service.channels()
+        .list(
+            part="snippet,statistics",
+            mine=True,
+        )
+        .execute()
+    )
 
     if not channel_response.get("items"):
         console.print("[red]No channel found[/red]")

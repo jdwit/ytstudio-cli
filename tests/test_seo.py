@@ -1,12 +1,10 @@
 """Tests for SEO analysis."""
 
-import pytest
-from unittest.mock import patch
 from typer.testing import CliRunner
 
-from ytcli.main import app
-from ytcli.commands.seo import analyze_seo, score_color, TITLE_MIN, TITLE_MAX, DESC_MIN, TAGS_MIN
 from tests.conftest import MOCK_VIDEO, MOCK_VIDEO_SHORT_TITLE
+from ytcli.commands.seo import DESC_MIN, TITLE_MAX, TITLE_MIN, analyze_seo, score_color
+from ytcli.main import app
 
 runner = CliRunner()
 

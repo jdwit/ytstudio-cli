@@ -1,8 +1,8 @@
 """Shared test fixtures and mock data."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 
 # Sample API response data
 MOCK_CHANNEL = {

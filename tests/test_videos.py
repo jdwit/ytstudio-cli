@@ -1,12 +1,12 @@
 """Tests for video commands."""
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 from typer.testing import CliRunner
 
+from tests.conftest import MOCK_VIDEO
+from ytcli.commands.videos import fetch_videos, format_number
 from ytcli.main import app
-from ytcli.commands.videos import format_number, fetch_videos
-from tests.conftest import MOCK_VIDEO, MOCK_CHANNEL, MOCK_PLAYLIST_ITEM, create_mock_service
 
 runner = CliRunner()
 
@@ -130,9 +130,7 @@ class TestVideosUpdateCommand:
 
     def test_update_video_apply(self, mock_auth):
         """Test applying update."""
-        result = runner.invoke(
-            app, ["videos", "update", "test_video_123", "--title", "New Title"]
-        )
+        result = runner.invoke(app, ["videos", "update", "test_video_123", "--title", "New Title"])
 
         assert result.exit_code == 0
         assert "Updated" in result.stdout
@@ -155,15 +153,15 @@ class TestBulkUpdateCommand:
         """Test bulk update shows preview by default."""
         # Set up mock to return video with matching title
         mock_auth.videos.return_value.list.return_value.execute.return_value = {
-            "items": [{
-                **MOCK_VIDEO,
-                "snippet": {**MOCK_VIDEO["snippet"], "title": "Old Title Here"},
-            }]
+            "items": [
+                {
+                    **MOCK_VIDEO,
+                    "snippet": {**MOCK_VIDEO["snippet"], "title": "Old Title Here"},
+                }
+            ]
         }
 
-        result = runner.invoke(
-            app, ["videos", "bulk-update", "-s", "Old", "-r", "New"]
-        )
+        result = runner.invoke(app, ["videos", "bulk-update", "-s", "Old", "-r", "New"])
 
         assert result.exit_code == 0
         assert "Pending" in result.stdout or "changes" in result.stdout.lower()
