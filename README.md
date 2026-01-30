@@ -72,6 +72,15 @@ yt seo check VIDEO_ID                      # check video SEO
 yt seo audit --limit 50                    # audit channel
 ```
 
+### Export
+
+```bash
+yt export videos data.csv                  # export to CSV
+yt export videos data.json -f json         # export to JSON
+yt export comments VIDEO_ID comments.json  # export comments
+yt export report report.json               # full channel report
+```
+
 ### Output Formats
 
 Most commands support `--output table|json|csv`.
