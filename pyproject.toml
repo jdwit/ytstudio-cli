@@ -31,8 +31,13 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+    "pytest-mock>=3.12.0",
     "ruff>=0.1.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 
 [project.scripts]
 yt = "ytcli.main:app"
