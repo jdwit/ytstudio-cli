@@ -5,7 +5,7 @@ CLI tool to manage and analyze your YouTube channel.
 ## Installation
 
 ```bash
-pip install -e .
+uv pip install -e .
 ```
 
 ## Setup
@@ -88,3 +88,10 @@ Most commands support `--output table|json|csv`.
 ## Configuration
 
 Credentials stored in `~/.config/ytcli/`.
+
+## Development
+
+```bash
+uv pip install -e ".[dev]"
+pytest -v
+```
