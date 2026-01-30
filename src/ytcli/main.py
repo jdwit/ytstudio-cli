@@ -1,0 +1,64 @@
+"""Main CLI entry point."""
+
+import typer
+from rich.console import Console
+
+from ytcli import __version__
+from ytcli.commands import auth, videos, analytics
+
+app = typer.Typer(
+    name="yt",
+    help="CLI tool to manage and analyze your YouTube channel",
+    no_args_is_help=True,
+)
+
+console = Console()
+
+app.add_typer(auth.app, name="auth")
+app.add_typer(videos.app, name="videos")
+app.add_typer(analytics.app, name="analytics")
+
+
+@app.command()
+def init(
+    client_secrets_file: str = typer.Option(
+        None,
+        "--client-secrets",
+        "-c",
+        help="Path to Google OAuth client secrets JSON file",
+    ),
+):
+    """Initialize ytcli with Google OAuth credentials."""
+    from ytcli.config import setup_credentials
+
+    setup_credentials(client_secrets_file)
+
+
+@app.command()
+def login():
+    """Authenticate with YouTube via OAuth."""
+    from ytcli.auth import authenticate
+
+    authenticate()
+
+
+@app.command()
+def status():
+    """Show current authentication status."""
+    from ytcli.auth import get_status
+
+    get_status()
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    version: bool = typer.Option(False, "--version", "-v", help="Show version"),
+):
+    """ytcli - CLI tool to manage and analyze your YouTube channel."""
+    if version:
+        console.print(f"ytcli version {__version__}")
+        raise typer.Exit()
+
+
+if __name__ == "__main__":
+    app()
