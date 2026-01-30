@@ -1,5 +1,6 @@
 """YouTube OAuth authentication."""
 
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -80,8 +81,6 @@ def get_credentials() -> Credentials | None:
     )
 
     if credentials.expired and credentials.refresh_token:
-        from google.auth.transport.requests import Request
-
         credentials.refresh(Request())
         # Save refreshed credentials
         creds_data["token"] = credentials.token

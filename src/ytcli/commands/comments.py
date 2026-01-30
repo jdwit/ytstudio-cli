@@ -1,11 +1,13 @@
 """Comment management commands."""
 
 import json
-from datetime import UTC
+from datetime import UTC, datetime
 
 import typer
 from rich.console import Console
 from rich.table import Table
+
+from ytcli.auth import get_authenticated_service
 
 app = typer.Typer(help="Comment commands")
 console = Console()
@@ -13,8 +15,6 @@ console = Console()
 
 def get_service():
     """Get authenticated service or exit."""
-    from ytcli.auth import get_authenticated_service
-
     service = get_authenticated_service()
     if not service:
         console.print("[red]Not authenticated. Run 'yt login' first.[/red]")
@@ -24,8 +24,6 @@ def get_service():
 
 def time_ago(iso_timestamp: str) -> str:
     """Convert ISO timestamp to relative time."""
-    from datetime import datetime
-
     dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
     now = datetime.now(UTC)
     delta = now - dt
