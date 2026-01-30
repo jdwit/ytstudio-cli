@@ -20,32 +20,62 @@ yt init --client-secrets /path/to/client_secrets.json
 yt login
 ```
 
-## Usage
+## Commands
+
+### Authentication
 
 ```bash
-# Authentication
-yt status                    # show current auth status
-yt login                     # authenticate via browser
-yt auth logout               # remove credentials
-
-# Videos
-yt videos list               # list videos (default: 20)
-yt videos list -n 50         # limit results
-yt videos list -o json       # output as json
-yt videos get VIDEO_ID       # get video details
-yt videos update VIDEO_ID --title "New Title"
-yt videos bulk-update -s "old" -r "new" --field title --dry-run
-
-# Analytics
-yt analytics retention VIDEO_ID
-yt analytics traffic VIDEO_ID --days 28
-yt analytics overview
+yt status              # show auth status
+yt login               # authenticate via browser
+yt auth logout         # clear credentials
 ```
+
+### Videos
+
+```bash
+yt videos list                              # list videos
+yt videos list -n 50 --sort views           # sort by views/likes/date
+yt videos get VIDEO_ID                      # video details
+yt videos update VIDEO_ID --title "New"     # update metadata
+yt videos update VIDEO_ID --tags "a,b,c"
+```
+
+### Bulk Operations
+
+```bash
+# search-replace (dry-run by default)
+yt videos bulk-update -s "old" -r "new" --field title
+yt videos bulk-update -s "old" -r "new" --field title --execute
+yt videos bulk-update -s "^prefix" -r "" --regex --execute
+```
+
+### Analytics
+
+```bash
+yt analytics overview --days 28            # channel overview
+yt analytics video VIDEO_ID                # video analytics
+yt analytics top --days 28 --limit 10      # top performers
+yt analytics traffic VIDEO_ID              # traffic sources
+```
+
+### Comments
+
+```bash
+yt comments list VIDEO_ID                  # list comments
+yt comments summary VIDEO_ID               # sentiment analysis
+```
+
+### SEO
+
+```bash
+yt seo check VIDEO_ID                      # check video SEO
+yt seo audit --limit 50                    # audit channel
+```
+
+### Output Formats
+
+Most commands support `--output table|json|csv`.
 
 ## Configuration
 
 Credentials stored in `~/.config/ytcli/`.
-
-## License
-
-MIT
