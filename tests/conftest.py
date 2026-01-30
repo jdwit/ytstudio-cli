@@ -143,8 +143,14 @@ def mock_service():
 
 @pytest.fixture
 def mock_auth(mock_service):
-    """Fixture that patches authentication to return mock service."""
-    with patch("ytcli.auth.get_authenticated_service", return_value=mock_service):
+    """Fixture that patches authentication to return mock service in all modules."""
+    with (
+        patch("ytcli.commands.videos.get_authenticated_service", return_value=mock_service),
+        patch("ytcli.commands.comments.get_authenticated_service", return_value=mock_service),
+        patch("ytcli.commands.seo.get_authenticated_service", return_value=mock_service),
+        patch("ytcli.commands.analytics.get_authenticated_service", return_value=mock_service),
+        patch("ytcli.commands.export.get_authenticated_service", return_value=mock_service),
+    ):
         yield mock_service
 
 
