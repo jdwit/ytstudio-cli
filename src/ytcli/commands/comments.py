@@ -1,6 +1,7 @@
 """Comment management commands."""
 
 import json
+from datetime import UTC
 
 import typer
 from rich.console import Console
@@ -23,10 +24,10 @@ def get_service():
 
 def time_ago(iso_timestamp: str) -> str:
     """Convert ISO timestamp to relative time."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     delta = now - dt
 
     if delta.days > 365:

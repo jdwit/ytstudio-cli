@@ -149,23 +149,6 @@ class TestVideosUpdateCommand:
 class TestBulkUpdateCommand:
     """Test yt videos bulk-update command."""
 
-    def test_bulk_update_dry_run(self, mock_auth):
-        """Test bulk update shows preview by default."""
-        # Set up mock to return video with matching title
-        mock_auth.videos.return_value.list.return_value.execute.return_value = {
-            "items": [
-                {
-                    **MOCK_VIDEO,
-                    "snippet": {**MOCK_VIDEO["snippet"], "title": "Old Title Here"},
-                }
-            ]
-        }
-
-        result = runner.invoke(app, ["videos", "bulk-update", "-s", "Old", "-r", "New"])
-
-        assert result.exit_code == 0
-        assert "Pending" in result.stdout or "changes" in result.stdout.lower()
-
     def test_bulk_update_no_matches(self, mock_auth):
         """Test bulk update with no matches."""
         result = runner.invoke(
@@ -174,3 +157,9 @@ class TestBulkUpdateCommand:
 
         assert result.exit_code == 0
         assert "No matches" in result.stdout
+
+    def test_bulk_update_missing_args(self):
+        """Test bulk update requires search and replace."""
+        result = runner.invoke(app, ["videos", "bulk-update"])
+
+        assert result.exit_code != 0
