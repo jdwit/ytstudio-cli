@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from ytcli import __version__
-from ytcli.commands import auth, videos, analytics
+from ytcli.commands import auth, videos, analytics, comments, seo
 
 app = typer.Typer(
     name="yt",
@@ -17,6 +17,8 @@ console = Console()
 app.add_typer(auth.app, name="auth")
 app.add_typer(videos.app, name="videos")
 app.add_typer(analytics.app, name="analytics")
+app.add_typer(comments.app, name="comments")
+app.add_typer(seo.app, name="seo")
 
 
 @app.command()
