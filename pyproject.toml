@@ -56,6 +56,23 @@ packages = ["src/ytcli"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "W",    # pycodestyle warnings
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # function call in default argument (typer pattern)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ytcli"]

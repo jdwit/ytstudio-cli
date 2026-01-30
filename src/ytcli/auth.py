@@ -1,9 +1,5 @@
 """YouTube OAuth authentication."""
 
-import webbrowser
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
-
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -11,10 +7,9 @@ from rich.console import Console
 
 from ytcli.config import (
     CLIENT_SECRETS_FILE,
-    get_client_secrets,
-    save_credentials,
-    load_credentials,
     clear_credentials,
+    load_credentials,
+    save_credentials,
 )
 
 console = Console()
@@ -126,7 +121,7 @@ def get_status():
             snippet = channel["snippet"]
             stats = channel["statistics"]
 
-            console.print(f"[green]✓ Authenticated[/green]")
+            console.print("[green]✓ Authenticated[/green]")
             console.print(f"  Channel: [bold]{snippet['title']}[/bold]")
             console.print(f"  Subscribers: {stats.get('subscriberCount', 'N/A')}")
             console.print(f"  Videos: {stats.get('videoCount', 'N/A')}")

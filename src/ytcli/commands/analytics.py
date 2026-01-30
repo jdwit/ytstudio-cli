@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 app = typer.Typer(help="Analytics commands")
 console = Console()
@@ -56,10 +56,14 @@ def overview(
         console.print("[yellow]Analytics API not available. Showing basic stats.[/yellow]\n")
 
         # Fallback to basic channel stats
-        response = data_service.channels().list(
-            part="snippet,statistics",
-            mine=True,
-        ).execute()
+        response = (
+            data_service.channels()
+            .list(
+                part="snippet,statistics",
+                mine=True,
+            )
+            .execute()
+        )
 
         if not response.get("items"):
             console.print("[red]No channel found[/red]")
@@ -73,25 +77,31 @@ def overview(
             print(json.dumps(channel, indent=2))
             return
 
-        console.print(Panel(
-            f"[bold]{snippet['title']}[/bold]\n\n"
-            f"Subscribers: {format_number(int(stats.get('subscriberCount', 0)))}\n"
-            f"Total views: {format_number(int(stats.get('viewCount', 0)))}\n"
-            f"Videos: {stats.get('videoCount', 0)}",
-            title="Channel Overview",
-        ))
+        console.print(
+            Panel(
+                f"[bold]{snippet['title']}[/bold]\n\n"
+                f"Subscribers: {format_number(int(stats.get('subscriberCount', 0)))}\n"
+                f"Total views: {format_number(int(stats.get('viewCount', 0)))}\n"
+                f"Videos: {stats.get('videoCount', 0)}",
+                title="Channel Overview",
+            )
+        )
         return
 
     channel_id = get_channel_id(data_service)
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = analytics_service.reports().query(
-        ids=f"channel=={channel_id}",
-        startDate=start_date,
-        endDate=end_date,
-        metrics="views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments",
-    ).execute()
+    response = (
+        analytics_service.reports()
+        .query(
+            ids=f"channel=={channel_id}",
+            startDate=start_date,
+            endDate=end_date,
+            metrics="views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments",
+        )
+        .execute()
+    )
 
     if output == "json":
         print(json.dumps(response, indent=2))
@@ -107,7 +117,10 @@ def overview(
 
         table.add_row("Views", format_number(int(metrics.get("views", 0))))
         table.add_row("Watch time", f"{int(metrics.get('estimatedMinutesWatched', 0) / 60)} hours")
-        table.add_row("Avg view duration", f"{int(metrics.get('averageViewDuration', 0) / 60)}:{int(metrics.get('averageViewDuration', 0) % 60):02d}")
+        table.add_row(
+            "Avg view duration",
+            f"{int(metrics.get('averageViewDuration', 0) / 60)}:{int(metrics.get('averageViewDuration', 0) % 60):02d}",
+        )
         table.add_row("Subscribers gained", f"+{int(metrics.get('subscribersGained', 0))}")
         table.add_row("Subscribers lost", f"-{int(metrics.get('subscribersLost', 0))}")
         table.add_row("Likes", format_number(int(metrics.get("likes", 0))))
@@ -128,10 +141,14 @@ def video(
     data_service, analytics_service = get_services()
 
     # Get video info first
-    video_response = data_service.videos().list(
-        part="snippet,statistics",
-        id=video_id,
-    ).execute()
+    video_response = (
+        data_service.videos()
+        .list(
+            part="snippet,statistics",
+            id=video_id,
+        )
+        .execute()
+    )
 
     if not video_response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
@@ -170,13 +187,17 @@ def video(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = analytics_service.reports().query(
-        ids=f"channel=={channel_id}",
-        startDate=start_date,
-        endDate=end_date,
-        metrics="views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments",
-        filters=f"video=={video_id}",
-    ).execute()
+    response = (
+        analytics_service.reports()
+        .query(
+            ids=f"channel=={channel_id}",
+            startDate=start_date,
+            endDate=end_date,
+            metrics="views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments",
+            filters=f"video=={video_id}",
+        )
+        .execute()
+    )
 
     if output == "json":
         print(json.dumps({"video": video, "analytics": response}, indent=2))
@@ -220,15 +241,19 @@ def traffic(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = analytics_service.reports().query(
-        ids=f"channel=={channel_id}",
-        startDate=start_date,
-        endDate=end_date,
-        metrics="views",
-        dimensions="insightTrafficSourceType",
-        filters=f"video=={video_id}",
-        sort="-views",
-    ).execute()
+    response = (
+        analytics_service.reports()
+        .query(
+            ids=f"channel=={channel_id}",
+            startDate=start_date,
+            endDate=end_date,
+            metrics="views",
+            dimensions="insightTrafficSourceType",
+            filters=f"video=={video_id}",
+            sort="-views",
+        )
+        .execute()
+    )
 
     if output == "json":
         print(json.dumps(response, indent=2))
@@ -259,6 +284,7 @@ def top(
     if not analytics_service:
         # Fallback: get videos and sort by views
         from ytcli.commands.videos import fetch_videos
+
         result = fetch_videos(data_service, limit=50)
         videos = sorted(result["videos"], key=lambda x: x["views"], reverse=True)[:limit]
 
@@ -288,15 +314,19 @@ def top(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = analytics_service.reports().query(
-        ids=f"channel=={channel_id}",
-        startDate=start_date,
-        endDate=end_date,
-        metrics="views,estimatedMinutesWatched,likes",
-        dimensions="video",
-        sort="-views",
-        maxResults=limit,
-    ).execute()
+    response = (
+        analytics_service.reports()
+        .query(
+            ids=f"channel=={channel_id}",
+            startDate=start_date,
+            endDate=end_date,
+            metrics="views,estimatedMinutesWatched,likes",
+            dimensions="video",
+            sort="-views",
+            maxResults=limit,
+        )
+        .execute()
+    )
 
     if output == "json":
         print(json.dumps(response, indent=2))
@@ -304,10 +334,14 @@ def top(
 
     if response.get("rows"):
         video_ids = [row[0] for row in response["rows"]]
-        videos_response = data_service.videos().list(
-            part="snippet",
-            id=",".join(video_ids),
-        ).execute()
+        videos_response = (
+            data_service.videos()
+            .list(
+                part="snippet",
+                id=",".join(video_ids),
+            )
+            .execute()
+        )
 
         title_map = {v["id"]: v["snippet"]["title"] for v in videos_response.get("items", [])}
 
@@ -317,7 +351,7 @@ def top(
         table.add_column("Watch time", justify="right")
 
         for row in response["rows"]:
-            video_id, views, watch_time, likes = row[0], row[1], row[2], row[3]
+            video_id, views, watch_time, _likes = row[0], row[1], row[2], row[3]
             title = title_map.get(video_id, video_id)
 
             table.add_row(

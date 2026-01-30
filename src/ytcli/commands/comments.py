@@ -17,7 +17,7 @@ def get_service():
     service = get_authenticated_service()
     if not service:
         console.print("[red]Not authenticated. Run 'yt login' first.[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return service
 
 
@@ -50,25 +50,31 @@ def list_comments(
     service = get_service()
 
     try:
-        response = service.commentThreads().list(
-            part="snippet",
-            videoId=video_id,
-            maxResults=min(limit, 100),
-            order="relevance",
-        ).execute()
+        response = (
+            service.commentThreads()
+            .list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(limit, 100),
+                order="relevance",
+            )
+            .execute()
+        )
     except Exception as e:
         console.print(f"[yellow]Could not fetch comments (may be disabled): {e}[/yellow]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     comments = []
     for item in response.get("items", []):
         snippet = item["snippet"]["topLevelComment"]["snippet"]
-        comments.append({
-            "author": snippet["authorDisplayName"],
-            "text": snippet["textOriginal"],
-            "likes": snippet["likeCount"],
-            "published": snippet["publishedAt"],
-        })
+        comments.append(
+            {
+                "author": snippet["authorDisplayName"],
+                "text": snippet["textOriginal"],
+                "likes": snippet["likeCount"],
+                "published": snippet["publishedAt"],
+            }
+        )
 
     if output == "json":
         print(json.dumps(comments, indent=2))
@@ -95,15 +101,19 @@ def summary(
     service = get_service()
 
     try:
-        response = service.commentThreads().list(
-            part="snippet",
-            videoId=video_id,
-            maxResults=min(limit, 100),
-            order="relevance",
-        ).execute()
+        response = (
+            service.commentThreads()
+            .list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(limit, 100),
+                order="relevance",
+            )
+            .execute()
+        )
     except Exception:
         console.print("[yellow]Could not fetch comments[/yellow]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     comments = response.get("items", [])
     if not comments:
@@ -111,8 +121,42 @@ def summary(
         return
 
     # Simple keyword-based sentiment
-    positive_words = {"love", "great", "amazing", "awesome", "best", "perfect", "fantastic", "excellent", "good", "nice", "beautiful", "haha", "lol", "😂", "❤️", "👍", "🔥", "genius", "brilliant"}
-    negative_words = {"hate", "bad", "worst", "terrible", "awful", "boring", "stupid", "trash", "garbage", "disappointing", "👎", "cringe", "sucks"}
+    positive_words = {
+        "love",
+        "great",
+        "amazing",
+        "awesome",
+        "best",
+        "perfect",
+        "fantastic",
+        "excellent",
+        "good",
+        "nice",
+        "beautiful",
+        "haha",
+        "lol",
+        "😂",
+        "❤️",
+        "👍",
+        "🔥",
+        "genius",
+        "brilliant",
+    }
+    negative_words = {
+        "hate",
+        "bad",
+        "worst",
+        "terrible",
+        "awful",
+        "boring",
+        "stupid",
+        "trash",
+        "garbage",
+        "disappointing",
+        "👎",
+        "cringe",
+        "sucks",
+    }
 
     positive = 0
     negative = 0
@@ -139,9 +183,9 @@ def summary(
     table.add_column("Count", justify="right")
     table.add_column("Percentage", justify="right")
 
-    table.add_row("[green]Positive[/green]", str(positive), f"{positive/total*100:.1f}%")
-    table.add_row("[red]Negative[/red]", str(negative), f"{negative/total*100:.1f}%")
-    table.add_row("[dim]Neutral[/dim]", str(neutral), f"{neutral/total*100:.1f}%")
+    table.add_row("[green]Positive[/green]", str(positive), f"{positive / total * 100:.1f}%")
+    table.add_row("[red]Negative[/red]", str(negative), f"{negative / total * 100:.1f}%")
+    table.add_row("[dim]Neutral[/dim]", str(neutral), f"{neutral / total * 100:.1f}%")
 
     console.print(table)
 

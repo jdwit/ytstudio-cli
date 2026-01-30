@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from ytcli import __version__
-from ytcli.commands import auth, videos, analytics, comments, seo, export
+from ytcli.commands import analytics, auth, comments, export, seo, videos
 
 app = typer.Typer(
     name="yt",

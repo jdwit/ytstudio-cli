@@ -6,7 +6,6 @@ import re
 import typer
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 
 app = typer.Typer(help="Video management commands")
 console = Console()
@@ -41,34 +40,44 @@ def get_channel_uploads_playlist(service) -> str:
     return response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 
-def fetch_videos(service, limit: int = 50, page_token: str = None) -> dict:
+def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dict:
     """Fetch videos with stats."""
     uploads_playlist_id = get_channel_uploads_playlist(service)
 
-    playlist_response = service.playlistItems().list(
-        part="snippet,contentDetails",
-        playlistId=uploads_playlist_id,
-        maxResults=min(limit, 50),
-        pageToken=page_token,
-    ).execute()
+    playlist_response = (
+        service.playlistItems()
+        .list(
+            part="snippet,contentDetails",
+            playlistId=uploads_playlist_id,
+            maxResults=min(limit, 50),
+            pageToken=page_token,
+        )
+        .execute()
+    )
 
     videos = []
     video_ids = []
 
     for item in playlist_response.get("items", []):
         video_ids.append(item["contentDetails"]["videoId"])
-        videos.append({
-            "id": item["contentDetails"]["videoId"],
-            "title": item["snippet"]["title"],
-            "description": item["snippet"].get("description", ""),
-            "published_at": item["snippet"]["publishedAt"],
-        })
+        videos.append(
+            {
+                "id": item["contentDetails"]["videoId"],
+                "title": item["snippet"]["title"],
+                "description": item["snippet"].get("description", ""),
+                "published_at": item["snippet"]["publishedAt"],
+            }
+        )
 
     if video_ids:
-        videos_response = service.videos().list(
-            part="statistics,status,snippet,contentDetails",
-            id=",".join(video_ids),
-        ).execute()
+        videos_response = (
+            service.videos()
+            .list(
+                part="statistics,status,snippet,contentDetails",
+                id=",".join(video_ids),
+            )
+            .execute()
+        )
 
         stats_map = {v["id"]: v for v in videos_response.get("items", [])}
 
@@ -115,7 +124,9 @@ def list_videos(
         print("id,title,views,likes,comments,privacy,published_at")
         for v in videos:
             title_escaped = v["title"].replace('"', '""')
-            print(f'{v["id"]},"{title_escaped}",{v["views"]},{v["likes"]},{v["comments"]},{v["privacy"]},{v["published_at"]}')
+            print(
+                f'{v["id"]},"{title_escaped}",{v["views"]},{v["likes"]},{v["comments"]},{v["privacy"]},{v["published_at"]}'
+            )
     else:
         table = Table(title=f"Videos ({result['total_results']} total)")
         table.add_column("Title", max_width=45)
@@ -147,10 +158,14 @@ def get(
     """Get details for a specific video."""
     service = get_service()
 
-    response = service.videos().list(
-        part="snippet,statistics,contentDetails,status",
-        id=video_id,
-    ).execute()
+    response = (
+        service.videos()
+        .list(
+            part="snippet,statistics,contentDetails,status",
+            id=video_id,
+        )
+        .execute()
+    )
 
     if not response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
@@ -197,7 +212,9 @@ def update(
 ):
     """Update a video's metadata."""
     if not any([title, description, tags]):
-        console.print("[yellow]Nothing to update. Provide --title, --description, or --tags[/yellow]")
+        console.print(
+            "[yellow]Nothing to update. Provide --title, --description, or --tags[/yellow]"
+        )
         raise typer.Exit(1)
 
     service = get_service()
@@ -220,7 +237,7 @@ def update(
         if title:
             console.print(f"title: {current['title'][:40]} → [green]{new_title[:40]}[/green]")
         if description:
-            console.print(f"description: [green](updated)[/green]")
+            console.print("description: [green](updated)[/green]")
         if tags:
             console.print(f"tags: [green]{', '.join(new_tags[:5])}[/green]")
         console.print("\n[dim]Run without --dry-run to apply[/dim]")
@@ -264,12 +281,14 @@ def bulk_update(
             new_value = old_value.replace(search, replace)
 
         if new_value != old_value:
-            changes.append({
-                "id": video["id"],
-                "field": field,
-                "old": old_value,
-                "new": new_value,
-            })
+            changes.append(
+                {
+                    "id": video["id"],
+                    "field": field,
+                    "old": old_value,
+                    "new": new_value,
+                }
+            )
 
     if not changes:
         console.print("[yellow]No matches found[/yellow]")

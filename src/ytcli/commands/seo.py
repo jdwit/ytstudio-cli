@@ -4,8 +4,8 @@ import json
 
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 app = typer.Typer(help="SEO analysis commands")
 console = Console()
@@ -97,10 +97,14 @@ def check(
     """Check SEO score for a video."""
     service = get_service()
 
-    response = service.videos().list(
-        part="snippet",
-        id=video_id,
-    ).execute()
+    response = (
+        service.videos()
+        .list(
+            part="snippet",
+            id=video_id,
+        )
+        .execute()
+    )
 
     if not response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
@@ -116,11 +120,13 @@ def check(
     console.print(f"[dim]https://youtu.be/{video_id}[/dim]\n")
 
     color = score_color(seo["total_score"])
-    console.print(Panel(
-        f"[bold {color}]{seo['total_score']}/100[/bold {color}]",
-        title="SEO Score",
-        border_style=color,
-    ))
+    console.print(
+        Panel(
+            f"[bold {color}]{seo['total_score']}/100[/bold {color}]",
+            title="SEO Score",
+            border_style=color,
+        )
+    )
 
     table = Table(show_header=True)
     table.add_column("Aspect")
@@ -155,10 +161,14 @@ def audit(
     service = get_service()
 
     # Get uploads playlist
-    channels_response = service.channels().list(
-        part="contentDetails",
-        mine=True,
-    ).execute()
+    channels_response = (
+        service.channels()
+        .list(
+            part="contentDetails",
+            mine=True,
+        )
+        .execute()
+    )
 
     if not channels_response.get("items"):
         console.print("[red]No channel found[/red]")
@@ -167,11 +177,15 @@ def audit(
     uploads_id = channels_response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
     # Get videos
-    playlist_response = service.playlistItems().list(
-        part="contentDetails",
-        playlistId=uploads_id,
-        maxResults=min(limit, 50),
-    ).execute()
+    playlist_response = (
+        service.playlistItems()
+        .list(
+            part="contentDetails",
+            playlistId=uploads_id,
+            maxResults=min(limit, 50),
+        )
+        .execute()
+    )
 
     video_ids = [item["contentDetails"]["videoId"] for item in playlist_response.get("items", [])]
 
@@ -180,10 +194,14 @@ def audit(
         return
 
     # Get video details
-    videos_response = service.videos().list(
-        part="snippet",
-        id=",".join(video_ids),
-    ).execute()
+    videos_response = (
+        service.videos()
+        .list(
+            part="snippet",
+            id=",".join(video_ids),
+        )
+        .execute()
+    )
 
     scores = [analyze_seo(v) for v in videos_response.get("items", [])]
     avg_score = sum(s["total_score"] for s in scores) / len(scores) if scores else 0
@@ -192,11 +210,13 @@ def audit(
         print(json.dumps({"average_score": avg_score, "videos": scores}, indent=2))
         return
 
-    console.print(Panel(
-        f"[bold]Average SEO Score: [{score_color(int(avg_score))}]{avg_score:.0f}/100[/][/bold]\n"
-        f"Analyzed {len(scores)} videos",
-        title="Channel SEO Audit",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Average SEO Score: [{score_color(int(avg_score))}]{avg_score:.0f}/100[/][/bold]\n"
+            f"Analyzed {len(scores)} videos",
+            title="Channel SEO Audit",
+        )
+    )
 
     # Show videos needing attention
     worst = sorted(scores, key=lambda s: s["total_score"])
@@ -210,9 +230,12 @@ def audit(
 
         for seo in needs_work[:15]:
             issue = (
-                seo["title_issues"][0] if seo["title_issues"]
-                else seo["desc_issues"][0] if seo["desc_issues"]
-                else seo["tags_issues"][0] if seo["tags_issues"]
+                seo["title_issues"][0]
+                if seo["title_issues"]
+                else seo["desc_issues"][0]
+                if seo["desc_issues"]
+                else seo["tags_issues"][0]
+                if seo["tags_issues"]
                 else ""
             )
             table.add_row(

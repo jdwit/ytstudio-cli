@@ -1,11 +1,11 @@
 """Tests for analytics commands."""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
 from typer.testing import CliRunner
 
-from ytcli.main import app
 from ytcli.commands.analytics import format_number
+from ytcli.main import app
 
 runner = CliRunner()
 
