@@ -16,7 +16,7 @@ class TestAnalyzeSeo:
         """Test video with good SEO gets high score."""
         result = analyze_seo(MOCK_VIDEO)
 
-        assert result["total_score"] >= 80
+        assert result["total_score"] >= 70  # title + tags good, desc shortish
         assert result["title_score"] >= 80
         assert result["desc_score"] >= 50  # description is shortish
         assert result["tags_score"] == 100

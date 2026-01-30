@@ -93,5 +93,6 @@ Credentials stored in `~/.config/ytcli/`.
 
 ```bash
 uv pip install -e ".[dev]"
+pre-commit install
 pytest -v
 ```
