@@ -8,6 +8,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from ytcli.auth import get_authenticated_service
+from ytcli.commands.videos import fetch_videos
+
 app = typer.Typer(help="Analytics commands")
 console = Console()
 
@@ -23,8 +26,6 @@ def format_number(n: int) -> str:
 
 def get_services():
     """Get YouTube Data API and Analytics API services."""
-    from ytcli.auth import get_authenticated_service
-
     data_service = get_authenticated_service("youtube", "v3")
     analytics_service = get_authenticated_service("youtubeAnalytics", "v2")
 
@@ -283,7 +284,6 @@ def top(
 
     if not analytics_service:
         # Fallback: get videos and sort by views
-        from ytcli.commands.videos import fetch_videos
 
         result = fetch_videos(data_service, limit=50)
         videos = sorted(result["videos"], key=lambda x: x["views"], reverse=True)[:limit]

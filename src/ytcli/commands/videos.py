@@ -7,6 +7,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from ytcli.auth import get_authenticated_service
+
 app = typer.Typer(help="Video management commands")
 console = Console()
 
@@ -22,8 +24,6 @@ def format_number(n: int) -> str:
 
 def get_service():
     """Get authenticated service or exit."""
-    from ytcli.auth import get_authenticated_service
-
     service = get_authenticated_service()
     if not service:
         console.print("[red]Not authenticated. Run 'yt login' first.[/red]")

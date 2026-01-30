@@ -7,14 +7,16 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from ytcli.auth import get_authenticated_service
+from ytcli.commands.seo import analyze_seo
+from ytcli.commands.videos import fetch_videos
+
 app = typer.Typer(help="Export data")
 console = Console()
 
 
 def get_service():
     """Get authenticated service or exit."""
-    from ytcli.auth import get_authenticated_service
-
     service = get_authenticated_service()
     if not service:
         console.print("[red]Not authenticated. Run 'yt login' first.[/red]")
@@ -29,8 +31,6 @@ def videos(
     limit: int = typer.Option(100, "--limit", "-n", help="Max videos to export"),
 ):
     """Export video data to file."""
-    from ytcli.commands.videos import fetch_videos
-
     service = get_service()
     result = fetch_videos(service, limit)
     videos_data = result["videos"]
@@ -109,8 +109,6 @@ def report(
     output: Path = typer.Argument(..., help="Output file path"),
 ):
     """Export channel report (JSON)."""
-    from ytcli.commands.seo import analyze_seo
-    from ytcli.commands.videos import fetch_videos
 
     service = get_service()
 

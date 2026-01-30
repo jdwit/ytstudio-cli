@@ -4,7 +4,9 @@ import typer
 from rich.console import Console
 
 from ytcli import __version__
+from ytcli.auth import authenticate, get_status
 from ytcli.commands import analytics, auth, comments, export, seo, videos
+from ytcli.config import setup_credentials
 
 app = typer.Typer(
     name="yt",
@@ -32,24 +34,18 @@ def init(
     ),
 ):
     """Initialize ytcli with Google OAuth credentials."""
-    from ytcli.config import setup_credentials
-
     setup_credentials(client_secrets_file)
 
 
 @app.command()
 def login():
     """Authenticate with YouTube via OAuth."""
-    from ytcli.auth import authenticate
-
     authenticate()
 
 
 @app.command()
 def status():
     """Show current authentication status."""
-    from ytcli.auth import get_status
-
     get_status()
 
 
