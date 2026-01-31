@@ -6,7 +6,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.prompt import Prompt
 
-CONFIG_DIR = Path.home() / ".config" / "ytcli"
+CONFIG_DIR = Path.home() / ".config" / "ytstudio-cli"
 CLIENT_SECRETS_FILE = CONFIG_DIR / "client_secrets.json"
 CREDENTIALS_FILE = CONFIG_DIR / "credentials.json"
 
@@ -33,9 +33,9 @@ def setup_credentials(client_secrets_file: str | None = None):
         console.print(f"[green]✓ Client secrets saved to {CLIENT_SECRETS_FILE}[/green]")
     else:
         # Interactive setup
-        console.print("\n[bold]ytcli Setup[/bold]\n")
+        console.print("\n[bold]ytstudio-cli Setup[/bold]\n")
         console.print("You need to create a Google Cloud project and OAuth credentials.")
-        console.print("See: https://github.com/jdwit/ytcli#setup\n")
+        console.print("See: https://github.com/jdwit/ytstudio-cli#setup\n")
 
         client_id = Prompt.ask("Enter your OAuth Client ID")
         client_secret = Prompt.ask("Enter your OAuth Client Secret")
@@ -53,7 +53,7 @@ def setup_credentials(client_secrets_file: str | None = None):
         CLIENT_SECRETS_FILE.write_text(json.dumps(secrets, indent=2))
         console.print(f"\n[green]✓ Client secrets saved to {CLIENT_SECRETS_FILE}[/green]")
 
-    console.print("\nRun [bold]yt login[/bold] to authenticate with YouTube.")
+    console.print("\nRun [bold]yts login[/bold] to authenticate with YouTube.")
 
 
 def get_client_secrets() -> dict | None:

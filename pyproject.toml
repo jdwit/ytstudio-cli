@@ -1,14 +1,14 @@
 [project]
-name = "ytcli"
+name = "ytstudio-cli"
 version = "0.1.0"
-description = "CLI tool to manage and analyze your YouTube channel"
+description = "CLI tool to manage and analyze your YouTube channel from the terminal"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
 authors = [
     { name = "Jelmer de Wit", email = "1598297+jdwit@users.noreply.github.com" }
 ]
-keywords = ["youtube", "cli", "analytics", "video"]
+keywords = ["youtube", "youtube-studio", "cli", "analytics", "creator", "video"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -40,11 +40,11 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [project.scripts]
-yt = "ytcli.main:app"
+yts = "ytcli.main:app"
 
 [project.urls]
-Homepage = "https://github.com/jdwit/ytcli"
-Repository = "https://github.com/jdwit/ytcli"
+Homepage = "https://github.com/jdwit/ytstudio-cli"
+Repository = "https://github.com/jdwit/ytstudio-cli"
 
 [build-system]
 requires = ["hatchling"]

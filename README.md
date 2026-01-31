@@ -1,8 +1,14 @@
-# ytcli
+# ytstudio-cli
 
-CLI tool to manage and analyze your YouTube channel.
+CLI tool to manage and analyze your YouTube channel from the terminal.
 
 ## Installation
+
+```bash
+pip install ytstudio-cli
+```
+
+Or for development:
 
 ```bash
 uv pip install -e .
@@ -13,11 +19,11 @@ uv pip install -e .
 1. Create a [Google Cloud project](https://console.cloud.google.com/)
 2. Enable **YouTube Data API v3** and **YouTube Analytics API**
 3. Create OAuth credentials (Desktop app) and download JSON
-4. Configure ytcli:
+4. Configure ytstudio-cli:
 
 ```bash
-yt init --client-secrets /path/to/client_secrets.json
-yt login
+yts init --client-secrets /path/to/client_secrets.json
+yts login
 ```
 
 ## Commands
@@ -25,60 +31,60 @@ yt login
 ### Authentication
 
 ```bash
-yt status              # show auth status
-yt login               # authenticate via browser
-yt auth logout         # clear credentials
+yts status              # show auth status
+yts login               # authenticate via browser
+yts auth logout         # clear credentials
 ```
 
 ### Videos
 
 ```bash
-yt videos list                              # list videos
-yt videos list -n 50 --sort views           # sort by views/likes/date
-yt videos get VIDEO_ID                      # video details
-yt videos update VIDEO_ID --title "New"     # update metadata
-yt videos update VIDEO_ID --tags "a,b,c"
+yts videos list                              # list videos
+yts videos list -n 50 --sort views           # sort by views/likes/date
+yts videos get VIDEO_ID                      # video details
+yts videos update VIDEO_ID --title "New"     # update metadata
+yts videos update VIDEO_ID --tags "a,b,c"
 ```
 
 ### Bulk Operations
 
 ```bash
 # search-replace (dry-run by default)
-yt videos bulk-update -s "old" -r "new" --field title
-yt videos bulk-update -s "old" -r "new" --field title --execute
-yt videos bulk-update -s "^prefix" -r "" --regex --execute
+yts videos bulk-update -s "old" -r "new" --field title
+yts videos bulk-update -s "old" -r "new" --field title --execute
+yts videos bulk-update -s "^prefix" -r "" --regex --execute
 ```
 
 ### Analytics
 
 ```bash
-yt analytics overview --days 28            # channel overview
-yt analytics video VIDEO_ID                # video analytics
-yt analytics top --days 28 --limit 10      # top performers
-yt analytics traffic VIDEO_ID              # traffic sources
+yts analytics overview --days 28            # channel overview
+yts analytics video VIDEO_ID                # video analytics
+yts analytics top --days 28 --limit 10      # top performers
+yts analytics traffic VIDEO_ID              # traffic sources
 ```
 
 ### Comments
 
 ```bash
-yt comments list VIDEO_ID                  # list comments
-yt comments summary VIDEO_ID               # sentiment analysis
+yts comments list VIDEO_ID                  # list comments
+yts comments summary VIDEO_ID               # sentiment analysis
 ```
 
 ### SEO
 
 ```bash
-yt seo check VIDEO_ID                      # check video SEO
-yt seo audit --limit 50                    # audit channel
+yts seo check VIDEO_ID                      # check video SEO
+yts seo audit --limit 50                    # audit channel
 ```
 
 ### Export
 
 ```bash
-yt export videos data.csv                  # export to CSV
-yt export videos data.json -f json         # export to JSON
-yt export comments VIDEO_ID comments.json  # export comments
-yt export report report.json               # full channel report
+yts export videos data.csv                  # export to CSV
+yts export videos data.json -f json         # export to JSON
+yts export comments VIDEO_ID comments.json  # export comments
+yts export report report.json               # full channel report
 ```
 
 ### Output Formats
@@ -87,7 +93,7 @@ Most commands support `--output table|json|csv`.
 
 ## Configuration
 
-Credentials stored in `~/.config/ytcli/`.
+Credentials stored in `~/.config/ytstudio-cli/`.
 
 ## Development
 

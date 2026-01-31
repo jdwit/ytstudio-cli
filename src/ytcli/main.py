@@ -9,7 +9,7 @@ from ytcli.commands import analytics, auth, comments, export, seo, videos
 from ytcli.config import setup_credentials
 
 app = typer.Typer(
-    name="yt",
+    name="yts",
     help="CLI tool to manage and analyze your YouTube channel",
     no_args_is_help=True,
 )
@@ -33,7 +33,7 @@ def init(
         help="Path to Google OAuth client secrets JSON file",
     ),
 ):
-    """Initialize ytcli with Google OAuth credentials."""
+    """Initialize ytstudio-cli with Google OAuth credentials."""
     setup_credentials(client_secrets_file)
 
 
@@ -53,9 +53,9 @@ def status():
 def main(
     version: bool = typer.Option(False, "--version", "-v", help="Show version"),
 ):
-    """ytcli - CLI tool to manage and analyze your YouTube channel."""
+    """ytstudio-cli - Manage and analyze your YouTube channel from the terminal."""
     if version:
-        console.print(f"ytcli version {__version__}")
+        console.print(f"ytstudio-cli version {__version__}")
         raise typer.Exit()
 
 
