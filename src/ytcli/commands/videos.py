@@ -85,13 +85,15 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             data = stats_map.get(video["id"], {})
             stats = data.get("statistics", {})
             snippet = data.get("snippet", {})
+            content_details = data.get("contentDetails", {})
             video["views"] = int(stats.get("viewCount", 0))
             video["likes"] = int(stats.get("likeCount", 0))
             video["comments"] = int(stats.get("commentCount", 0))
             video["privacy"] = data.get("status", {}).get("privacyStatus", "unknown")
             video["tags"] = snippet.get("tags", [])
             video["category_id"] = snippet.get("categoryId", "")
-            video["duration"] = data.get("contentDetails", {}).get("duration", "")
+            video["duration"] = content_details.get("duration", "")
+            video["licensed"] = content_details.get("licensedContent", False)
 
     return {
         "videos": videos,
@@ -105,12 +107,17 @@ def list_videos(
     limit: int = typer.Option(20, "--limit", "-n", help="Number of videos to list"),
     page_token: str = typer.Option(None, "--page-token", "-p", help="Page token for pagination"),
     sort: str = typer.Option("date", "--sort", "-s", help="Sort by: date, views, likes"),
+    claimed: bool = typer.Option(False, "--claimed", "-c", help="Show only videos with claims"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
 ):
     """List your YouTube videos."""
     service = get_service()
     result = fetch_videos(service, limit, page_token)
     videos = result["videos"]
+
+    # Filter claimed
+    if claimed:
+        videos = [v for v in videos if v.get("licensed", False)]
 
     # Sort
     if sort == "views":
@@ -119,25 +126,34 @@ def list_videos(
         videos.sort(key=lambda x: x["likes"], reverse=True)
 
     if output == "json":
-        print(json.dumps(result, indent=2))
+        print(json.dumps({"videos": videos, **{k: v for k, v in result.items() if k != "videos"}}, indent=2))
     elif output == "csv":
-        print("id,title,views,likes,comments,privacy,published_at")
+        print("id,title,views,likes,comments,privacy,claimed,published_at")
         for v in videos:
             title_escaped = v["title"].replace('"', '""')
             print(
-                f'{v["id"]},"{title_escaped}",{v["views"]},{v["likes"]},{v["comments"]},{v["privacy"]},{v["published_at"]}'
+                f'{v["id"]},"{title_escaped}",{v["views"]},{v["likes"]},{v["comments"]},{v["privacy"]},{v.get("licensed", False)},{v["published_at"]}'
             )
     else:
-        table = Table(title=f"Videos ({result['total_results']} total)")
-        table.add_column("Title", max_width=45)
+        claimed_count = sum(1 for v in result["videos"] if v.get("licensed", False))
+        title = f"Videos ({result['total_results']} total"
+        if claimed_count > 0:
+            title += f", [red]{claimed_count} claimed[/red]"
+        title += ")"
+
+        table = Table(title=title)
+        table.add_column("", width=2)  # claim indicator
+        table.add_column("Title", max_width=43)
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
         table.add_column("Comments", justify="right")
         table.add_column("Published")
 
         for v in videos:
+            claim_icon = "[red]©[/red]" if v.get("licensed", False) else ""
             table.add_row(
-                v["title"][:45],
+                claim_icon,
+                v["title"][:43],
                 format_number(v["views"]),
                 format_number(v["likes"]),
                 format_number(v["comments"]),
@@ -175,6 +191,7 @@ def get(
     snippet = video["snippet"]
     stats = video["statistics"]
     content = video["contentDetails"]
+    is_claimed = content.get("licensedContent", False)
 
     if output == "json":
         print(json.dumps(video, indent=2))
@@ -193,6 +210,7 @@ def get(
     table.add_row("duration", content.get("duration", "N/A"))
     table.add_row("published", snippet["publishedAt"][:10])
     table.add_row("privacy", video.get("status", {}).get("privacyStatus", "unknown"))
+    table.add_row("claimed", "[red]Yes ©[/red]" if is_claimed else "[green]No[/green]")
 
     console.print(table)
 
@@ -344,3 +362,41 @@ def bulk_update(
             failed += 1
 
     console.print(f"\n[bold]Done:[/bold] {success} updated, {failed} failed")
+
+
+@app.command()
+def claims(
+    limit: int = typer.Option(100, "--limit", "-n", help="Max videos to scan"),
+    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+):
+    """List videos with copyright claims."""
+    service = get_service()
+    result = fetch_videos(service, limit)
+    claimed_videos = [v for v in result["videos"] if v.get("licensed", False)]
+
+    if output == "json":
+        print(json.dumps(claimed_videos, indent=2))
+        return
+
+    if not claimed_videos:
+        console.print("[green]✓ No claimed videos found![/green]")
+        return
+
+    table = Table(title=f"[red]Claimed Videos ({len(claimed_videos)})[/red]")
+    table.add_column("ID", style="dim")
+    table.add_column("Title", max_width=40)
+    table.add_column("Views", justify="right")
+    table.add_column("Published")
+
+    for v in claimed_videos:
+        table.add_row(
+            v["id"],
+            v["title"][:40],
+            format_number(v["views"]),
+            v["published_at"][:10],
+        )
+
+    console.print(table)
+    console.print(
+        "\n[dim]Note: 'claimed' means Content ID matched. Check Studio for claim details.[/dim]"
+    )
