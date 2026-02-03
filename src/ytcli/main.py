@@ -12,6 +12,7 @@ app = typer.Typer(
     name="yts",
     help="CLI tool to manage and analyze your YouTube channel",
     no_args_is_help=True,
+    rich_markup_mode="markdown",
 )
 
 console = Console()
@@ -24,7 +25,29 @@ app.add_typer(seo.app, name="seo")
 app.add_typer(export.app, name="export")
 
 
-@app.command()
+INIT_EPILOG = """
+**Setup Instructions**
+
+
+1. Go to `console.cloud.google.com`
+
+2. Create a new project (or select existing)
+
+3. Enable **YouTube Data API v3**: APIs & Services → Enable APIs
+
+4. Create **OAuth credentials**: APIs & Services → Credentials → Create Credentials → OAuth client ID → Select "Desktop app" → Download JSON
+
+5. Run: `yts init -c ~/Downloads/client_secret_xxx.json`
+
+6. Authenticate: `yts login`
+
+---
+
+⚠️  **Note**: Add yourself as test user in OAuth consent screen until verified
+"""
+
+
+@app.command(epilog=INIT_EPILOG)
 def init(
     client_secrets_file: str = typer.Option(
         None,
