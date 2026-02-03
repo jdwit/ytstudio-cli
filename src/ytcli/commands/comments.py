@@ -4,13 +4,12 @@ import json
 from datetime import UTC, datetime
 
 import typer
-from rich.console import Console
-from rich.table import Table
+from googleapiclient.errors import HttpError
 
-from ytcli.auth import get_authenticated_service
+from ytcli.auth import api, get_authenticated_service, handle_api_error
+from ytcli.ui import console, create_table, dim
 
 app = typer.Typer(help="Comment commands")
-console = Console()
 
 
 def get_service():
@@ -39,6 +38,25 @@ def time_ago(iso_timestamp: str) -> str:
     return "recently"
 
 
+def fetch_comments(service, video_id: str, limit: int = 100):
+    """Fetch comments with error handling for disabled comments."""
+    try:
+        return api(
+            service.commentThreads().list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(limit, 100),
+                order="relevance",
+            )
+        )
+    except HttpError as e:
+        # Handle quota errors
+        handle_api_error(e)
+    except Exception as e:
+        console.print(f"[yellow]Could not fetch comments (may be disabled): {e}[/yellow]")
+        raise typer.Exit(1) from None
+
+
 @app.command("list")
 def list_comments(
     video_id: str = typer.Argument(..., help="Video ID"),
@@ -47,21 +65,7 @@ def list_comments(
 ):
     """List comments for a video."""
     service = get_service()
-
-    try:
-        response = (
-            service.commentThreads()
-            .list(
-                part="snippet",
-                videoId=video_id,
-                maxResults=min(limit, 100),
-                order="relevance",
-            )
-            .execute()
-        )
-    except Exception as e:
-        console.print(f"[yellow]Could not fetch comments (may be disabled): {e}[/yellow]")
-        raise typer.Exit(1) from None
+    response = fetch_comments(service, video_id, limit)
 
     comments = []
     for item in response.get("items", []):
@@ -98,21 +102,7 @@ def summary(
 ):
     """Analyze comment sentiment for a video."""
     service = get_service()
-
-    try:
-        response = (
-            service.commentThreads()
-            .list(
-                part="snippet",
-                videoId=video_id,
-                maxResults=min(limit, 100),
-                order="relevance",
-            )
-            .execute()
-        )
-    except Exception:
-        console.print("[yellow]Could not fetch comments[/yellow]")
-        raise typer.Exit(1) from None
+    response = fetch_comments(service, video_id, limit)
 
     comments = response.get("items", [])
     if not comments:
@@ -177,8 +167,9 @@ def summary(
     neutral = len(comments) - positive - negative
     total = len(comments)
 
-    table = Table(title=f"Comment Sentiment ({total} analyzed)")
-    table.add_column("Sentiment")
+    console.print(f"\n[bold]Comment Sentiment[/bold] {dim(f'({total} analyzed)')}\n")
+    table = create_table()
+    table.add_column("Sentiment", style="dim")
     table.add_column("Count", justify="right")
     table.add_column("Percentage", justify="right")
 

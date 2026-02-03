@@ -55,7 +55,7 @@ def main(
 ):
     """ytstudio-cli - Manage and analyze your YouTube channel from the terminal."""
     if version:
-        console.print(f"ytstudio-cli version {__version__}")
+        console.print(f"ytstudio-cli v{__version__}")
         raise typer.Exit()
 
 

@@ -4,7 +4,9 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from rich.console import Console
+from rich.panel import Panel
 
 from ytcli.config import (
     CLIENT_SECRETS_FILE,
@@ -14,6 +16,47 @@ from ytcli.config import (
 )
 
 console = Console()
+
+
+def handle_api_error(error: HttpError) -> None:
+    """Handle YouTube API errors with user-friendly messages."""
+    if error.resp.status == 403:
+        error_details = error.error_details[0] if error.error_details else {}
+        reason = error_details.get("reason", "")
+        
+        if reason == "quotaExceeded":
+            console.print(
+                Panel(
+                    "[bold red]YouTube API quota exceeded[/bold red]\n\n"
+                    "Your daily quota (10,000 units) has been used up.\n\n"
+                    "[bold]Options:[/bold]\n"
+                    "• [cyan]Wait[/cyan] - Quota resets at midnight Pacific Time (~9 AM CET)\n"
+                    "• [cyan]Request more[/cyan] - Visit Google Cloud Console → APIs → YouTube Data API v3 → Quotas\n\n"
+                    "[dim]Tip: Update operations cost 50 units each. Use --dry-run to preview changes.[/dim]",
+                    title="⚠️  Quota Exceeded",
+                    border_style="red",
+                )
+            )
+            raise SystemExit(1)
+        
+        if reason == "forbidden":
+            console.print("[red]Access denied. You may not have permission for this action.[/red]")
+            raise SystemExit(1)
+    
+    # Re-raise for other errors
+    raise error
+
+
+def api(request):
+    """Execute an API request with automatic error handling.
+    
+    Usage:
+        response = api(service.videos().list(part="snippet", id=video_id))
+    """
+    try:
+        return request.execute()
+    except HttpError as e:
+        handle_api_error(e)
 
 # YouTube API scopes
 SCOPES = [
@@ -111,21 +154,18 @@ def get_status():
         return
 
     # Get channel info
-    try:
-        service = build("youtube", "v3", credentials=credentials)
-        response = service.channels().list(part="snippet,statistics", mine=True).execute()
+    service = build("youtube", "v3", credentials=credentials)
+    response = api(service.channels().list(part="snippet,statistics", mine=True))
 
-        if response.get("items"):
-            channel = response["items"][0]
-            snippet = channel["snippet"]
-            stats = channel["statistics"]
+    if response.get("items"):
+        channel = response["items"][0]
+        snippet = channel["snippet"]
+        stats = channel["statistics"]
 
-            console.print("[green]✓ Authenticated[/green]")
-            console.print(f"  Channel: [bold]{snippet['title']}[/bold]")
-            console.print(f"  Subscribers: {stats.get('subscriberCount', 'N/A')}")
-            console.print(f"  Videos: {stats.get('videoCount', 'N/A')}")
-    except Exception as e:
-        console.print(f"[red]Error checking status: {e}[/red]")
+        console.print("[green]✓ Authenticated[/green]")
+        console.print(f"  Channel: [bold]{snippet['title']}[/bold]")
+        console.print(f"  Subscribers: {stats.get('subscriberCount', 'N/A')}")
+        console.print(f"  Videos: {stats.get('videoCount', 'N/A')}")
 
 
 def logout():

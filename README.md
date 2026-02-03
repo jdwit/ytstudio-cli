@@ -1,5 +1,11 @@
 # ytstudio-cli
 
+[![CI](https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jdwit/ytstudio-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/jdwit/ytstudio-cli)
+[![PyPI version](https://badge.fury.io/py/ytstudio-cli.svg)](https://pypi.org/project/ytstudio-cli/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 CLI tool to manage and analyze your YouTube channel from the terminal.
 
 ## Installation
@@ -98,7 +104,23 @@ Credentials stored in `~/.config/ytstudio-cli/`.
 ## Development
 
 ```bash
-uv pip install -e ".[dev]"
-pre-commit install
-pytest -v
+uv sync --all-extras
+uv run pre-commit install
+uv run pytest
+```
+
+### Demo Mode
+
+For screencasts and testing without credentials:
+
+```bash
+YTS_DEMO=1 yts videos list
+YTS_DEMO=1 yts analytics overview
+```
+
+### Recording Demo GIF
+
+```bash
+brew install vhs
+vhs demo.tape
 ```

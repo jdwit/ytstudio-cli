@@ -30,6 +30,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
     "pytest-mock>=3.12.0",
     "ruff>=0.8.0",
     "pre-commit>=3.0.0",
@@ -38,6 +39,18 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "--cov=ytcli --cov-report=term-missing --cov-report=xml"
+
+[tool.coverage.run]
+source = ["src/ytcli"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
 
 [project.scripts]
 yts = "ytcli.main:app"

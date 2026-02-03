@@ -3,14 +3,12 @@
 import json
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 
-from ytcli.auth import get_authenticated_service
+from ytcli.auth import api, get_authenticated_service
+from ytcli.ui import console, create_table
 
 app = typer.Typer(help="SEO analysis commands")
-console = Console()
 
 # SEO thresholds
 TITLE_MIN = 30
@@ -97,14 +95,7 @@ def check(
     """Check SEO score for a video."""
     service = get_service()
 
-    response = (
-        service.videos()
-        .list(
-            part="snippet",
-            id=video_id,
-        )
-        .execute()
-    )
+    response = api(service.videos().list(part="snippet", id=video_id))
 
     if not response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
@@ -128,8 +119,8 @@ def check(
         )
     )
 
-    table = Table(show_header=True)
-    table.add_column("Aspect")
+    table = create_table()
+    table.add_column("Aspect", style="dim")
     table.add_column("Score", justify="center")
     table.add_column("Issues")
 
@@ -160,15 +151,7 @@ def audit(
     """Audit SEO for all channel videos."""
     service = get_service()
 
-    # Get uploads playlist
-    channels_response = (
-        service.channels()
-        .list(
-            part="contentDetails",
-            mine=True,
-        )
-        .execute()
-    )
+    channels_response = api(service.channels().list(part="contentDetails", mine=True))
 
     if not channels_response.get("items"):
         console.print("[red]No channel found[/red]")
@@ -176,15 +159,12 @@ def audit(
 
     uploads_id = channels_response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
-    # Get videos
-    playlist_response = (
-        service.playlistItems()
-        .list(
+    playlist_response = api(
+        service.playlistItems().list(
             part="contentDetails",
             playlistId=uploads_id,
             maxResults=min(limit, 50),
         )
-        .execute()
     )
 
     video_ids = [item["contentDetails"]["videoId"] for item in playlist_response.get("items", [])]
@@ -193,15 +173,7 @@ def audit(
         console.print("[yellow]No videos found[/yellow]")
         return
 
-    # Get video details
-    videos_response = (
-        service.videos()
-        .list(
-            part="snippet",
-            id=",".join(video_ids),
-        )
-        .execute()
-    )
+    videos_response = api(service.videos().list(part="snippet", id=",".join(video_ids)))
 
     scores = [analyze_seo(v) for v in videos_response.get("items", [])]
     avg_score = sum(s["total_score"] for s in scores) / len(scores) if scores else 0
@@ -218,15 +190,15 @@ def audit(
         )
     )
 
-    # Show videos needing attention
     worst = sorted(scores, key=lambda s: s["total_score"])
     needs_work = [s for s in worst if s["total_score"] < 80]
 
     if needs_work:
-        table = Table(title="Videos Needing Attention")
+        console.print("\n[bold]Videos Needing Attention[/bold]\n")
+        table = create_table()
         table.add_column("Score", justify="center")
         table.add_column("Title", max_width=40)
-        table.add_column("Main Issue")
+        table.add_column("Main Issue", style="dim")
 
         for seo in needs_work[:15]:
             issue = (

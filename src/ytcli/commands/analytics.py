@@ -4,24 +4,14 @@ import json
 from datetime import datetime, timedelta
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 
-from ytcli.auth import get_authenticated_service
+from ytcli.auth import api, get_authenticated_service
 from ytcli.commands.videos import fetch_videos
+from ytcli.demo import DEMO_ANALYTICS, DEMO_CHANNEL, is_demo_mode
+from ytcli.ui import console, create_kv_table, create_table, dim, format_number
 
 app = typer.Typer(help="Analytics commands")
-console = Console()
-
-
-def format_number(n: int) -> str:
-    """Format large numbers."""
-    if n >= 1_000_000:
-        return f"{n / 1_000_000:.1f}M"
-    if n >= 1_000:
-        return f"{n / 1_000:.1f}K"
-    return str(n)
 
 
 def get_services():
@@ -38,7 +28,7 @@ def get_services():
 
 def get_channel_id(service) -> str:
     """Get the authenticated user's channel ID."""
-    response = service.channels().list(part="id", mine=True).execute()
+    response = api(service.channels().list(part="id", mine=True))
     if not response.get("items"):
         console.print("[red]No channel found[/red]")
         raise typer.Exit(1)
@@ -51,20 +41,37 @@ def overview(
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """Get channel overview analytics."""
+    if is_demo_mode():
+        if output == "json":
+            print(
+                json.dumps(
+                    {"channel": DEMO_CHANNEL, "analytics": DEMO_ANALYTICS, "days": days}, indent=2
+                )
+            )
+            return
+
+        table = create_kv_table()
+
+        table.add_row(dim("views"), format_number(DEMO_ANALYTICS["views"]))
+        table.add_row(dim("watch time"), f"{DEMO_ANALYTICS['watch_time_hours']} hours")
+        table.add_row(dim("avg duration"), DEMO_ANALYTICS["avg_view_duration"])
+        table.add_row(dim("subs gained"), f"[green]+{DEMO_ANALYTICS['subscribers_gained']}[/green]")
+        table.add_row(dim("subs lost"), f"[red]-{DEMO_ANALYTICS['subscribers_lost']}[/red]")
+        table.add_row(dim("likes"), format_number(DEMO_ANALYTICS["likes"]))
+        table.add_row(dim("comments"), format_number(DEMO_ANALYTICS["comments"]))
+        table.add_row(dim("impressions"), format_number(DEMO_ANALYTICS["impressions"]))
+        table.add_row(dim("CTR"), f"{DEMO_ANALYTICS['ctr']}%")
+
+        console.print(f"\n[bold]Channel Analytics[/bold] {dim(f'(last {days} days)')}\n")
+        console.print(table)
+        return
+
     data_service, analytics_service = get_services()
 
     if not analytics_service:
         console.print("[yellow]Analytics API not available. Showing basic stats.[/yellow]\n")
 
-        # Fallback to basic channel stats
-        response = (
-            data_service.channels()
-            .list(
-                part="snippet,statistics",
-                mine=True,
-            )
-            .execute()
-        )
+        response = api(data_service.channels().list(part="snippet,statistics", mine=True))
 
         if not response.get("items"):
             console.print("[red]No channel found[/red]")
@@ -93,15 +100,13 @@ def overview(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = (
-        analytics_service.reports()
-        .query(
+    response = api(
+        analytics_service.reports().query(
             ids=f"channel=={channel_id}",
             startDate=start_date,
             endDate=end_date,
             metrics="views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments",
         )
-        .execute()
     )
 
     if output == "json":
@@ -112,20 +117,23 @@ def overview(
         row = response["rows"][0]
         metrics = {h["name"]: row[i] for i, h in enumerate(response["columnHeaders"])}
 
-        table = Table(title=f"Channel Analytics (last {days} days)")
-        table.add_column("Metric")
-        table.add_column("Value", justify="right")
+        console.print(f"\n[bold]Channel Analytics[/bold] {dim(f'(last {days} days)')}\n")
+        table = create_kv_table()
 
-        table.add_row("Views", format_number(int(metrics.get("views", 0))))
-        table.add_row("Watch time", f"{int(metrics.get('estimatedMinutesWatched', 0) / 60)} hours")
+        table.add_row(dim("views"), format_number(int(metrics.get("views", 0))))
         table.add_row(
-            "Avg view duration",
+            dim("watch time"), f"{int(metrics.get('estimatedMinutesWatched', 0) / 60)} hours"
+        )
+        table.add_row(
+            dim("avg duration"),
             f"{int(metrics.get('averageViewDuration', 0) / 60)}:{int(metrics.get('averageViewDuration', 0) % 60):02d}",
         )
-        table.add_row("Subscribers gained", f"+{int(metrics.get('subscribersGained', 0))}")
-        table.add_row("Subscribers lost", f"-{int(metrics.get('subscribersLost', 0))}")
-        table.add_row("Likes", format_number(int(metrics.get("likes", 0))))
-        table.add_row("Comments", format_number(int(metrics.get("comments", 0))))
+        table.add_row(
+            dim("subs gained"), f"[green]+{int(metrics.get('subscribersGained', 0))}[/green]"
+        )
+        table.add_row(dim("subs lost"), f"[red]-{int(metrics.get('subscribersLost', 0))}[/red]")
+        table.add_row(dim("likes"), format_number(int(metrics.get("likes", 0))))
+        table.add_row(dim("comments"), format_number(int(metrics.get("comments", 0))))
 
         console.print(table)
     else:
@@ -141,15 +149,7 @@ def video(
     """Get analytics for a specific video."""
     data_service, analytics_service = get_services()
 
-    # Get video info first
-    video_response = (
-        data_service.videos()
-        .list(
-            part="snippet,statistics",
-            id=video_id,
-        )
-        .execute()
-    )
+    video_response = api(data_service.videos().list(part="snippet,statistics", id=video_id))
 
     if not video_response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
@@ -167,7 +167,7 @@ def video(
         console.print(f"\n[bold]{snippet['title']}[/bold]")
         console.print(f"[dim]https://youtu.be/{video_id}[/dim]\n")
 
-        table = Table(show_header=False, box=None)
+        table = create_kv_table()
         table.add_column("metric", style="dim")
         table.add_column("value", style="bold")
 
@@ -188,16 +188,14 @@ def video(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = (
-        analytics_service.reports()
-        .query(
+    response = api(
+        analytics_service.reports().query(
             ids=f"channel=={channel_id}",
             startDate=start_date,
             endDate=end_date,
             metrics="views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments",
             filters=f"video=={video_id}",
         )
-        .execute()
     )
 
     if output == "json":
@@ -211,16 +209,15 @@ def video(
         row = response["rows"][0]
         metrics = {h["name"]: row[i] for i, h in enumerate(response["columnHeaders"])}
 
-        table = Table(title=f"Video Analytics (last {days} days)")
-        table.add_column("Metric")
-        table.add_column("Value", justify="right")
+        console.print(f"[bold]Analytics[/bold] {dim(f'(last {days} days)')}\n")
+        table = create_kv_table()
 
-        table.add_row("Views", format_number(int(metrics.get("views", 0))))
-        table.add_row("Watch time", f"{int(metrics.get('estimatedMinutesWatched', 0))} min")
-        table.add_row("Avg view duration", f"{int(metrics.get('averageViewDuration', 0))}s")
-        table.add_row("Avg % viewed", f"{metrics.get('averageViewPercentage', 0):.1f}%")
-        table.add_row("Likes", format_number(int(metrics.get("likes", 0))))
-        table.add_row("Comments", format_number(int(metrics.get("comments", 0))))
+        table.add_row(dim("views"), format_number(int(metrics.get("views", 0))))
+        table.add_row(dim("watch time"), f"{int(metrics.get('estimatedMinutesWatched', 0))} min")
+        table.add_row(dim("avg duration"), f"{int(metrics.get('averageViewDuration', 0))}s")
+        table.add_row(dim("avg % viewed"), f"{metrics.get('averageViewPercentage', 0):.1f}%")
+        table.add_row(dim("likes"), format_number(int(metrics.get("likes", 0))))
+        table.add_row(dim("comments"), format_number(int(metrics.get("comments", 0))))
 
         console.print(table)
 
@@ -242,9 +239,8 @@ def traffic(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = (
-        analytics_service.reports()
-        .query(
+    response = api(
+        analytics_service.reports().query(
             ids=f"channel=={channel_id}",
             startDate=start_date,
             endDate=end_date,
@@ -253,7 +249,6 @@ def traffic(
             filters=f"video=={video_id}",
             sort="-views",
         )
-        .execute()
     )
 
     if output == "json":
@@ -261,8 +256,9 @@ def traffic(
         return
 
     if response.get("rows"):
-        table = Table(title=f"Traffic Sources (last {days} days)")
-        table.add_column("Source")
+        console.print(f"\n[bold]Traffic Sources[/bold] {dim(f'(last {days} days)')}\n")
+        table = create_table()
+        table.add_column("Source", style="dim")
         table.add_column("Views", justify="right")
 
         for row in response["rows"]:
@@ -283,8 +279,6 @@ def top(
     data_service, analytics_service = get_services()
 
     if not analytics_service:
-        # Fallback: get videos and sort by views
-
         result = fetch_videos(data_service, limit=50)
         videos = sorted(result["videos"], key=lambda x: x["views"], reverse=True)[:limit]
 
@@ -292,11 +286,12 @@ def top(
             print(json.dumps(videos, indent=2))
             return
 
-        table = Table(title=f"Top {limit} Videos by Views")
+        console.print(f"\n[bold]Top {limit} Videos by Views[/bold]\n")
+        table = create_table()
         table.add_column("Title", max_width=40)
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
-        table.add_column("Engagement", justify="right")
+        table.add_column("Engagement", justify="right", style="dim")
 
         for v in videos:
             eng = (v["likes"] + v["comments"]) / v["views"] * 100 if v["views"] else 0
@@ -314,9 +309,8 @@ def top(
     end_date = datetime.now().strftime("%Y-%m-%d")
     start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
-    response = (
-        analytics_service.reports()
-        .query(
+    response = api(
+        analytics_service.reports().query(
             ids=f"channel=={channel_id}",
             startDate=start_date,
             endDate=end_date,
@@ -325,7 +319,6 @@ def top(
             sort="-views",
             maxResults=limit,
         )
-        .execute()
     )
 
     if output == "json":
@@ -334,21 +327,15 @@ def top(
 
     if response.get("rows"):
         video_ids = [row[0] for row in response["rows"]]
-        videos_response = (
-            data_service.videos()
-            .list(
-                part="snippet",
-                id=",".join(video_ids),
-            )
-            .execute()
-        )
+        videos_response = api(data_service.videos().list(part="snippet", id=",".join(video_ids)))
 
         title_map = {v["id"]: v["snippet"]["title"] for v in videos_response.get("items", [])}
 
-        table = Table(title=f"Top {limit} Videos (last {days} days)")
+        console.print(f"\n[bold]Top {limit} Videos[/bold] {dim(f'(last {days} days)')}\n")
+        table = create_table()
         table.add_column("Title", max_width=40)
         table.add_column("Views", justify="right")
-        table.add_column("Watch time", justify="right")
+        table.add_column("Watch time", justify="right", style="dim")
 
         for row in response["rows"]:
             video_id, views, watch_time, _likes = row[0], row[1], row[2], row[3]
