@@ -29,7 +29,7 @@ INIT_EPILOG = """
 **Setup Instructions**
 
 
-1. Go to `console.cloud.google.com`
+1. Open https://console.cloud.google.com
 
 2. Create a new project (or select existing)
 
@@ -37,13 +37,13 @@ INIT_EPILOG = """
 
 4. Create **OAuth credentials**: APIs & Services → Credentials → Create Credentials → OAuth client ID → Select "Desktop app" → Download JSON
 
-5. Run: `yts init -c ~/Downloads/client_secret_xxx.json`
+5. Run: `yts init -c path/to/client_secret.json`
 
 6. Authenticate: `yts login`
 
 ---
 
-⚠️  **Note**: Add yourself as test user in OAuth consent screen until verified
+⚠️  Add yourself as test user in OAuth consent screen until app is verified
 """
 
 
