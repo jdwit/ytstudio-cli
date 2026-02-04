@@ -40,13 +40,13 @@ yt videos update VIDEO_ID --title "New"     # update metadata
 yt videos update VIDEO_ID --tags "a,b,c"
 ```
 
-### Bulk Operations
+### Search & Replace
 
 ```bash
-# search-replace (dry-run by default)
-yt videos bulk-update -s "old" -r "new" --field title
-yt videos bulk-update -s "old" -r "new" --field title --execute
-yt videos bulk-update -s "^prefix" -r "" --regex --execute
+# search-replace across videos (dry-run by default)
+yt videos search-replace -s "old" -r "new" --field title
+yt videos search-replace -s "old" -r "new" --field title --execute
+yt videos search-replace -s "^prefix" -r "" --regex --execute
 ```
 
 ### Analytics

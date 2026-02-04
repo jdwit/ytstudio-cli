@@ -257,8 +257,8 @@ def update(
     console.print(f"[green]✓ Updated: {new_title}[/green]")
 
 
-@app.command("bulk-update")
-def bulk_update(
+@app.command("search-replace")
+def search_replace(
     search: str = typer.Option(..., "--search", "-s", help="Text to search for"),
     replace: str = typer.Option(..., "--replace", "-r", help="Text to replace with"),
     field: str = typer.Option("title", "--field", "-f", help="Field to update: title, description"),
