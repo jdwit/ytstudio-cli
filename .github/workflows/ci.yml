@@ -30,16 +30,8 @@ jobs:
           uv run ruff check src tests
           uv run ruff format --check src tests
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov-report=xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.12'
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          fail_ci_if_error: false
+      - name: Run tests
+        run: uv run pytest
 
   publish:
     needs: test
