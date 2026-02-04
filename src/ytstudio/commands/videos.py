@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from ytstudio.auth import api, get_authenticated_service, handle_api_error
 from ytstudio.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
-from ytstudio.ui import console, create_kv_table, create_table, bold, cyan, dim, error, format_number, muted
+from ytstudio.ui import (
+    console,
+    create_kv_table,
+    create_table,
+    dim,
+    format_number,
+)
 
 app = typer.Typer(help="Video management commands")
 
@@ -17,15 +23,15 @@ def format_duration(iso_duration: str) -> str:
     """Format ISO 8601 duration (PT1M19S -> 1:19)."""
     if not iso_duration:
         return ""
-    
+
     match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', iso_duration)
     if not match:
         return ""
-    
+
     hours = int(match.group(1) or 0)
     minutes = int(match.group(2) or 0)
     seconds = int(match.group(3) or 0)
-    
+
     if hours > 0:
         return f"{hours}:{minutes:02d}:{seconds:02d}"
     return f"{minutes}:{seconds:02d}"
@@ -62,7 +68,7 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
 
     while len(all_videos) < limit:
         batch_size = min(limit - len(all_videos), 50)
-        
+
         playlist_response = api(
             service.playlistItems().list(
                 part="snippet,contentDetails",
@@ -80,7 +86,7 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             break
 
         video_ids = [item["contentDetails"]["videoId"] for item in items]
-        
+
         videos_response = api(
             service.videos().list(
                 part="statistics,status,snippet,contentDetails",
@@ -96,7 +102,7 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             stats = data.get("statistics", {})
             snippet = data.get("snippet", {})
             content_details = data.get("contentDetails", {})
-            
+
             all_videos.append({
                 "id": video_id,
                 "title": item["snippet"]["title"],
@@ -405,7 +411,7 @@ def search_replace(
 
     for c in changes:
         table.add_row(c["id"], c["old"], "→", f"[green]{c['new']}[/green]")
-    
+
     console.print(dim(f"{'Pending' if not execute else 'Applying'} {len(changes)} changes\n"))
 
     console.print(table)

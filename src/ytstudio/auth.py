@@ -23,7 +23,7 @@ def handle_api_error(error: HttpError) -> None:
     if error.resp.status == 403:
         error_details = error.error_details[0] if error.error_details else {}
         reason = error_details.get("reason", "")
-        
+
         if reason == "quotaExceeded":
             console.print(
                 Panel(
@@ -38,18 +38,18 @@ def handle_api_error(error: HttpError) -> None:
                 )
             )
             raise SystemExit(1)
-        
+
         if reason == "forbidden":
             console.print("[red]Access denied. You may not have permission for this action.[/red]")
             raise SystemExit(1)
-    
+
     # Re-raise for other errors
     raise error
 
 
 def api(request):
     """Execute an API request with automatic error handling.
-    
+
     Usage:
         response = api(service.videos().list(part="snippet", id=video_id))
     """
