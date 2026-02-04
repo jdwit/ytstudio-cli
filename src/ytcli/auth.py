@@ -32,7 +32,7 @@ def handle_api_error(error: HttpError) -> None:
                     "[bold]Options:[/bold]\n"
                     "• [cyan]Wait[/cyan] - Quota resets at midnight Pacific Time (~9 AM CET)\n"
                     "• [cyan]Request more[/cyan] - Visit Google Cloud Console → APIs → YouTube Data API v3 → Quotas\n\n"
-                    "[dim]Tip: Update operations cost 50 units each. Use --dry-run to preview changes.[/dim]",
+                    "[bright_black]Tip: Update operations cost 50 units each. Use --dry-run to preview changes.[/bright_black]",
                     title="⚠️  Quota Exceeded",
                     border_style="red",
                 )

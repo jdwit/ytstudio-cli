@@ -193,7 +193,7 @@ def list_videos(
         console.print(dim(f"\n{result['total_results']} videos"))
 
         if result["next_page_token"]:
-            console.print(f"\n[dim]Next page: --page-token {result['next_page_token']}[/dim]")
+            console.print(f"\n[bright_black]Next page: --page-token {result['next_page_token']}[/bright_black]")
 
 
 @app.command()
@@ -273,7 +273,7 @@ def get(
     console.print(table)
 
     if snippet.get("tags"):
-        console.print(f"\n[dim]tags:[/dim] {', '.join(snippet['tags'][:15])}")
+        console.print(f"\n[bright_black]tags:[/bright_black] {', '.join(snippet['tags'][:15])}")
 
     console.print(f"\n[bold]description:[/bold]\n{snippet.get('description', '')}")
 
@@ -314,7 +314,7 @@ def update(
             console.print("description: [green](updated)[/green]")
         if tags:
             console.print(f"tags: [green]{', '.join(new_tags[:5])}[/green]")
-        console.print("\n[dim]Run without --dry-run to apply[/dim]")
+        console.print("\n[bright_black]Run without --dry-run to apply[/bright_black]")
         return
 
     body = {
@@ -367,9 +367,9 @@ def bulk_update(
         return
 
     table = create_table()
-    table.add_column("Video ID", style="dim")
+    table.add_column("Video ID", style="bright_black")
     table.add_column("Current")
-    table.add_column("→", justify="center", style="dim")
+    table.add_column("→", justify="center", style="bright_black")
     table.add_column("New")
 
     for c in changes:
@@ -380,7 +380,7 @@ def bulk_update(
     console.print(table)
 
     if not execute:
-        console.print("\n[dim]Run with --execute to apply changes[/dim]")
+        console.print("\n[bright_black]Run with --execute to apply changes[/bright_black]")
         return
 
     console.print("\n[bold]Applying changes...[/bold]\n")

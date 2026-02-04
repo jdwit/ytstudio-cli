@@ -108,7 +108,7 @@ def check(
         return
 
     console.print(f"\n[bold]{seo['title']}[/bold]")
-    console.print(f"[dim]https://youtu.be/{video_id}[/dim]\n")
+    console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
     color = score_color(seo["total_score"])
     console.print(
@@ -120,7 +120,7 @@ def check(
     )
 
     table = create_table()
-    table.add_column("Aspect", style="dim")
+    table.add_column("Aspect", style="bright_black")
     table.add_column("Score", justify="center")
     table.add_column("Issues")
 
@@ -198,7 +198,7 @@ def audit(
         table = create_table()
         table.add_column("Score", justify="center")
         table.add_column("Title", max_width=40)
-        table.add_column("Main Issue", style="dim")
+        table.add_column("Main Issue", style="bright_black")
 
         for seo in needs_work[:15]:
             issue = (

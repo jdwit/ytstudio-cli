@@ -90,8 +90,8 @@ def list_comments(
         if len(c["text"]) > 150:
             text += "..."
 
-        like_str = f" [dim]({c['likes']} likes)[/dim]" if c["likes"] else ""
-        console.print(f"[bold]{c['author']}[/bold]{like_str} [dim]{time_ago(c['published'])}[/dim]")
+        like_str = f" [bright_black]({c['likes']} likes)[/bright_black]" if c["likes"] else ""
+        console.print(f"[bold]{c['author']}[/bold]{like_str} [bright_black]{time_ago(c['published'])}[/bright_black]")
         console.print(f"  {text}\n")
 
 
@@ -169,17 +169,17 @@ def summary(
 
     console.print(f"\n[bold]Comment Sentiment[/bold] {dim(f'({total} analyzed)')}\n")
     table = create_table()
-    table.add_column("Sentiment", style="dim")
+    table.add_column("Sentiment", style="bright_black")
     table.add_column("Count", justify="right")
     table.add_column("Percentage", justify="right")
 
     table.add_row("[green]Positive[/green]", str(positive), f"{positive / total * 100:.1f}%")
     table.add_row("[red]Negative[/red]", str(negative), f"{negative / total * 100:.1f}%")
-    table.add_row("[dim]Neutral[/dim]", str(neutral), f"{neutral / total * 100:.1f}%")
+    table.add_row("[bright_black]Neutral[/bright_black]", str(neutral), f"{neutral / total * 100:.1f}%")
 
     console.print(table)
 
     if negative_comments:
         console.print("\n[bold red]Negative comments:[/bold red]")
         for c in negative_comments[:5]:
-            console.print(f"  [dim]{c['author']}:[/dim] {c['text']}")
+            console.print(f"  [bright_black]{c['author']}:[/bright_black] {c['text']}")
