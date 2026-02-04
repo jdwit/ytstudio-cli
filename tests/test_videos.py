@@ -77,7 +77,8 @@ class TestVideosListCommand:
 
     def test_list_videos_not_authenticated(self):
         """Test error when not authenticated."""
-        with patch("ytstudio.auth.get_authenticated_service", return_value=None):
+        with patch("ytstudio.commands.videos.get_authenticated_service", return_value=None), \
+             patch("ytstudio.commands.videos.is_demo_mode", return_value=False):
             result = runner.invoke(app, ["videos", "list"])
 
             assert result.exit_code == 1
@@ -152,7 +153,7 @@ class TestSearchReplaceCommand:
     def test_search_replace_no_matches(self, mock_auth):
         """Test search-replace with no matches."""
         result = runner.invoke(
-            app, ["videos", "search-replace", "-s", "nonexistent_text", "-r", "new"]
+            app, ["videos", "search-replace", "-s", "nonexistent_text", "-r", "new", "-f", "title"]
         )
 
         assert result.exit_code == 0
