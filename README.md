@@ -5,13 +5,7 @@ CLI tool to manage and analyze your YouTube channel.
 ## Installation
 
 ```bash
-pip install ytstudio
-```
-
-Or with uv:
-
-```bash
-uv pip install ytstudio
+uv tool install ytstudio
 ```
 
 ## Setup
