@@ -25,29 +25,7 @@ app.add_typer(seo.app, name="seo")
 app.add_typer(export.app, name="export")
 
 
-INIT_EPILOG = """
-**Setup Instructions**
-
-
-1. Open https://console.cloud.google.com
-
-2. Create a new project (or select existing)
-
-3. Enable **YouTube Data API v3**: APIs & Services → Enable APIs
-
-4. Create **OAuth credentials**: APIs & Services → Credentials → Create Credentials → OAuth client ID → Select "Desktop app" → Download JSON
-
-5. Run: `yts init -c path/to/client_secret.json`
-
-6. Authenticate: `yts login`
-
----
-
-⚠️  Add yourself as test user in OAuth consent screen until app is verified
-"""
-
-
-@app.command(epilog=INIT_EPILOG)
+@app.command()
 def init(
     client_secrets_file: str = typer.Option(
         None,
@@ -56,7 +34,7 @@ def init(
         help="Path to Google OAuth client secrets JSON file",
     ),
 ):
-    """Initialize ytstudio-cli with Google OAuth credentials."""
+    """Initialize with Google OAuth credentials."""
     setup_credentials(client_secrets_file)
 
 
