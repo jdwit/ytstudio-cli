@@ -73,20 +73,29 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "I",    # isort
-    "W",    # pycodestyle warnings
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "SIM",  # flake8-simplify
-    "RUF",  # ruff-specific
-    "PLC0415",  # import-outside-toplevel
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort
+    "W",      # pycodestyle warnings
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific
+    "PTH",    # pathlib
+    "ERA",    # commented-out code
+    "PL",     # pylint
 ]
 ignore = [
-    "E501",   # line too long (handled by formatter)
-    "B008",   # function call in default argument (typer pattern)
+    "E501",     # line too long (handled by formatter)
+    "B008",     # function call in default argument (typer pattern)
+    "PLR0913",  # too many arguments
+    "PLR0912",  # too many branches
+    "PLR0915",  # too many statements
+    "PLR2004",  # magic value comparison
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ERA001"]  # allow section comments in test fixtures
 
 [tool.ruff.lint.isort]
 known-first-party = ["ytstudio"]
