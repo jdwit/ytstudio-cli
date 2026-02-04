@@ -337,30 +337,61 @@ def search_replace(
     replace: str = typer.Option(..., "--replace", "-r", help="Text to replace with"),
     field: str = typer.Option(..., "--field", "-f", help="Field to update: title, description"),
     regex: bool = typer.Option(False, "--regex", help="Treat search as regex"),
-    limit: int = typer.Option(100, "--limit", "-n", help="Max videos to process"),
+    limit: int = typer.Option(10, "--limit", "-n", help="Max matches to find"),
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
     """Bulk update videos using search and replace."""
     service = get_service()
-    result = fetch_videos(service, limit)
-    videos = result["videos"]
+    uploads_playlist_id = get_channel_uploads_playlist(service)
 
     changes = []
+    page_token = None
 
-    for video in videos:
-        old_value = video.get(field, "")
-        if regex:
-            new_value = re.sub(search, replace, old_value)
-        else:
-            new_value = old_value.replace(search, replace)
+    while len(changes) < limit:
+        # Fetch batch of videos
+        playlist_response = api(
+            service.playlistItems().list(
+                part="snippet,contentDetails",
+                playlistId=uploads_playlist_id,
+                maxResults=50,
+                pageToken=page_token,
+            )
+        )
 
-        if new_value != old_value:
-            changes.append({
-                "id": video["id"],
-                "field": field,
-                "old": old_value,
-                "new": new_value,
-            })
+        items = playlist_response.get("items", [])
+        if not items:
+            break
+
+        video_ids = [item["contentDetails"]["videoId"] for item in items]
+
+        videos_response = api(
+            service.videos().list(
+                part="snippet",
+                id=",".join(video_ids),
+            )
+        )
+
+        for video in videos_response.get("items", []):
+            if len(changes) >= limit:
+                break
+
+            old_value = video["snippet"].get(field, "")
+            if regex:
+                new_value = re.sub(search, replace, old_value)
+            else:
+                new_value = old_value.replace(search, replace)
+
+            if new_value != old_value:
+                changes.append({
+                    "id": video["id"],
+                    "field": field,
+                    "old": old_value,
+                    "new": new_value,
+                })
+
+        page_token = playlist_response.get("nextPageToken")
+        if not page_token:
+            break
 
     if not changes:
         console.print("[yellow]No matches found[/yellow]")
