@@ -6,9 +6,9 @@ import re
 import typer
 from googleapiclient.errors import HttpError
 
-from ytcli.auth import api, get_authenticated_service, handle_api_error
-from ytcli.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
-from ytcli.ui import console, create_kv_table, create_table, bold, cyan, dim, error, format_number, muted
+from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
+from ytstudio.ui import console, create_kv_table, create_table, bold, cyan, dim, error, format_number, muted
 
 app = typer.Typer(help="Video management commands")
 

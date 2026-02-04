@@ -145,11 +145,11 @@ def mock_service():
 def mock_auth(mock_service):
     """Fixture that patches authentication to return mock service in all modules."""
     with (
-        patch("ytcli.commands.videos.get_authenticated_service", return_value=mock_service),
-        patch("ytcli.commands.comments.get_authenticated_service", return_value=mock_service),
-        patch("ytcli.commands.seo.get_authenticated_service", return_value=mock_service),
-        patch("ytcli.commands.analytics.get_authenticated_service", return_value=mock_service),
-        patch("ytcli.commands.export.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.commands.videos.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.commands.comments.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.commands.seo.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.commands.analytics.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.commands.export.get_authenticated_service", return_value=mock_service),
     ):
         yield mock_service
 
@@ -165,5 +165,5 @@ def mock_credentials():
         "client_secret": "fake_secret",
         "scopes": ["https://www.googleapis.com/auth/youtube.readonly"],
     }
-    with patch("ytcli.config.load_credentials", return_value=mock_creds):
+    with patch("ytstudio.config.load_credentials", return_value=mock_creds):
         yield mock_creds

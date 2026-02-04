@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 import typer
 from rich.panel import Panel
 
-from ytcli.auth import api, get_authenticated_service
-from ytcli.commands.videos import fetch_videos
-from ytcli.demo import DEMO_ANALYTICS, DEMO_CHANNEL, is_demo_mode
-from ytcli.ui import console, create_kv_table, create_table, dim, format_number
+from ytstudio.auth import api, get_authenticated_service
+from ytstudio.commands.videos import fetch_videos
+from ytstudio.demo import DEMO_ANALYTICS, DEMO_CHANNEL, is_demo_mode
+from ytstudio.ui import console, create_kv_table, create_table, dim, format_number
 
 app = typer.Typer(help="Analytics commands")
 

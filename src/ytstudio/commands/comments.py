@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 import typer
 from googleapiclient.errors import HttpError
 
-from ytcli.auth import api, get_authenticated_service, handle_api_error
-from ytcli.ui import console, create_table, dim
+from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.ui import console, create_table, dim
 
 app = typer.Typer(help="Comment commands")
 

@@ -8,7 +8,7 @@ from googleapiclient.errors import HttpError
 from rich.console import Console
 from rich.panel import Panel
 
-from ytcli.config import (
+from ytstudio.config import (
     CLIENT_SECRETS_FILE,
     clear_credentials,
     load_credentials,

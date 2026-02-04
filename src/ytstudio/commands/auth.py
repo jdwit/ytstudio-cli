@@ -3,8 +3,8 @@
 import typer
 from rich.console import Console
 
-from ytcli.auth import authenticate, get_status
-from ytcli.auth import logout as do_logout
+from ytstudio.auth import authenticate, get_status
+from ytstudio.auth import logout as do_logout
 
 app = typer.Typer(help="Authentication commands")
 console = Console()

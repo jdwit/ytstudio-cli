@@ -3,10 +3,10 @@
 import typer
 from rich.console import Console
 
-from ytcli import __version__
-from ytcli.auth import authenticate, get_status
-from ytcli.commands import analytics, auth, comments, export, seo, videos
-from ytcli.config import setup_credentials
+from ytstudio import __version__
+from ytstudio.auth import authenticate, get_status
+from ytstudio.commands import analytics, auth, comments, export, seo, videos
+from ytstudio.config import setup_credentials
 
 app = typer.Typer(
     name="yts",

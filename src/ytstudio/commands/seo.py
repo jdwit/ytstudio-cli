@@ -5,8 +5,8 @@ import json
 import typer
 from rich.panel import Panel
 
-from ytcli.auth import api, get_authenticated_service
-from ytcli.ui import console, create_table
+from ytstudio.auth import api, get_authenticated_service
+from ytstudio.ui import console, create_table
 
 app = typer.Typer(help="SEO analysis commands")
 

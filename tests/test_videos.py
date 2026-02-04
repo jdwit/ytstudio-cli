@@ -5,8 +5,8 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from tests.conftest import MOCK_VIDEO
-from ytcli.commands.videos import fetch_videos, format_number
-from ytcli.main import app
+from ytstudio.commands.videos import fetch_videos, format_number
+from ytstudio.main import app
 
 runner = CliRunner()
 
@@ -77,7 +77,7 @@ class TestVideosListCommand:
 
     def test_list_videos_not_authenticated(self):
         """Test error when not authenticated."""
-        with patch("ytcli.auth.get_authenticated_service", return_value=None):
+        with patch("ytstudio.auth.get_authenticated_service", return_value=None):
             result = runner.invoke(app, ["videos", "list"])
 
             assert result.exit_code == 1

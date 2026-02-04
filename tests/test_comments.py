@@ -4,8 +4,8 @@ from datetime import UTC, datetime, timedelta
 
 from typer.testing import CliRunner
 
-from ytcli.commands.comments import time_ago
-from ytcli.main import app
+from ytstudio.commands.comments import time_ago
+from ytstudio.main import app
 
 runner = CliRunner()
 
@@ -94,7 +94,7 @@ class TestSentimentAnalysis:
 
     def test_positive_comment_detected(self):
         """Test that positive words are detected."""
-        from ytcli.commands.comments import summary  # noqa
+        from ytstudio.commands.comments import summary  # noqa
 
         # The sentiment logic is in summary command
         positive_words = {"love", "great", "amazing", "awesome"}

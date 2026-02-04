@@ -7,9 +7,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ytcli.auth import get_authenticated_service
-from ytcli.commands.seo import analyze_seo
-from ytcli.commands.videos import fetch_videos
+from ytstudio.auth import get_authenticated_service
+from ytstudio.commands.seo import analyze_seo
+from ytstudio.commands.videos import fetch_videos
 
 app = typer.Typer(help="Export data")
 console = Console()

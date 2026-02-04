@@ -28,8 +28,8 @@ uv pip install -e .
 4. Configure ytstudio-cli:
 
 ```bash
-yts init --client-secrets /path/to/client_secrets.json
-yts login
+ytstudio init --client-secrets /path/to/client_secrets.json
+ytstudio login
 ```
 
 ## Commands
@@ -37,60 +37,60 @@ yts login
 ### Authentication
 
 ```bash
-yts status              # show auth status
-yts login               # authenticate via browser
-yts auth logout         # clear credentials
+ytstudio status              # show auth status
+ytstudio login               # authenticate via browser
+ytstudio auth logout         # clear credentials
 ```
 
 ### Videos
 
 ```bash
-yts videos list                              # list videos
-yts videos list -n 50 --sort views           # sort by views/likes/date
-yts videos get VIDEO_ID                      # video details
-yts videos update VIDEO_ID --title "New"     # update metadata
-yts videos update VIDEO_ID --tags "a,b,c"
+ytstudio videos list                              # list videos
+ytstudio videos list -n 50 --sort views           # sort by views/likes/date
+ytstudio videos get VIDEO_ID                      # video details
+ytstudio videos update VIDEO_ID --title "New"     # update metadata
+ytstudio videos update VIDEO_ID --tags "a,b,c"
 ```
 
 ### Bulk Operations
 
 ```bash
 # search-replace (dry-run by default)
-yts videos bulk-update -s "old" -r "new" --field title
-yts videos bulk-update -s "old" -r "new" --field title --execute
-yts videos bulk-update -s "^prefix" -r "" --regex --execute
+ytstudio videos bulk-update -s "old" -r "new" --field title
+ytstudio videos bulk-update -s "old" -r "new" --field title --execute
+ytstudio videos bulk-update -s "^prefix" -r "" --regex --execute
 ```
 
 ### Analytics
 
 ```bash
-yts analytics overview --days 28            # channel overview
-yts analytics video VIDEO_ID                # video analytics
-yts analytics top --days 28 --limit 10      # top performers
-yts analytics traffic VIDEO_ID              # traffic sources
+ytstudio analytics overview --days 28            # channel overview
+ytstudio analytics video VIDEO_ID                # video analytics
+ytstudio analytics top --days 28 --limit 10      # top performers
+ytstudio analytics traffic VIDEO_ID              # traffic sources
 ```
 
 ### Comments
 
 ```bash
-yts comments list VIDEO_ID                  # list comments
-yts comments summary VIDEO_ID               # sentiment analysis
+ytstudio comments list VIDEO_ID                  # list comments
+ytstudio comments summary VIDEO_ID               # sentiment analysis
 ```
 
 ### SEO
 
 ```bash
-yts seo check VIDEO_ID                      # check video SEO
-yts seo audit --limit 50                    # audit channel
+ytstudio seo check VIDEO_ID                      # check video SEO
+ytstudio seo audit --limit 50                    # audit channel
 ```
 
 ### Export
 
 ```bash
-yts export videos data.csv                  # export to CSV
-yts export videos data.json -f json         # export to JSON
-yts export comments VIDEO_ID comments.json  # export comments
-yts export report report.json               # full channel report
+ytstudio export videos data.csv                  # export to CSV
+ytstudio export videos data.json -f json         # export to JSON
+ytstudio export comments VIDEO_ID comments.json  # export comments
+ytstudio export report report.json               # full channel report
 ```
 
 ### Output Formats
@@ -114,8 +114,8 @@ uv run pytest
 For screencasts and testing without credentials:
 
 ```bash
-YTS_DEMO=1 yts videos list
-YTS_DEMO=1 yts analytics overview
+YTS_DEMO=1 ytstudio videos list
+YTS_DEMO=1 ytstudio analytics overview
 ```
 
 ### Recording Demo GIF

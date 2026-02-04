@@ -1,5 +1,5 @@
 [project]
-name = "ytstudio-cli"
+name = "ytstudio"
 version = "0.1.0"
 description = "CLI tool to manage and analyze your YouTube channel from the terminal"
 readme = "README.md"
@@ -39,10 +39,10 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--cov=ytcli --cov-report=term-missing --cov-report=xml"
+addopts = "--cov=ytstudio --cov-report=term-missing --cov-report=xml"
 
 [tool.coverage.run]
-source = ["src/ytcli"]
+source = ["src/ytstudio"]
 branch = true
 
 [tool.coverage.report]
@@ -53,7 +53,7 @@ exclude_lines = [
 ]
 
 [project.scripts]
-yts = "ytcli.main:app"
+ytstudio = "ytstudio.main:app"
 
 [project.urls]
 Homepage = "https://github.com/jdwit/ytstudio-cli"
@@ -64,7 +64,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ytcli"]
+packages = ["src/ytstudio"]
 
 [tool.ruff]
 line-length = 100
@@ -89,4 +89,4 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ytcli"]
+known-first-party = ["ytstudio"]

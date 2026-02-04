@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from typer.testing import CliRunner
 
-from ytcli.commands.analytics import format_number
-from ytcli.main import app
+from ytstudio.commands.analytics import format_number
+from ytstudio.main import app
 
 runner = CliRunner()
 
@@ -32,7 +32,7 @@ class TestAnalyticsOverviewCommand:
     def test_overview_basic_stats(self, mock_auth):
         """Test overview shows channel stats when analytics API unavailable."""
         # Mock analytics service as None (unavailable)
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "overview"])
@@ -42,7 +42,7 @@ class TestAnalyticsOverviewCommand:
 
     def test_overview_json(self, mock_auth):
         """Test overview in JSON format."""
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "overview", "-o", "json"])
@@ -55,7 +55,7 @@ class TestAnalyticsVideoCommand:
 
     def test_video_stats(self, mock_auth):
         """Test video analytics shows stats."""
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "video", "test_video_123"])
@@ -67,7 +67,7 @@ class TestAnalyticsVideoCommand:
         """Test error when video not found."""
         mock_auth.videos.return_value.list.return_value.execute.return_value = {"items": []}
 
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "video", "nonexistent"])
@@ -81,7 +81,7 @@ class TestAnalyticsTopCommand:
 
     def test_top_videos(self, mock_auth):
         """Test top videos command."""
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "top"])
@@ -109,7 +109,7 @@ class TestAnalyticsWithFullAPI:
             "rows": [[10000, 50000, 180, 100, 10, 500, 50]],
         }
 
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, mock_analytics)
 
             result = runner.invoke(app, ["analytics", "overview"])
@@ -120,7 +120,7 @@ class TestAnalyticsWithFullAPI:
 
     def test_traffic_requires_analytics_api(self, mock_auth):
         """Test traffic command requires analytics API."""
-        with patch("ytcli.commands.analytics.get_services") as mock_get:
+        with patch("ytstudio.commands.analytics.get_services") as mock_get:
             mock_get.return_value = (mock_auth, None)
 
             result = runner.invoke(app, ["analytics", "traffic", "test_video_123"])

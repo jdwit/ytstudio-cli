@@ -1,1 +1,1 @@
-"""ytcli tests."""
+"""ytstudio tests."""

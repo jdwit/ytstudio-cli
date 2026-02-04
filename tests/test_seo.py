@@ -3,8 +3,8 @@
 from typer.testing import CliRunner
 
 from tests.conftest import MOCK_VIDEO, MOCK_VIDEO_SHORT_TITLE
-from ytcli.commands.seo import DESC_MIN, TITLE_MAX, TITLE_MIN, analyze_seo, score_color
-from ytcli.main import app
+from ytstudio.commands.seo import DESC_MIN, TITLE_MAX, TITLE_MIN, analyze_seo, score_color
+from ytstudio.main import app
 
 runner = CliRunner()
 
