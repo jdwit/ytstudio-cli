@@ -8,7 +8,7 @@ from googleapiclient.errors import HttpError
 
 from ytcli.auth import api, get_authenticated_service, handle_api_error
 from ytcli.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
-from ytcli.ui import console, create_kv_table, create_table, dim, error, format_number
+from ytcli.ui import console, create_kv_table, create_table, bold, cyan, dim, error, format_number, muted
 
 app = typer.Typer(help="Video management commands")
 
@@ -170,16 +170,16 @@ def list_videos(
             )
     else:
         table = create_table()
-        table.add_column("ID", style="dim")
+        table.add_column("ID", style="bright_black")
         table.add_column("Title")
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
         table.add_column("Comments", justify="right")
-        table.add_column("Published", style="dim")
+        table.add_column("Published", style="bright_black")
 
         for v in videos:
             video_url = f"https://youtu.be/{v['id']}"
-            title_link = f"[link={video_url}]{v['title']}[/link]"
+            title_link = f"[cyan][link={video_url}]{v['title']}[/link][/cyan]"
             table.add_row(
                 v["id"],
                 title_link,
@@ -213,10 +213,10 @@ def get(
             return
 
         console.print(f"\n[bold]{demo_video['title']}[/bold]")
-        console.print(f"[dim]https://youtu.be/{video_id}[/dim]\n")
+        console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
         table = create_kv_table()
-        table.add_column("field", style="dim")
+        table.add_column("field", style="bright_black")
         table.add_column("value")
 
         table.add_row("views", format_number(demo_video["views"]))
@@ -229,7 +229,7 @@ def get(
         console.print(table)
 
         if demo_video.get("tags"):
-            console.print(f"\n[dim]tags:[/dim] {', '.join(demo_video['tags'][:15])}")
+            console.print(f"\n[bright_black]tags:[/bright_black] {', '.join(demo_video['tags'][:15])}")
 
         console.print(f"\n[bold]description:[/bold]\n{demo_video.get('description', '')}")
         return
@@ -257,10 +257,10 @@ def get(
         return
 
     console.print(f"\n[bold]{snippet['title']}[/bold]")
-    console.print(f"[dim]https://youtu.be/{video_id}[/dim]\n")
+    console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
     table = create_kv_table()
-    table.add_column("field", style="dim")
+    table.add_column("field", style="bright_black")
     table.add_column("value")
 
     table.add_row("views", format_number(int(stats.get("viewCount", 0))))

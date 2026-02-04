@@ -43,6 +43,21 @@ def dim(text: str) -> str:
     return f"[dim]{text}[/dim]"
 
 
+def muted(text: str) -> str:
+    """Muted text for IDs, hashes, secondary info (gh-style gray)."""
+    return f"[bright_black]{text}[/bright_black]"
+
+
+def cyan(text: str) -> str:
+    """Cyan text for links and URLs."""
+    return f"[cyan]{text}[/cyan]"
+
+
+def bold(text: str) -> str:
+    """Bold text for emphasis."""
+    return f"[bold]{text}[/bold]"
+
+
 def success(text: str) -> str:
     """Green success text."""
     return f"[green]{text}[/green]"
@@ -59,5 +74,5 @@ def warning(text: str) -> str:
 
 
 def link(text: str, url: str) -> str:
-    """Clickable link."""
-    return f"[link={url}]{text}[/link]"
+    """Clickable link (cyan)."""
+    return f"[cyan][link={url}]{text}[/link][/cyan]"
