@@ -91,7 +91,9 @@ def list_comments(
             text += "..."
 
         like_str = f" [bright_black]({c['likes']} likes)[/bright_black]" if c["likes"] else ""
-        console.print(f"[bold]{c['author']}[/bold]{like_str} [bright_black]{time_ago(c['published'])}[/bright_black]")
+        console.print(
+            f"[bold]{c['author']}[/bold]{like_str} [bright_black]{time_ago(c['published'])}[/bright_black]"
+        )
         console.print(f"  {text}\n")
 
 
@@ -175,7 +177,9 @@ def summary(
 
     table.add_row("[green]Positive[/green]", str(positive), f"{positive / total * 100:.1f}%")
     table.add_row("[red]Negative[/red]", str(negative), f"{negative / total * 100:.1f}%")
-    table.add_row("[bright_black]Neutral[/bright_black]", str(neutral), f"{neutral / total * 100:.1f}%")
+    table.add_row(
+        "[bright_black]Neutral[/bright_black]", str(neutral), f"{neutral / total * 100:.1f}%"
+    )
 
     console.print(table)
 

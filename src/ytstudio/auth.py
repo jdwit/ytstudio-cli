@@ -58,6 +58,7 @@ def api(request):
     except HttpError as e:
         handle_api_error(e)
 
+
 # YouTube API scopes
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",

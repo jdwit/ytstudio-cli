@@ -77,8 +77,10 @@ class TestVideosListCommand:
 
     def test_list_videos_not_authenticated(self):
         """Test error when not authenticated."""
-        with patch("ytstudio.commands.videos.get_authenticated_service", return_value=None), \
-             patch("ytstudio.commands.videos.is_demo_mode", return_value=False):
+        with (
+            patch("ytstudio.commands.videos.get_authenticated_service", return_value=None),
+            patch("ytstudio.commands.videos.is_demo_mode", return_value=False),
+        ):
             result = runner.invoke(app, ["videos", "list"])
 
             assert result.exit_code == 1

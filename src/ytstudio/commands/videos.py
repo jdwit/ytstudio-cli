@@ -24,7 +24,7 @@ def format_duration(iso_duration: str) -> str:
     if not iso_duration:
         return ""
 
-    match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', iso_duration)
+    match = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso_duration)
     if not match:
         return ""
 
@@ -103,20 +103,22 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             snippet = data.get("snippet", {})
             content_details = data.get("contentDetails", {})
 
-            all_videos.append({
-                "id": video_id,
-                "title": item["snippet"]["title"],
-                "description": item["snippet"].get("description", ""),
-                "published_at": item["snippet"]["publishedAt"],
-                "views": int(stats.get("viewCount", 0)),
-                "likes": int(stats.get("likeCount", 0)),
-                "comments": int(stats.get("commentCount", 0)),
-                "privacy": data.get("status", {}).get("privacyStatus", "unknown"),
-                "tags": snippet.get("tags", []),
-                "category_id": snippet.get("categoryId", ""),
-                "duration": content_details.get("duration", ""),
-                "licensed": content_details.get("licensedContent", False),
-            })
+            all_videos.append(
+                {
+                    "id": video_id,
+                    "title": item["snippet"]["title"],
+                    "description": item["snippet"].get("description", ""),
+                    "published_at": item["snippet"]["publishedAt"],
+                    "views": int(stats.get("viewCount", 0)),
+                    "likes": int(stats.get("likeCount", 0)),
+                    "comments": int(stats.get("commentCount", 0)),
+                    "privacy": data.get("status", {}).get("privacyStatus", "unknown"),
+                    "tags": snippet.get("tags", []),
+                    "category_id": snippet.get("categoryId", ""),
+                    "duration": content_details.get("duration", ""),
+                    "licensed": content_details.get("licensedContent", False),
+                }
+            )
 
         next_page_token = playlist_response.get("nextPageToken")
         if not next_page_token:
@@ -166,7 +168,11 @@ def list_videos(
         videos.sort(key=lambda x: x["likes"], reverse=True)
 
     if output == "json":
-        print(json.dumps({"videos": videos, **{k: v for k, v in result.items() if k != "videos"}}, indent=2))
+        print(
+            json.dumps(
+                {"videos": videos, **{k: v for k, v in result.items() if k != "videos"}}, indent=2
+            )
+        )
     elif output == "csv":
         print("id,title,views,likes,comments,privacy,published_at")
         for v in videos:
@@ -199,7 +205,9 @@ def list_videos(
         console.print(dim(f"\n{result['total_results']} videos"))
 
         if result["next_page_token"]:
-            console.print(f"\n[bright_black]Next page: --page-token {result['next_page_token']}[/bright_black]")
+            console.print(
+                f"\n[bright_black]Next page: --page-token {result['next_page_token']}[/bright_black]"
+            )
 
 
 @app.command()
@@ -215,7 +223,27 @@ def get(
             raise typer.Exit(1)
 
         if output == "json":
-            print(json.dumps({"id": demo_video["id"], "snippet": {"title": demo_video["title"], "description": demo_video["description"], "tags": demo_video["tags"], "publishedAt": demo_video["published"].isoformat()}, "statistics": {"viewCount": demo_video["views"], "likeCount": demo_video["likes"], "commentCount": demo_video["comments"]}, "contentDetails": {"duration": demo_video["duration"]}, "status": {"privacyStatus": demo_video["privacy"]}}, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "id": demo_video["id"],
+                        "snippet": {
+                            "title": demo_video["title"],
+                            "description": demo_video["description"],
+                            "tags": demo_video["tags"],
+                            "publishedAt": demo_video["published"].isoformat(),
+                        },
+                        "statistics": {
+                            "viewCount": demo_video["views"],
+                            "likeCount": demo_video["likes"],
+                            "commentCount": demo_video["comments"],
+                        },
+                        "contentDetails": {"duration": demo_video["duration"]},
+                        "status": {"privacyStatus": demo_video["privacy"]},
+                    },
+                    indent=2,
+                )
+            )
             return
 
         console.print(f"\n[bold]{demo_video['title']}[/bold]")
@@ -235,7 +263,9 @@ def get(
         console.print(table)
 
         if demo_video.get("tags"):
-            console.print(f"\n[bright_black]tags:[/bright_black] {', '.join(demo_video['tags'][:15])}")
+            console.print(
+                f"\n[bright_black]tags:[/bright_black] {', '.join(demo_video['tags'][:15])}"
+            )
 
         console.print(f"\n[bold]description:[/bold]\n{demo_video.get('description', '')}")
         return
@@ -388,12 +418,14 @@ def search_replace(
                 new_value = old_value.replace(search, replace)
 
             if new_value != old_value:
-                changes.append({
-                    "id": video["id"],
-                    "field": field,
-                    "old": old_value,
-                    "new": new_value,
-                })
+                changes.append(
+                    {
+                        "id": video["id"],
+                        "field": field,
+                        "old": old_value,
+                        "new": new_value,
+                    }
+                )
 
         page_token = playlist_response.get("nextPageToken")
         if not page_token:
@@ -441,7 +473,9 @@ def search_replace(
             # Quota exceeded - stop immediately
             error_details = e.error_details[0] if e.error_details else {}
             if error_details.get("reason") == "quotaExceeded":
-                console.print(f"\n[bold]Partial progress:[/bold] {success} updated, {failed} failed")
+                console.print(
+                    f"\n[bold]Partial progress:[/bold] {success} updated, {failed} failed"
+                )
                 handle_api_error(e)
             console.print(f"[red]✗[/red] {c['id']}: {e}")
             failed += 1

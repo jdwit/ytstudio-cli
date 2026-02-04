@@ -90,11 +90,36 @@ DEMO_ANALYTICS = {
 }
 
 DEMO_COMMENTS = [
-    {"author": "Pietjeansen", "text": "LuckyTV is echt te goed 😂", "likes": 342, "published": datetime.now() - timedelta(hours=2)},
-    {"author": "MediaWatcher", "text": "Eindelijk weer nieuwe content!", "likes": 156, "published": datetime.now() - timedelta(hours=5)},
-    {"author": "Henk_uit_Almere", "text": "Dit is waarom ik YouTube betaal", "likes": 89, "published": datetime.now() - timedelta(hours=8)},
-    {"author": "SatireFan2024", "text": "Sander is een genie", "likes": 234, "published": datetime.now() - timedelta(days=1)},
-    {"author": "NLPolitiek", "text": "Te accuraat 🎯", "likes": 67, "published": datetime.now() - timedelta(days=1)},
+    {
+        "author": "Pietjeansen",
+        "text": "LuckyTV is echt te goed 😂",
+        "likes": 342,
+        "published": datetime.now() - timedelta(hours=2),
+    },
+    {
+        "author": "MediaWatcher",
+        "text": "Eindelijk weer nieuwe content!",
+        "likes": 156,
+        "published": datetime.now() - timedelta(hours=5),
+    },
+    {
+        "author": "Henk_uit_Almere",
+        "text": "Dit is waarom ik YouTube betaal",
+        "likes": 89,
+        "published": datetime.now() - timedelta(hours=8),
+    },
+    {
+        "author": "SatireFan2024",
+        "text": "Sander is een genie",
+        "likes": 234,
+        "published": datetime.now() - timedelta(days=1),
+    },
+    {
+        "author": "NLPolitiek",
+        "text": "Te accuraat 🎯",
+        "likes": 67,
+        "published": datetime.now() - timedelta(days=1),
+    },
 ]
 
 DEMO_SEO = {
