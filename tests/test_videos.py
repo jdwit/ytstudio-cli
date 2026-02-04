@@ -146,20 +146,20 @@ class TestVideosUpdateCommand:
         assert "Nothing to update" in result.stdout
 
 
-class TestBulkUpdateCommand:
-    """Test yt videos bulk-update command."""
+class TestSearchReplaceCommand:
+    """Test yt videos search-replace command."""
 
-    def test_bulk_update_no_matches(self, mock_auth):
-        """Test bulk update with no matches."""
+    def test_search_replace_no_matches(self, mock_auth):
+        """Test search-replace with no matches."""
         result = runner.invoke(
-            app, ["videos", "bulk-update", "-s", "nonexistent_text", "-r", "new"]
+            app, ["videos", "search-replace", "-s", "nonexistent_text", "-r", "new"]
         )
 
         assert result.exit_code == 0
         assert "No matches" in result.stdout
 
-    def test_bulk_update_missing_args(self):
-        """Test bulk update requires search and replace."""
-        result = runner.invoke(app, ["videos", "bulk-update"])
+    def test_search_replace_missing_args(self):
+        """Test search-replace requires search and replace."""
+        result = runner.invoke(app, ["videos", "search-replace"])
 
         assert result.exit_code != 0
