@@ -168,7 +168,7 @@ def video(
         console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
         table = create_kv_table()
-        table.add_column("metric", style="bright_black")
+        table.add_column("metric", style="dim")
         table.add_column("value", style="bold")
 
         table.add_row("views", format_number(int(stats.get("viewCount", 0))))
@@ -258,7 +258,7 @@ def traffic(
     if response.get("rows"):
         console.print(f"\n[bold]Traffic Sources[/bold] {dim(f'(last {days} days)')}\n")
         table = create_table()
-        table.add_column("Source", style="bright_black")
+        table.add_column("Source", style="dim")
         table.add_column("Views", justify="right")
 
         for row in response["rows"]:
@@ -291,7 +291,7 @@ def top(
         table.add_column("Title", max_width=40)
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
-        table.add_column("Engagement", justify="right", style="bright_black")
+        table.add_column("Engagement", justify="right", style="dim")
 
         for v in videos:
             eng = (v["likes"] + v["comments"]) / v["views"] * 100 if v["views"] else 0
@@ -335,7 +335,7 @@ def top(
         table = create_table()
         table.add_column("Title", max_width=40)
         table.add_column("Views", justify="right")
-        table.add_column("Watch time", justify="right", style="bright_black")
+        table.add_column("Watch time", justify="right", style="dim")
 
         for row in response["rows"]:
             video_id, views, watch_time, _likes = row[0], row[1], row[2], row[3]

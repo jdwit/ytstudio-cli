@@ -182,12 +182,12 @@ def list_videos(
             )
     else:
         table = create_table()
-        table.add_column("ID", style="bright_black")
+        table.add_column("ID", style="dim")
         table.add_column("Title")
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
         table.add_column("Comments", justify="right")
-        table.add_column("Published", style="bright_black")
+        table.add_column("Published", style="dim")
 
         for v in videos:
             video_url = f"https://youtu.be/{v['id']}"
@@ -205,9 +205,7 @@ def list_videos(
         console.print(dim(f"\n{result['total_results']} videos"))
 
         if result["next_page_token"]:
-            console.print(
-                f"\n[bright_black]Next page: --page-token {result['next_page_token']}[/bright_black]"
-            )
+            console.print(f"\n[dim]Next page: --page-token {result['next_page_token']}[/dim]")
 
 
 @app.command()
@@ -250,7 +248,7 @@ def get(
         console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
         table = create_kv_table()
-        table.add_column("field", style="bright_black")
+        table.add_column("field", style="dim")
         table.add_column("value")
 
         table.add_row("views", format_number(demo_video["views"]))
@@ -263,9 +261,7 @@ def get(
         console.print(table)
 
         if demo_video.get("tags"):
-            console.print(
-                f"\n[bright_black]tags:[/bright_black] {', '.join(demo_video['tags'][:15])}"
-            )
+            console.print(f"\n[dim]tags:[/dim] {', '.join(demo_video['tags'][:15])}")
 
         console.print(f"\n[bold]description:[/bold]\n{demo_video.get('description', '')}")
         return
@@ -296,7 +292,7 @@ def get(
     console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
     table = create_kv_table()
-    table.add_column("field", style="bright_black")
+    table.add_column("field", style="dim")
     table.add_column("value")
 
     table.add_row("views", format_number(int(stats.get("viewCount", 0))))
@@ -309,7 +305,7 @@ def get(
     console.print(table)
 
     if snippet.get("tags"):
-        console.print(f"\n[bright_black]tags:[/bright_black] {', '.join(snippet['tags'][:15])}")
+        console.print(f"\n[dim]tags:[/dim] {', '.join(snippet['tags'][:15])}")
 
     console.print(f"\n[bold]description:[/bold]\n{snippet.get('description', '')}")
 
@@ -350,7 +346,7 @@ def update(
             console.print("description: [green](updated)[/green]")
         if tags:
             console.print(f"tags: [green]{', '.join(new_tags[:5])}[/green]")
-        console.print("\n[bright_black]Run without --dry-run to apply[/bright_black]")
+        console.print("\n[dim]Run without --dry-run to apply[/dim]")
         return
 
     body = {
@@ -436,9 +432,9 @@ def search_replace(
         return
 
     table = create_table()
-    table.add_column("Video ID", style="bright_black")
+    table.add_column("Video ID", style="dim")
     table.add_column("Current")
-    table.add_column("→", justify="center", style="bright_black")
+    table.add_column("→", justify="center", style="dim")
     table.add_column("New")
 
     for c in changes:
@@ -449,7 +445,7 @@ def search_replace(
     console.print(table)
 
     if not execute:
-        console.print("\n[bright_black]Run with --execute to apply changes[/bright_black]")
+        console.print("\n[dim]Run with --execute to apply changes[/dim]")
         return
 
     console.print("\n[bold]Applying changes...[/bold]\n")

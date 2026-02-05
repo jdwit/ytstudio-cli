@@ -14,7 +14,7 @@ def create_table(title: str | None = None, show_header: bool = True) -> Table:
         show_header=show_header,
         pad_edge=False,
         collapse_padding=True,
-        header_style="bright_black",
+        header_style="dim",
     )
 
 
@@ -40,12 +40,12 @@ def format_number(n: int) -> str:
 
 def dim(text: str) -> str:
     """Dim/muted text for labels, secondary info (gh-style)."""
-    return f"[bright_black]{text}[/bright_black]"
+    return f"[dim]{text}[/dim]"
 
 
 def muted(text: str) -> str:
     """Alias for dim - muted text for IDs, hashes, secondary info."""
-    return f"[bright_black]{text}[/bright_black]"
+    return f"[dim]{text}[/dim]"
 
 
 def cyan(text: str) -> str:
