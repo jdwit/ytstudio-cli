@@ -1,16 +1,17 @@
 """Main CLI entry point."""
 
+from importlib.metadata import version
+
 import typer
 from rich.console import Console
 
-from ytstudio import __version__
 from ytstudio.auth import authenticate, get_status
-from ytstudio.commands import analytics, auth, comments, export, seo, videos
+from ytstudio.commands import analytics, auth, comments, seo, videos
 from ytstudio.config import setup_credentials
 
 app = typer.Typer(
-    name="yts",
-    help="CLI tool to manage and analyze your YouTube channel",
+    name="ytstudio",
+    help="Manage your YouTube channel from the terminal",
     no_args_is_help=True,
     rich_markup_mode="markdown",
 )
@@ -22,7 +23,6 @@ app.add_typer(videos.app, name="videos")
 app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")
 app.add_typer(seo.app, name="seo")
-app.add_typer(export.app, name="export")
 
 
 @app.command()
@@ -52,11 +52,11 @@ def status():
 
 @app.callback(invoke_without_command=True)
 def main(
-    version: bool = typer.Option(False, "--version", "-v", help="Show version"),
+    show_version: bool = typer.Option(False, "--version", "-v", help="Show version"),
 ):
-    """ytstudio-cli - Manage and analyze your YouTube channel from the terminal."""
-    if version:
-        console.print(f"ytstudio-cli v{__version__}")
+    """ytstudio - Manage your YouTube channel from the terminal"""
+    if show_version:
+        console.print(f"ytstudio v{version('ytstudio')}")
         raise typer.Exit()
 
 

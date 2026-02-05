@@ -2,6 +2,7 @@
 
 import json
 import re
+from dataclasses import asdict, dataclass, field
 
 import typer
 from googleapiclient.errors import HttpError
@@ -17,6 +18,27 @@ from ytstudio.ui import (
 )
 
 app = typer.Typer(help="Video management commands")
+
+
+@dataclass
+class Video:
+    """Normalized video data from YouTube API."""
+
+    id: str
+    title: str
+    description: str
+    published_at: str
+    views: int
+    likes: int
+    comments: int
+    duration: str
+    privacy: str
+    tags: list[str] = field(default_factory=list)
+    category_id: str = ""
+    licensed: bool = False
+    default_language: str | None = None
+    default_audio_language: str | None = None
+    localizations: dict = field(default_factory=dict)
 
 
 def format_duration(iso_duration: str) -> str:
@@ -57,20 +79,99 @@ def get_channel_uploads_playlist(service) -> str:
     return response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 
-def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dict:
-    """Fetch videos with stats. Automatically paginates to reach limit."""
-    uploads_playlist_id = get_channel_uploads_playlist(service)
+def fetch_video(data_service, video_id: str) -> Video | None:
+    """Fetch a single video by ID. Returns Video or None if not found."""
+    if is_demo_mode():
+        demo = get_demo_video(video_id)
+        if not demo:
+            return None
+        return Video(
+            id=demo["id"],
+            title=demo["title"],
+            description=demo.get("description", ""),
+            published_at=demo["published"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+            views=demo["views"],
+            likes=demo["likes"],
+            comments=demo["comments"],
+            duration=demo["duration"],
+            privacy=demo["privacy"],
+            tags=demo.get("tags", []),
+            default_language=demo.get("defaultLanguage"),
+            default_audio_language=demo.get("defaultAudioLanguage"),
+            localizations=demo.get("localizations", {}),
+        )
+
+    response = api(
+        data_service.videos().list(
+            part="snippet,statistics,contentDetails,status,localizations",
+            id=video_id,
+        )
+    )
+
+    if not response.get("items"):
+        return None
+
+    item = response["items"][0]
+    snippet = item["snippet"]
+    stats = item.get("statistics", {})
+    content = item.get("contentDetails", {})
+
+    return Video(
+        id=item["id"],
+        title=snippet["title"],
+        description=snippet.get("description", ""),
+        published_at=snippet["publishedAt"],
+        views=int(stats.get("viewCount", 0)),
+        likes=int(stats.get("likeCount", 0)),
+        comments=int(stats.get("commentCount", 0)),
+        duration=content.get("duration", ""),
+        privacy=item.get("status", {}).get("privacyStatus", "unknown"),
+        tags=snippet.get("tags", []),
+        default_language=snippet.get("defaultLanguage"),
+        default_audio_language=snippet.get("defaultAudioLanguage"),
+        localizations=item.get("localizations", {}),
+    )
+
+
+def fetch_videos(
+    data_service, limit: int = 50, page_token: str | None = None
+) -> dict[str, list[Video] | str | int | None]:
+    """Fetch videos with stats. Returns dict with 'videos' list of Video objects."""
+    if is_demo_mode():
+        videos = [
+            Video(
+                id=v["id"],
+                title=v["title"],
+                description=v.get("description", ""),
+                published_at=v["published"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+                views=v["views"],
+                likes=v["likes"],
+                comments=v["comments"],
+                privacy=v["privacy"],
+                tags=v.get("tags", []),
+                duration=v["duration"],
+                localizations=v.get("localizations", {}),
+                default_language=v.get("defaultLanguage"),
+                default_audio_language=v.get("defaultAudioLanguage"),
+            )
+            for v in DEMO_VIDEOS[:limit]
+        ]
+        return {"videos": videos, "next_page_token": None, "total_results": len(DEMO_VIDEOS)}
+
+    uploads_playlist_id = get_channel_uploads_playlist(data_service)
 
     all_videos = []
     current_page_token = page_token
     total_results = None
     next_page_token = None
 
+    parts = "statistics,status,snippet,contentDetails,localizations"
+
     while len(all_videos) < limit:
         batch_size = min(limit - len(all_videos), 50)
 
         playlist_response = api(
-            service.playlistItems().list(
+            data_service.playlistItems().list(
                 part="snippet,contentDetails",
                 playlistId=uploads_playlist_id,
                 maxResults=batch_size,
@@ -88,8 +189,8 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
         video_ids = [item["contentDetails"]["videoId"] for item in items]
 
         videos_response = api(
-            service.videos().list(
-                part="statistics,status,snippet,contentDetails",
+            data_service.videos().list(
+                part=parts,
                 id=",".join(video_ids),
             )
         )
@@ -103,22 +204,25 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             snippet = data.get("snippet", {})
             content_details = data.get("contentDetails", {})
 
-            all_videos.append(
-                {
-                    "id": video_id,
-                    "title": item["snippet"]["title"],
-                    "description": item["snippet"].get("description", ""),
-                    "published_at": item["snippet"]["publishedAt"],
-                    "views": int(stats.get("viewCount", 0)),
-                    "likes": int(stats.get("likeCount", 0)),
-                    "comments": int(stats.get("commentCount", 0)),
-                    "privacy": data.get("status", {}).get("privacyStatus", "unknown"),
-                    "tags": snippet.get("tags", []),
-                    "category_id": snippet.get("categoryId", ""),
-                    "duration": content_details.get("duration", ""),
-                    "licensed": content_details.get("licensedContent", False),
-                }
+            video = Video(
+                id=video_id,
+                title=item["snippet"]["title"],
+                description=item["snippet"].get("description", ""),
+                published_at=item["snippet"]["publishedAt"],
+                views=int(stats.get("viewCount", 0)),
+                likes=int(stats.get("likeCount", 0)),
+                comments=int(stats.get("commentCount", 0)),
+                privacy=data.get("status", {}).get("privacyStatus", "unknown"),
+                tags=snippet.get("tags", []),
+                category_id=snippet.get("categoryId", ""),
+                duration=content_details.get("duration", ""),
+                licensed=content_details.get("licensedContent", False),
+                localizations=data.get("localizations", {}),
+                default_language=snippet.get("defaultLanguage"),
+                default_audio_language=snippet.get("defaultAudioLanguage"),
             )
+
+            all_videos.append(video)
 
         next_page_token = playlist_response.get("nextPageToken")
         if not next_page_token:
@@ -138,67 +242,67 @@ def list_videos(
     page_token: str = typer.Option(None, "--page-token", "-p", help="Page token for pagination"),
     sort: str = typer.Option("date", "--sort", "-s", help="Sort by: date, views, likes"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
+    audio_lang: str = typer.Option(None, "--audio-lang", help="Filter by audio language (e.g., en, es)"),
+    meta_lang: str = typer.Option(None, "--meta-lang", help="Filter by metadata language (e.g., en, es)"),
+    has_localization: str = typer.Option(
+        None, "--has-localization", help="Filter by available translation (e.g., en, es)"
+    ),
 ):
     """List your YouTube videos."""
-    if is_demo_mode():
-        videos = [
-            {
-                "id": v["id"],
-                "title": v["title"],
-                "description": v["description"],
-                "published_at": v["published"].isoformat(),
-                "views": v["views"],
-                "likes": v["likes"],
-                "comments": v["comments"],
-                "privacy": v["privacy"],
-                "tags": v["tags"],
-                "duration": v["duration"],
-            }
-            for v in DEMO_VIDEOS[:limit]
-        ]
-        result = {"videos": videos, "next_page_token": None, "total_results": len(DEMO_VIDEOS)}
-    else:
-        service = get_service()
-        result = fetch_videos(service, limit, page_token)
-        videos = result["videos"]
+    service = get_service()
+    result = fetch_videos(service, limit, page_token)
+    videos: list[Video] = result["videos"]
+
+    if audio_lang:
+        videos = [v for v in videos if v.default_audio_language == audio_lang]
+    if meta_lang:
+        videos = [v for v in videos if v.default_language == meta_lang]
+    if has_localization:
+        videos = [v for v in videos if has_localization in v.localizations]
 
     if sort == "views":
-        videos.sort(key=lambda x: x["views"], reverse=True)
+        videos.sort(key=lambda x: x.views, reverse=True)
     elif sort == "likes":
-        videos.sort(key=lambda x: x["likes"], reverse=True)
+        videos.sort(key=lambda x: x.likes, reverse=True)
 
     if output == "json":
         print(
             json.dumps(
-                {"videos": videos, **{k: v for k, v in result.items() if k != "videos"}}, indent=2
+                {
+                    "videos": [asdict(v) for v in videos],
+                    "next_page_token": result["next_page_token"],
+                    "total_results": result["total_results"],
+                },
+                indent=2,
             )
         )
     elif output == "csv":
         print("id,title,views,likes,comments,privacy,published_at")
         for v in videos:
-            title_escaped = v["title"].replace('"', '""')
+            title_escaped = v.title.replace('"', '""')
             print(
-                f'{v["id"]},"{title_escaped}",{v["views"]},{v["likes"]},{v["comments"]},{v["privacy"]},{v["published_at"]}'
+                f'{v.id},"{title_escaped}",{v.views},{v.likes},{v.comments},{v.privacy},{v.published_at}'
             )
     else:
         table = create_table()
         table.add_column("ID", style="yellow")
-        table.add_column("Title")
+        table.add_column("Title", style="cyan")
+        table.add_column("URL")
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
         table.add_column("Comments", justify="right")
         table.add_column("Published")
 
         for v in videos:
-            video_url = f"https://youtu.be/{v['id']}"
-            title_link = f"[cyan][link={video_url}]{v['title']}[/link][/cyan]"
+            video_url = f"https://youtu.be/{v.id}"
             table.add_row(
-                v["id"],
-                title_link,
-                format_number(v["views"]),
-                format_number(v["likes"]),
-                format_number(v["comments"]),
-                v["published_at"][:10],
+                v.id,
+                v.title,
+                video_url,
+                format_number(v.views),
+                format_number(v.likes),
+                format_number(v.comments),
+                v.published_at[:10],
             )
 
         console.print(table)
@@ -214,100 +318,42 @@ def get(
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """Get details for a specific video."""
-    if is_demo_mode():
-        demo_video = get_demo_video(video_id)
-        if not demo_video:
-            console.print(f"[red]Video not found: {video_id}[/red]")
-            raise typer.Exit(1)
-
-        if output == "json":
-            print(
-                json.dumps(
-                    {
-                        "id": demo_video["id"],
-                        "snippet": {
-                            "title": demo_video["title"],
-                            "description": demo_video["description"],
-                            "tags": demo_video["tags"],
-                            "publishedAt": demo_video["published"].isoformat(),
-                        },
-                        "statistics": {
-                            "viewCount": demo_video["views"],
-                            "likeCount": demo_video["likes"],
-                            "commentCount": demo_video["comments"],
-                        },
-                        "contentDetails": {"duration": demo_video["duration"]},
-                        "status": {"privacyStatus": demo_video["privacy"]},
-                    },
-                    indent=2,
-                )
-            )
-            return
-
-        console.print(f"\n[bold]{demo_video['title']}[/bold]")
-        console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
-
-        table = create_kv_table()
-        table.add_column("field", style="dim")
-        table.add_column("value")
-
-        table.add_row("views", format_number(demo_video["views"]))
-        table.add_row("likes", format_number(demo_video["likes"]))
-        table.add_row("comments", format_number(demo_video["comments"]))
-        table.add_row("duration", demo_video["duration"])
-        table.add_row("published", demo_video["published"].strftime("%Y-%m-%d"))
-        table.add_row("privacy", demo_video["privacy"])
-
-        console.print(table)
-
-        if demo_video.get("tags"):
-            console.print(f"\n[dim]tags:[/dim] {', '.join(demo_video['tags'][:15])}")
-
-        console.print(f"\n[bold]description:[/bold]\n{demo_video.get('description', '')}")
-        return
-
     service = get_service()
+    video = fetch_video(service, video_id)
 
-    response = api(
-        service.videos().list(
-            part="snippet,statistics,contentDetails,status",
-            id=video_id,
-        )
-    )
-
-    if not response.get("items"):
+    if not video:
         console.print(f"[red]Video not found: {video_id}[/red]")
         raise typer.Exit(1)
 
-    video = response["items"][0]
-    snippet = video["snippet"]
-    stats = video["statistics"]
-    content = video["contentDetails"]
-
     if output == "json":
-        print(json.dumps(video, indent=2))
+        print(json.dumps(asdict(video), indent=2))
         return
 
-    console.print(f"\n[bold]{snippet['title']}[/bold]")
+    console.print(f"\n[bold]{video.title}[/bold]")
     console.print(f"[cyan]https://youtu.be/{video_id}[/cyan]\n")
 
     table = create_kv_table()
     table.add_column("field", style="dim")
     table.add_column("value")
 
-    table.add_row("views", format_number(int(stats.get("viewCount", 0))))
-    table.add_row("likes", format_number(int(stats.get("likeCount", 0))))
-    table.add_row("comments", format_number(int(stats.get("commentCount", 0))))
-    table.add_row("duration", content.get("duration", "N/A"))
-    table.add_row("published", snippet["publishedAt"][:10])
-    table.add_row("privacy", video.get("status", {}).get("privacyStatus", "unknown"))
+    table.add_row("views", format_number(video.views))
+    table.add_row("likes", format_number(video.likes))
+    table.add_row("comments", format_number(video.comments))
+    table.add_row("duration", video.duration or "N/A")
+    table.add_row("published", video.published_at[:10])
+    table.add_row("privacy", video.privacy)
+    table.add_row("language", video.default_language or "-")
+    table.add_row("audio language", video.default_audio_language or "-")
+
+    if video.localizations:
+        table.add_row("localizations", ", ".join(sorted(video.localizations.keys())))
 
     console.print(table)
 
-    if snippet.get("tags"):
-        console.print(f"\n[dim]tags:[/dim] {', '.join(snippet['tags'][:15])}")
+    if video.tags:
+        console.print(f"\n[dim]tags:[/dim] {', '.join(video.tags[:15])}")
 
-    console.print(f"\n[bold]description:[/bold]\n{snippet.get('description', '')}")
+    console.print(f"\n[bold]description:[/bold]\n{video.description}")
 
 
 @app.command()

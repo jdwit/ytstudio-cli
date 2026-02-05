@@ -3,7 +3,7 @@
 import os
 from datetime import datetime, timedelta
 
-DEMO_MODE = os.environ.get("YTS_DEMO", "").lower() in ("1", "true", "yes")
+DEMO_MODE = os.environ.get("YTSTUDIO_DEMO", "").lower() in ("1", "true", "yes")
 
 # Demo data based on Fireship (https://youtube.com/@Fireship)
 # Used with appreciation for educational purposes
@@ -28,6 +28,9 @@ DEMO_VIDEOS = [
         "privacy": "public",
         "tags": ["typescript", "javascript", "100SecondsOfCode", "programming"],
         "description": "Learn the basics of TypeScript in 100 seconds...",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en",
+        "localizations": {"en": {"title": "TypeScript in 100 Seconds", "description": "Learn the basics of TypeScript in 100 seconds..."}},
     },
     {
         "id": "lHhRhPV--G0",

@@ -3,7 +3,7 @@
 [![CI](https://github.com/jdwit/ytstudio/actions/workflows/ci.yml/badge.svg)](https://github.com/jdwit/ytstudio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-CLI tool to manage and analyze your YouTube channel.
+Manage your YouTube channel from the terminal. Access analytics and manage videos without leaving the command line. Ideal for agent workflows and automation.
 
 ## Installation
 

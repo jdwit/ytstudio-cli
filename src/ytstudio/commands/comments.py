@@ -1,15 +1,27 @@
 """Comment management commands."""
 
 import json
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 
 import typer
 from googleapiclient.errors import HttpError
 
 from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.demo import DEMO_COMMENTS, is_demo_mode
 from ytstudio.ui import console, create_table, dim
 
 app = typer.Typer(help="Comment commands")
+
+
+@dataclass
+class Comment:
+    """Normalized comment data."""
+
+    author: str
+    text: str
+    likes: int
+    published_at: str
 
 
 def get_service():
@@ -38,11 +50,22 @@ def time_ago(iso_timestamp: str) -> str:
     return "recently"
 
 
-def fetch_comments(service, video_id: str, limit: int = 100):
-    """Fetch comments with error handling for disabled comments."""
+def fetch_comments(data_service, video_id: str, limit: int = 100) -> list[Comment]:
+    """Fetch comments for a video. Returns list of Comment objects."""
+    if is_demo_mode():
+        return [
+            Comment(
+                author=c["author"],
+                text=c["text"],
+                likes=c["likes"],
+                published_at=c["published"].isoformat() if hasattr(c["published"], "isoformat") else c["published"],
+            )
+            for c in DEMO_COMMENTS[:limit]
+        ]
+
     try:
-        return api(
-            service.commentThreads().list(
+        response = api(
+            data_service.commentThreads().list(
                 part="snippet",
                 videoId=video_id,
                 maxResults=min(limit, 100),
@@ -50,11 +73,23 @@ def fetch_comments(service, video_id: str, limit: int = 100):
             )
         )
     except HttpError as e:
-        # Handle quota errors
         handle_api_error(e)
     except Exception as e:
         console.print(f"[yellow]Could not fetch comments (may be disabled): {e}[/yellow]")
         raise typer.Exit(1) from None
+
+    comments = []
+    for item in response.get("items", []):
+        snippet = item["snippet"]["topLevelComment"]["snippet"]
+        comments.append(
+            Comment(
+                author=snippet["authorDisplayName"],
+                text=snippet["textOriginal"],
+                likes=snippet["likeCount"],
+                published_at=snippet["publishedAt"],
+            )
+        )
+    return comments
 
 
 @app.command("list")
@@ -65,33 +100,21 @@ def list_comments(
 ):
     """List comments for a video."""
     service = get_service()
-    response = fetch_comments(service, video_id, limit)
-
-    comments = []
-    for item in response.get("items", []):
-        snippet = item["snippet"]["topLevelComment"]["snippet"]
-        comments.append(
-            {
-                "author": snippet["authorDisplayName"],
-                "text": snippet["textOriginal"],
-                "likes": snippet["likeCount"],
-                "published": snippet["publishedAt"],
-            }
-        )
+    comments = fetch_comments(service, video_id, limit)
 
     if output == "json":
-        print(json.dumps(comments, indent=2))
+        print(json.dumps([asdict(c) for c in comments], indent=2))
         return
 
     console.print(f"\n[bold]Comments ({len(comments)})[/bold]\n")
 
     for c in comments:
-        text = c["text"][:150]
-        if len(c["text"]) > 150:
+        text = c.text[:150]
+        if len(c.text) > 150:
             text += "..."
 
-        like_str = f" [dim]({c['likes']} likes)[/dim]" if c["likes"] else ""
-        console.print(f"[bold]{c['author']}[/bold]{like_str} [dim]{time_ago(c['published'])}[/dim]")
+        like_str = f" [dim]({c.likes} likes)[/dim]" if c.likes else ""
+        console.print(f"[bold]{c.author}[/bold]{like_str} [dim]{time_ago(c.published_at)}[/dim]")
         console.print(f"  {text}\n")
 
 
@@ -102,9 +125,8 @@ def summary(
 ):
     """Analyze comment sentiment for a video."""
     service = get_service()
-    response = fetch_comments(service, video_id, limit)
+    comments = fetch_comments(service, video_id, limit)
 
-    comments = response.get("items", [])
     if not comments:
         console.print("[yellow]No comments found[/yellow]")
         return
@@ -149,18 +171,17 @@ def summary(
 
     positive = 0
     negative = 0
-    negative_comments = []
+    negative_comments: list[Comment] = []
 
-    for item in comments:
-        text = item["snippet"]["topLevelComment"]["snippet"]["textOriginal"].lower()
-        author = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"]
+    for c in comments:
+        text = c.text.lower()
 
         has_pos = any(w in text for w in positive_words)
         has_neg = any(w in text for w in negative_words)
 
         if has_neg and not has_pos:
             negative += 1
-            negative_comments.append({"author": author, "text": text[:100]})
+            negative_comments.append(c)
         elif has_pos and not has_neg:
             positive += 1
 
@@ -182,4 +203,4 @@ def summary(
     if negative_comments:
         console.print("\n[bold red]Negative comments:[/bold red]")
         for c in negative_comments[:5]:
-            console.print(f"  [dim]{c['author']}:[/dim] {c['text']}")
+            console.print(f"  [dim]{c.author}:[/dim] {c.text[:100]}")

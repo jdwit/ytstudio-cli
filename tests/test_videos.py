@@ -39,10 +39,10 @@ class TestFetchVideos:
         assert len(result["videos"]) == 1
 
         video = result["videos"][0]
-        assert video["id"] == MOCK_VIDEO["id"]
-        assert video["title"] == MOCK_VIDEO["snippet"]["title"]
-        assert video["views"] == 10000
-        assert video["likes"] == 500
+        assert video.id == MOCK_VIDEO["id"]
+        assert video.title == MOCK_VIDEO["snippet"]["title"]
+        assert video.views == 10000
+        assert video.likes == 500
 
     def test_fetch_videos_calls_api(self, mock_service):
         """Test that correct API calls are made."""

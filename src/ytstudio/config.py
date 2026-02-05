@@ -53,7 +53,7 @@ def setup_credentials(client_secrets_file: str | None = None):
         CLIENT_SECRETS_FILE.write_text(json.dumps(secrets, indent=2))
         console.print(f"\n[green]✓ Client secrets saved to {CLIENT_SECRETS_FILE}[/green]")
 
-    console.print("\nRun [bold]yts login[/bold] to authenticate with YouTube.")
+    console.print("\nRun [bold]ytstudio login[/bold] to authenticate with YouTube.")
 
 
 def get_client_secrets() -> dict | None:
