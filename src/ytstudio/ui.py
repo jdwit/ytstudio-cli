@@ -44,8 +44,13 @@ def dim(text: str) -> str:
 
 
 def muted(text: str) -> str:
-    """Alias for dim - muted text for IDs, hashes, secondary info."""
+    """Muted text for secondary info."""
     return f"[dim]{text}[/dim]"
+
+
+def id_style(text: str) -> str:
+    """Style for IDs, hashes - visible but subtle (gh-style yellow)."""
+    return f"[yellow]{text}[/yellow]"
 
 
 def cyan(text: str) -> str:

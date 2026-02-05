@@ -182,7 +182,7 @@ def list_videos(
             )
     else:
         table = create_table()
-        table.add_column("ID", style="dim")
+        table.add_column("ID", style="yellow")
         table.add_column("Title")
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
@@ -432,7 +432,7 @@ def search_replace(
         return
 
     table = create_table()
-    table.add_column("Video ID", style="dim")
+    table.add_column("Video ID", style="yellow")
     table.add_column("Current")
     table.add_column("→", justify="center", style="dim")
     table.add_column("New")
