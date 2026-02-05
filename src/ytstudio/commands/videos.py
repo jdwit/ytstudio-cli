@@ -187,7 +187,7 @@ def list_videos(
         table.add_column("Views", justify="right")
         table.add_column("Likes", justify="right")
         table.add_column("Comments", justify="right")
-        table.add_column("Published", style="dim")
+        table.add_column("Published")
 
         for v in videos:
             video_url = f"https://youtu.be/{v['id']}"
