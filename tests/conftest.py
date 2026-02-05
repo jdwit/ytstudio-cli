@@ -147,7 +147,6 @@ def mock_auth(mock_service):
     with (
         patch("ytstudio.commands.videos.get_authenticated_service", return_value=mock_service),
         patch("ytstudio.commands.comments.get_authenticated_service", return_value=mock_service),
-        patch("ytstudio.commands.seo.get_authenticated_service", return_value=mock_service),
         patch("ytstudio.commands.analytics.get_authenticated_service", return_value=mock_service),
     ):
         yield mock_service

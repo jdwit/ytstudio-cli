@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 
 from ytstudio.auth import authenticate, get_status
-from ytstudio.commands import analytics, auth, comments, seo, videos
+from ytstudio.commands import analytics, auth, comments, videos
 from ytstudio.config import setup_credentials
 
 app = typer.Typer(
@@ -22,7 +22,6 @@ app.add_typer(auth.app, name="auth")
 app.add_typer(videos.app, name="videos")
 app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")
-app.add_typer(seo.app, name="seo")
 
 
 @app.command()
