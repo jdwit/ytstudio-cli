@@ -58,7 +58,9 @@ def fetch_comments(data_service, video_id: str, limit: int = 100) -> list[Commen
                 author=c["author"],
                 text=c["text"],
                 likes=c["likes"],
-                published_at=c["published"].isoformat() if hasattr(c["published"], "isoformat") else c["published"],
+                published_at=c["published"].isoformat()
+                if hasattr(c["published"], "isoformat")
+                else c["published"],
             )
             for c in DEMO_COMMENTS[:limit]
         ]

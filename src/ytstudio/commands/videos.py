@@ -242,8 +242,12 @@ def list_videos(
     page_token: str = typer.Option(None, "--page-token", "-p", help="Page token for pagination"),
     sort: str = typer.Option("date", "--sort", "-s", help="Sort by: date, views, likes"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
-    audio_lang: str = typer.Option(None, "--audio-lang", help="Filter by audio language (e.g., en, es)"),
-    meta_lang: str = typer.Option(None, "--meta-lang", help="Filter by metadata language (e.g., en, es)"),
+    audio_lang: str = typer.Option(
+        None, "--audio-lang", help="Filter by audio language (e.g., en, es)"
+    ),
+    meta_lang: str = typer.Option(
+        None, "--meta-lang", help="Filter by metadata language (e.g., en, es)"
+    ),
     has_localization: str = typer.Option(
         None, "--has-localization", help="Filter by available translation (e.g., en, es)"
     ),

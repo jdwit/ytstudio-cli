@@ -30,7 +30,12 @@ DEMO_VIDEOS = [
         "description": "Learn the basics of TypeScript in 100 seconds...",
         "defaultLanguage": "en",
         "defaultAudioLanguage": "en",
-        "localizations": {"en": {"title": "TypeScript in 100 Seconds", "description": "Learn the basics of TypeScript in 100 seconds..."}},
+        "localizations": {
+            "en": {
+                "title": "TypeScript in 100 Seconds",
+                "description": "Learn the basics of TypeScript in 100 seconds...",
+            }
+        },
     },
     {
         "id": "lHhRhPV--G0",
