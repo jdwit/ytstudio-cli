@@ -91,6 +91,7 @@ def fetch_videos(service, limit: int = 50, page_token: str | None = None) -> dic
             service.videos().list(
                 part="statistics,status,snippet,contentDetails",
                 id=",".join(video_ids),
+                hl="nl",
             )
         )
 
@@ -272,6 +273,7 @@ def get(
         service.videos().list(
             part="snippet,statistics,contentDetails,status",
             id=video_id,
+            hl="nl",
         )
     )
 
@@ -327,7 +329,7 @@ def update(
 
     service = get_service()
 
-    response = api(service.videos().list(part="snippet", id=video_id))
+    response = api(service.videos().list(part="snippet", id=video_id, hl="nl"))
     if not response.get("items"):
         console.print(f"[red]Video not found: {video_id}[/red]")
         raise typer.Exit(1)
@@ -400,6 +402,7 @@ def search_replace(
             service.videos().list(
                 part="snippet",
                 id=",".join(video_ids),
+                hl="nl",
             )
         )
 
@@ -454,7 +457,7 @@ def search_replace(
 
     for c in changes:
         try:
-            response = api(service.videos().list(part="snippet", id=c["id"]))
+            response = api(service.videos().list(part="snippet", id=c["id"], hl="nl"))
             if not response.get("items"):
                 continue
 
