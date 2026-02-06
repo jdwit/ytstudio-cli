@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 
 from ytstudio.auth import api, get_authenticated_service, handle_api_error
 from ytstudio.demo import DEMO_COMMENTS, is_demo_mode
-from ytstudio.ui import console, time_ago
+from ytstudio.ui import console, time_ago, truncate
 
 app = typer.Typer(help="Comment commands")
 
@@ -135,9 +135,7 @@ def list_comments(
     console.print(f"\n[bold]{label} Comments ({len(comments)})[/bold] — {scope}\n")
 
     for c in comments:
-        text = c.text[:150]
-        if len(c.text) > 150:
-            text += "..."
+        text = truncate(c.text, 150)
 
         like_str = f" [dim]({c.likes} likes)[/dim]" if c.likes else ""
         video_str = f" [dim cyan]on {c.video_id}[/dim cyan]" if c.video_id and not video_id else ""
