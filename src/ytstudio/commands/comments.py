@@ -1,79 +1,94 @@
-"""Comment management commands."""
-
 import json
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from enum import Enum
 
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.auth import api, handle_api_error, get_authenticated_service
 from ytstudio.demo import DEMO_COMMENTS, is_demo_mode
-from ytstudio.ui import console, create_table, dim
+from ytstudio.ui import console, time_ago
 
 app = typer.Typer(help="Comment commands")
 
 
+class SortOrder(str, Enum):
+    relevance = "relevance"
+    time = "time"
+
+
+class ModerationStatus(str, Enum):
+    published = "published"
+    held = "held"
+    spam = "spam"
+
+    def to_api_value(self) -> str:
+        """Convert to YouTube API moderationStatus value"""
+        return {"published": "published", "held": "heldForReview", "spam": "likelySpam"}[self.value]
+
+
 @dataclass
 class Comment:
-    """Normalized comment data."""
-
+    id: str
     author: str
     text: str
     likes: int
     published_at: str
+    video_id: str = ""
 
 
 def get_service():
-    """Get authenticated service or exit."""
-    service = get_authenticated_service()
-    if not service:
-        console.print("[red]Not authenticated. Run 'yt login' first.[/red]")
-        raise typer.Exit(1) from None
-    return service
+    return get_authenticated_service()
 
 
-def time_ago(iso_timestamp: str) -> str:
-    """Convert ISO timestamp to relative time."""
-    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    now = datetime.now(UTC)
-    delta = now - dt
-
-    if delta.days > 365:
-        return f"{delta.days // 365}y ago"
-    if delta.days > 30:
-        return f"{delta.days // 30}mo ago"
-    if delta.days > 0:
-        return f"{delta.days}d ago"
-    if delta.seconds > 3600:
-        return f"{delta.seconds // 3600}h ago"
-    return "recently"
+def get_channel_id(service) -> str:
+    response = api(service.channels().list(part="id", mine=True))
+    if not response.get("items"):
+        console.print("[red]No channel found[/red]")
+        raise typer.Exit(1)
+    return response["items"][0]["id"]
 
 
-def fetch_comments(data_service, video_id: str, limit: int = 100) -> list[Comment]:
-    """Fetch comments for a video. Returns list of Comment objects."""
+def fetch_comments(
+    data_service,
+    video_id: str | None = None,
+    limit: int = 100,
+    order: SortOrder = SortOrder.relevance,
+    moderation_status: ModerationStatus = ModerationStatus.published,
+) -> list[Comment]:
     if is_demo_mode():
         return [
             Comment(
+                id=c.get("id", f"comment_{i}"),
                 author=c["author"],
                 text=c["text"],
                 likes=c["likes"],
                 published_at=c["published"].isoformat()
                 if hasattr(c["published"], "isoformat")
                 else c["published"],
+                video_id=c.get("video_id", "demo_video"),
             )
-            for c in DEMO_COMMENTS[:limit]
+            for i, c in enumerate(DEMO_COMMENTS[:limit])
         ]
 
     try:
-        response = api(
-            data_service.commentThreads().list(
-                part="snippet",
-                videoId=video_id,
-                maxResults=min(limit, 100),
-                order="relevance",
-            )
-        )
+        # Build query parameters based on filters
+        params = {
+            "part": "snippet",
+            "maxResults": min(limit, 100),
+            "order": order.value,
+        }
+
+        if video_id:
+            # Video-specific query (moderationStatus not supported)
+            params["videoId"] = video_id
+        else:
+            # Channel-wide query (supports moderation filtering)
+            channel_id = get_channel_id(data_service)
+            params["allThreadsRelatedToChannelId"] = channel_id
+            params["moderationStatus"] = moderation_status.to_api_value()
+
+        response = api(data_service.commentThreads().list(**params))
     except HttpError as e:
         handle_api_error(e)
     except Exception as e:
@@ -85,10 +100,12 @@ def fetch_comments(data_service, video_id: str, limit: int = 100) -> list[Commen
         snippet = item["snippet"]["topLevelComment"]["snippet"]
         comments.append(
             Comment(
+                id=item["id"],
                 author=snippet["authorDisplayName"],
                 text=snippet["textOriginal"],
                 likes=snippet["likeCount"],
                 published_at=snippet["publishedAt"],
+                video_id=snippet.get("videoId", ""),
             )
         )
     return comments
@@ -96,19 +113,26 @@ def fetch_comments(data_service, video_id: str, limit: int = 100) -> list[Commen
 
 @app.command("list")
 def list_comments(
-    video_id: str = typer.Argument(..., help="Video ID"),
+    video_id: str = typer.Option(None, "--video", "-v", help="Filter by video ID"),
+    status: ModerationStatus = typer.Option(
+        ModerationStatus.published, "--status", help="Moderation status: published, held, spam"
+    ),
     limit: int = typer.Option(20, "--limit", "-n", help="Number of comments"),
+    sort: SortOrder = typer.Option(SortOrder.relevance, "--sort", "-s", help="Sort order"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
-    """List comments for a video."""
+    """List comments across channel or for a specific video"""
     service = get_service()
-    comments = fetch_comments(service, video_id, limit)
+    comments = fetch_comments(service, video_id, limit, sort, status)
 
     if output == "json":
         print(json.dumps([asdict(c) for c in comments], indent=2))
         return
 
-    console.print(f"\n[bold]Comments ({len(comments)})[/bold]\n")
+    status_label = {"published": "Published", "held": "Held for Review", "spam": "Likely Spam"}
+    label = status_label.get(status.value, status.value)
+    scope = f"video {video_id}" if video_id else "channel"
+    console.print(f"\n[bold]{label} Comments ({len(comments)})[/bold] — {scope}\n")
 
     for c in comments:
         text = c.text[:150]
@@ -116,93 +140,6 @@ def list_comments(
             text += "..."
 
         like_str = f" [dim]({c.likes} likes)[/dim]" if c.likes else ""
-        console.print(f"[bold]{c.author}[/bold]{like_str} [dim]{time_ago(c.published_at)}[/dim]")
+        video_str = f" [dim cyan]on {c.video_id}[/dim cyan]" if c.video_id and not video_id else ""
+        console.print(f"[bold]{c.author}[/bold]{like_str}{video_str} [dim]{time_ago(c.published_at)}[/dim]")
         console.print(f"  {text}\n")
-
-
-@app.command()
-def summary(
-    video_id: str = typer.Argument(..., help="Video ID"),
-    limit: int = typer.Option(100, "--limit", "-n", help="Number of comments to analyze"),
-):
-    """Analyze comment sentiment for a video."""
-    service = get_service()
-    comments = fetch_comments(service, video_id, limit)
-
-    if not comments:
-        console.print("[yellow]No comments found[/yellow]")
-        return
-
-    # Simple keyword-based sentiment
-    positive_words = {
-        "love",
-        "great",
-        "amazing",
-        "awesome",
-        "best",
-        "perfect",
-        "fantastic",
-        "excellent",
-        "good",
-        "nice",
-        "beautiful",
-        "haha",
-        "lol",
-        "😂",
-        "❤️",
-        "👍",
-        "🔥",
-        "genius",
-        "brilliant",
-    }
-    negative_words = {
-        "hate",
-        "bad",
-        "worst",
-        "terrible",
-        "awful",
-        "boring",
-        "stupid",
-        "trash",
-        "garbage",
-        "disappointing",
-        "👎",
-        "cringe",
-        "sucks",
-    }
-
-    positive = 0
-    negative = 0
-    negative_comments: list[Comment] = []
-
-    for c in comments:
-        text = c.text.lower()
-
-        has_pos = any(w in text for w in positive_words)
-        has_neg = any(w in text for w in negative_words)
-
-        if has_neg and not has_pos:
-            negative += 1
-            negative_comments.append(c)
-        elif has_pos and not has_neg:
-            positive += 1
-
-    neutral = len(comments) - positive - negative
-    total = len(comments)
-
-    console.print(f"\n[bold]Comment Sentiment[/bold] {dim(f'({total} analyzed)')}\n")
-    table = create_table()
-    table.add_column("Sentiment", style="dim")
-    table.add_column("Count", justify="right")
-    table.add_column("Percentage", justify="right")
-
-    table.add_row("[green]Positive[/green]", str(positive), f"{positive / total * 100:.1f}%")
-    table.add_row("[red]Negative[/red]", str(negative), f"{negative / total * 100:.1f}%")
-    table.add_row("[dim]Neutral[/dim]", str(neutral), f"{neutral / total * 100:.1f}%")
-
-    console.print(table)
-
-    if negative_comments:
-        console.print("\n[bold red]Negative comments:[/bold red]")
-        for c in negative_comments[:5]:
-            console.print(f"  [dim]{c.author}:[/dim] {c.text[:100]}")

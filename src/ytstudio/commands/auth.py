@@ -1,5 +1,3 @@
-"""Authentication commands."""
-
 import typer
 from rich.console import Console
 
@@ -12,17 +10,17 @@ console = Console()
 
 @app.command()
 def login():
-    """Authenticate with YouTube via OAuth."""
+    """Authenticate with YouTube via OAuth"""
     authenticate()
 
 
 @app.command()
 def logout():
-    """Remove stored credentials."""
+    """Remove stored credentials"""
     do_logout()
 
 
 @app.command()
 def status():
-    """Show current authentication status."""
+    """Show current authentication status"""
     get_status()

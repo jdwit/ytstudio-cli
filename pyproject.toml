@@ -1,5 +1,5 @@
 [project]
-name = "ytstudio"
+name = "ytstudio-cli"
 version = "0.1.0"
 description = "CLI tool to manage and analyze your YouTube channel from the terminal"
 readme = "README.md"
@@ -25,6 +25,7 @@ dependencies = [
     "google-auth>=2.0.0",
     "google-auth-oauthlib>=1.0.0",
     "google-api-python-client>=2.0.0",
+    "packaging>=21.0",
 ]
 
 [dependency-groups]

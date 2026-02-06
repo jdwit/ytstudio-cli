@@ -1,10 +1,7 @@
-"""Shared test fixtures and mock data."""
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Sample API response data
 MOCK_CHANNEL = {
     "id": "UC_test_channel_id",
     "snippet": {
@@ -68,6 +65,7 @@ MOCK_PLAYLIST_ITEM = {
 }
 
 MOCK_COMMENT = {
+    "id": "UgwComment123",
     "snippet": {
         "topLevelComment": {
             "snippet": {
@@ -76,12 +74,14 @@ MOCK_COMMENT = {
                 "textDisplay": "Great video! Love it!",
                 "likeCount": 5,
                 "publishedAt": "2026-01-20T15:00:00Z",
+                "videoId": "test_video_123",
             },
         },
     },
 }
 
 MOCK_NEGATIVE_COMMENT = {
+    "id": "UgwComment456",
     "snippet": {
         "topLevelComment": {
             "snippet": {
@@ -90,6 +90,7 @@ MOCK_NEGATIVE_COMMENT = {
                 "textDisplay": "This is terrible and boring",
                 "likeCount": 0,
                 "publishedAt": "2026-01-20T16:00:00Z",
+                "videoId": "test_video_123",
             },
         },
     },
@@ -97,15 +98,12 @@ MOCK_NEGATIVE_COMMENT = {
 
 
 def create_mock_service():
-    """Create a mock YouTube API service."""
     service = MagicMock()
 
-    # channels().list()
     channels_list = MagicMock()
     channels_list.execute.return_value = {"items": [MOCK_CHANNEL]}
     service.channels.return_value.list.return_value = channels_list
 
-    # playlistItems().list()
     playlist_list = MagicMock()
     playlist_list.execute.return_value = {
         "items": [MOCK_PLAYLIST_ITEM],
@@ -114,17 +112,14 @@ def create_mock_service():
     }
     service.playlistItems.return_value.list.return_value = playlist_list
 
-    # videos().list()
     videos_list = MagicMock()
     videos_list.execute.return_value = {"items": [MOCK_VIDEO]}
     service.videos.return_value.list.return_value = videos_list
 
-    # videos().update()
     videos_update = MagicMock()
     videos_update.execute.return_value = MOCK_VIDEO
     service.videos.return_value.update.return_value = videos_update
 
-    # commentThreads().list()
     comments_list = MagicMock()
     comments_list.execute.return_value = {
         "items": [MOCK_COMMENT, MOCK_NEGATIVE_COMMENT],
@@ -137,24 +132,21 @@ def create_mock_service():
 
 @pytest.fixture
 def mock_service():
-    """Fixture that provides a mocked YouTube service."""
     return create_mock_service()
 
 
 @pytest.fixture
 def mock_auth(mock_service):
-    """Fixture that patches authentication to return mock service in all modules."""
+    mock_creds = MagicMock()
     with (
-        patch("ytstudio.commands.videos.get_authenticated_service", return_value=mock_service),
-        patch("ytstudio.commands.comments.get_authenticated_service", return_value=mock_service),
-        patch("ytstudio.commands.analytics.get_authenticated_service", return_value=mock_service),
+        patch("ytstudio.auth.get_credentials", return_value=mock_creds),
+        patch("ytstudio.auth.build", return_value=mock_service),
     ):
         yield mock_service
 
 
 @pytest.fixture
 def mock_credentials():
-    """Fixture that patches credential loading."""
     mock_creds = {
         "token": "fake_token",
         "refresh_token": "fake_refresh",

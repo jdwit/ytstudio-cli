@@ -1,32 +1,14 @@
-# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
 .venv/
-venv/
 *.egg-info/
 dist/
 build/
-.eggs/
-
-# Testing
 .pytest_cache/
 .coverage
 coverage.xml
 htmlcov/
-
-# IDE
+.ruff_cache/
 .idea/
 .vscode/
-*.swp
-*.swo
-
-# OS
 .DS_Store
-Thumbs.db
-
-# Project specific
-.ruff_cache/
-uv.lock

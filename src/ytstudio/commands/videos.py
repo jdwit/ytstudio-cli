@@ -1,5 +1,3 @@
-"""Video management commands."""
-
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -7,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.auth import api, handle_api_error, get_authenticated_service
 from ytstudio.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
 from ytstudio.ui import (
     console,
@@ -15,6 +13,8 @@ from ytstudio.ui import (
     create_table,
     dim,
     format_number,
+    success_message,
+    truncate,
 )
 
 app = typer.Typer(help="Video management commands")
@@ -22,8 +22,6 @@ app = typer.Typer(help="Video management commands")
 
 @dataclass
 class Video:
-    """Normalized video data from YouTube API."""
-
     id: str
     title: str
     description: str
@@ -42,7 +40,7 @@ class Video:
 
 
 def format_duration(iso_duration: str) -> str:
-    """Format ISO 8601 duration (PT1M19S -> 1:19)."""
+    """Format ISO 8601 duration (PT1M19S -> 1:19)"""
     if not iso_duration:
         return ""
 
@@ -60,18 +58,12 @@ def format_duration(iso_duration: str) -> str:
 
 
 def get_service():
-    """Get authenticated service or exit. Returns None in demo mode."""
     if is_demo_mode():
         return None
-    service = get_authenticated_service()
-    if not service:
-        console.print("[red]Not authenticated. Run 'yt login' first.[/red]")
-        raise typer.Exit(1)
-    return service
+    return get_authenticated_service()
 
 
 def get_channel_uploads_playlist(service) -> str:
-    """Get the uploads playlist ID for the authenticated channel."""
     response = api(service.channels().list(part="contentDetails", mine=True))
     if not response.get("items"):
         console.print("[red]No channel found[/red]")
@@ -80,7 +72,6 @@ def get_channel_uploads_playlist(service) -> str:
 
 
 def fetch_video(data_service, video_id: str) -> Video | None:
-    """Fetch a single video by ID. Returns Video or None if not found."""
     if is_demo_mode():
         demo = get_demo_video(video_id)
         if not demo:
@@ -136,7 +127,6 @@ def fetch_video(data_service, video_id: str) -> Video | None:
 def fetch_videos(
     data_service, limit: int = 50, page_token: str | None = None
 ) -> dict[str, list[Video] | str | int | None]:
-    """Fetch videos with stats. Returns dict with 'videos' list of Video objects."""
     if is_demo_mode():
         videos = [
             Video(
@@ -243,16 +233,16 @@ def list_videos(
     sort: str = typer.Option("date", "--sort", "-s", help="Sort by: date, views, likes"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
     audio_lang: str = typer.Option(
-        None, "--audio-lang", help="Filter by audio language (e.g., en, es)"
+        None, "--audio-lang", help="Filter by audio language (e.g., en, nl)"
     ),
     meta_lang: str = typer.Option(
-        None, "--meta-lang", help="Filter by metadata language (e.g., en, es)"
+        None, "--meta-lang", help="Filter by metadata language (e.g., en, nl)"
     ),
     has_localization: str = typer.Option(
-        None, "--has-localization", help="Filter by available translation (e.g., en, es)"
+        None, "--has-localization", help="Filter by available translation (e.g., en, nl)"
     ),
 ):
-    """List your YouTube videos."""
+    """List your YouTube videos"""
     service = get_service()
     result = fetch_videos(service, limit, page_token)
     videos: list[Video] = result["videos"]
@@ -299,9 +289,10 @@ def list_videos(
 
         for v in videos:
             video_url = f"https://youtu.be/{v.id}"
+            title = truncate(v.title)
             table.add_row(
                 v.id,
-                v.title,
+                title,
                 video_url,
                 format_number(v.views),
                 format_number(v.likes),
@@ -310,18 +301,17 @@ def list_videos(
             )
 
         console.print(table)
-        console.print(dim(f"\n{result['total_results']} videos"))
 
         if result["next_page_token"]:
-            console.print(f"\n[dim]Next page: --page-token {result['next_page_token']}[/dim]")
+            console.print(f"\nNext page: --page-token {result['next_page_token']}")
 
 
 @app.command()
-def get(
+def show(
     video_id: str = typer.Argument(..., help="Video ID"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
-    """Get details for a specific video."""
+    """Show details for a specific video"""
     service = get_service()
     video = fetch_video(service, video_id)
 
@@ -366,9 +356,9 @@ def update(
     title: str = typer.Option(None, "--title", "-t", help="New title"),
     description: str = typer.Option(None, "--description", "-d", help="New description"),
     tags: str = typer.Option(None, "--tags", help="Comma-separated tags"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Preview without applying"),
+    execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
-    """Update a video's metadata."""
+    """Update a video's metadata"""
     if not any([title, description, tags]):
         console.print(
             "[yellow]Nothing to update. Provide --title, --description, or --tags[/yellow]"
@@ -388,15 +378,15 @@ def update(
     new_desc = description if description else current.get("description", "")
     new_tags = [t.strip() for t in tags.split(",")] if tags else current.get("tags", [])
 
-    if dry_run:
-        console.print("[bold]Dry run - changes:[/bold]\n")
+    if not execute:
+        console.print("[bold]Preview changes:[/bold]\n")
         if title:
             console.print(f"title: {current['title']} → [green]{new_title}[/green]")
         if description:
             console.print("description: [green](updated)[/green]")
         if tags:
             console.print(f"tags: [green]{', '.join(new_tags[:5])}[/green]")
-        console.print("\n[dim]Run without --dry-run to apply[/dim]")
+        console.print("\nRun with --execute to apply")
         return
 
     body = {
@@ -410,7 +400,7 @@ def update(
     }
 
     api(service.videos().update(part="snippet", body=body))
-    console.print(f"[green]✓ Updated: {new_title}[/green]")
+    success_message(f"Updated: {new_title}")
 
 
 @app.command("search-replace")
@@ -422,7 +412,7 @@ def search_replace(
     limit: int = typer.Option(10, "--limit", "-n", help="Max matches to find"),
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
-    """Bulk update videos using search and replace."""
+    """Bulk update videos using search and replace"""
     service = get_service()
     uploads_playlist_id = get_channel_uploads_playlist(service)
 

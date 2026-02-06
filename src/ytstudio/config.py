@@ -1,25 +1,20 @@
-"""Configuration management."""
-
 import json
 from pathlib import Path
 
-from rich.console import Console
 from rich.prompt import Prompt
+
+from ytstudio.ui import console, success_message
 
 CONFIG_DIR = Path.home() / ".config" / "ytstudio-cli"
 CLIENT_SECRETS_FILE = CONFIG_DIR / "client_secrets.json"
 CREDENTIALS_FILE = CONFIG_DIR / "credentials.json"
 
-console = Console()
 
-
-def ensure_config_dir():
-    """Ensure the config directory exists."""
+def ensure_config_dir() -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def setup_credentials(client_secrets_file: str | None = None):
-    """Set up Google OAuth client credentials."""
+def setup_credentials(client_secrets_file: str | None = None) -> None:
     ensure_config_dir()
 
     if client_secrets_file:
@@ -30,7 +25,7 @@ def setup_credentials(client_secrets_file: str | None = None):
             raise SystemExit(1)
 
         CLIENT_SECRETS_FILE.write_text(source.read_text())
-        console.print(f"[green]✓ Client secrets saved to {CLIENT_SECRETS_FILE}[/green]")
+        success_message(f"Client secrets saved to {CLIENT_SECRETS_FILE}")
     else:
         # Interactive setup
         console.print("\n[bold]ytstudio-cli Setup[/bold]\n")
@@ -51,32 +46,29 @@ def setup_credentials(client_secrets_file: str | None = None):
         }
 
         CLIENT_SECRETS_FILE.write_text(json.dumps(secrets, indent=2))
-        console.print(f"\n[green]✓ Client secrets saved to {CLIENT_SECRETS_FILE}[/green]")
+        console.print()
+        success_message(f"Client secrets saved to {CLIENT_SECRETS_FILE}")
 
     console.print("\nRun [bold]ytstudio login[/bold] to authenticate with YouTube.")
 
 
 def get_client_secrets() -> dict | None:
-    """Load client secrets from config."""
     if not CLIENT_SECRETS_FILE.exists():
         return None
     return json.loads(CLIENT_SECRETS_FILE.read_text())
 
 
-def save_credentials(credentials: dict):
-    """Save OAuth credentials."""
+def save_credentials(credentials: dict) -> None:
     ensure_config_dir()
     CREDENTIALS_FILE.write_text(json.dumps(credentials, indent=2))
 
 
 def load_credentials() -> dict | None:
-    """Load stored OAuth credentials."""
     if not CREDENTIALS_FILE.exists():
         return None
     return json.loads(CREDENTIALS_FILE.read_text())
 
 
-def clear_credentials():
-    """Remove stored credentials."""
+def clear_credentials() -> None:
     if CREDENTIALS_FILE.exists():
         CREDENTIALS_FILE.unlink()

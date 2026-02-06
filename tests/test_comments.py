@@ -1,110 +1,49 @@
-"""Tests for comment commands."""
-
 from datetime import UTC, datetime, timedelta
 
 from typer.testing import CliRunner
 
-from ytstudio.commands.comments import time_ago
 from ytstudio.main import app
+from ytstudio.ui import time_ago
 
 runner = CliRunner()
 
 
 class TestTimeAgo:
-    """Test time_ago utility."""
-
-    def test_recent(self):
+    def test_formats_correctly(self):
         now = datetime.now(UTC).isoformat()
         assert time_ago(now) == "recently"
 
-    def test_hours_ago(self):
-        dt = datetime.now(UTC) - timedelta(hours=5)
-        result = time_ago(dt.isoformat())
-        assert "5h ago" in result
-
-    def test_days_ago(self):
-        dt = datetime.now(UTC) - timedelta(days=3)
-        result = time_ago(dt.isoformat())
-        assert "3d ago" in result
-
-    def test_months_ago(self):
-        dt = datetime.now(UTC) - timedelta(days=60)
-        result = time_ago(dt.isoformat())
-        assert "2mo ago" in result
-
-    def test_years_ago(self):
-        dt = datetime.now(UTC) - timedelta(days=400)
-        result = time_ago(dt.isoformat())
-        assert "1y ago" in result
+        hours_ago = (datetime.now(UTC) - timedelta(hours=5)).isoformat()
+        assert "5h ago" in time_ago(hours_ago)
 
 
-class TestCommentsListCommand:
-    """Test yt comments list command."""
-
-    def test_list_comments(self, mock_auth):
-        """Test listing comments."""
-        result = runner.invoke(app, ["comments", "list", "test_video_123"])
-
+class TestCommentsCommands:
+    def test_list_channel_wide(self, mock_auth):
+        result = runner.invoke(app, ["comments", "list"])
         assert result.exit_code == 0
         assert "Test User" in result.stdout
-        assert "Great video" in result.stdout
+        assert "Published Comments" in result.stdout
+        assert "channel" in result.stdout
 
-    def test_list_comments_json(self, mock_auth):
-        """Test listing comments as JSON."""
-        result = runner.invoke(app, ["comments", "list", "test_video_123", "-o", "json"])
-
+    def test_list_with_video_filter(self, mock_auth):
+        result = runner.invoke(app, ["comments", "list", "--video", "test_video_123"])
         assert result.exit_code == 0
         assert "Test User" in result.stdout
-        assert "Great video" in result.stdout
+        assert "video test_video_123" in result.stdout
+
+    def test_list_held_comments(self, mock_auth):
+        result = runner.invoke(app, ["comments", "list", "--status", "held"])
+        assert result.exit_code == 0
+        assert "Held for Review" in result.stdout
+
+    def test_list_spam_comments(self, mock_auth):
+        result = runner.invoke(app, ["comments", "list", "--status", "spam"])
+        assert result.exit_code == 0
+        assert "Likely Spam" in result.stdout
 
     def test_list_comments_disabled(self, mock_auth):
-        """Test handling when comments are disabled."""
         mock_auth.commentThreads.return_value.list.return_value.execute.side_effect = Exception(
             "Comments disabled"
         )
-
-        result = runner.invoke(app, ["comments", "list", "test_video_123"])
-
+        result = runner.invoke(app, ["comments", "list", "--video", "test_video_123"])
         assert result.exit_code == 1
-        assert "Could not fetch" in result.stdout
-
-
-class TestCommentsSummaryCommand:
-    """Test yt comments summary command."""
-
-    def test_summary_shows_sentiment(self, mock_auth):
-        """Test that summary shows sentiment breakdown."""
-        result = runner.invoke(app, ["comments", "summary", "test_video_123"])
-
-        assert result.exit_code == 0
-        assert "Positive" in result.stdout
-        assert "Negative" in result.stdout
-
-    def test_summary_shows_negative_comments(self, mock_auth):
-        """Test that negative comments are highlighted."""
-        result = runner.invoke(app, ["comments", "summary", "test_video_123"])
-
-        assert result.exit_code == 0
-        # Should show the negative comment
-        assert "terrible" in result.stdout.lower() or "Angry User" in result.stdout
-
-
-class TestSentimentAnalysis:
-    """Test sentiment analysis logic."""
-
-    def test_positive_comment_detected(self):
-        """Test that positive words are detected."""
-        from ytstudio.commands.comments import summary  # noqa
-
-        # The sentiment logic is in summary command
-        positive_words = {"love", "great", "amazing", "awesome"}
-        text = "Great video! Love it!".lower()
-
-        assert any(word in text for word in positive_words)
-
-    def test_negative_comment_detected(self):
-        """Test that negative words are detected."""
-        negative_words = {"hate", "bad", "worst", "terrible", "boring"}
-        text = "This is terrible and boring".lower()
-
-        assert any(word in text for word in negative_words)

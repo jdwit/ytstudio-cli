@@ -1,4 +1,4 @@
-"""Centralized UI components and styling."""
+from datetime import UTC, datetime
 
 from rich.console import Console
 from rich.table import Table
@@ -7,7 +7,6 @@ console = Console()
 
 
 def create_table(title: str | None = None, show_header: bool = True) -> Table:
-    """Create a table with consistent styling."""
     return Table(
         title=title,
         box=None,
@@ -19,7 +18,6 @@ def create_table(title: str | None = None, show_header: bool = True) -> Table:
 
 
 def create_kv_table() -> Table:
-    """Create a key-value table (for details view)."""
     return Table(
         box=None,
         show_header=False,
@@ -30,7 +28,7 @@ def create_kv_table() -> Table:
 
 
 def format_number(n: int) -> str:
-    """Format large numbers (1234567 -> 1.2M)."""
+    """Format large numbers (1234567 -> 1.2M)"""
     if n >= 1_000_000:
         return f"{n / 1_000_000:.1f}M"
     if n >= 1_000:
@@ -38,46 +36,63 @@ def format_number(n: int) -> str:
     return str(n)
 
 
+def time_ago(iso_timestamp: str) -> str:
+    """Format ISO timestamp as relative time (2h ago, 3d ago)"""
+    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    delta = datetime.now(UTC) - dt
+
+    if delta.days > 365:
+        return f"{delta.days // 365}y ago"
+    if delta.days > 30:
+        return f"{delta.days // 30}mo ago"
+    if delta.days > 0:
+        return f"{delta.days}d ago"
+    if delta.seconds > 3600:
+        return f"{delta.seconds // 3600}h ago"
+    return "recently"
+
+
 def dim(text: str) -> str:
-    """Dim/muted text for labels, secondary info (gh-style)."""
     return f"[dim]{text}[/dim]"
 
 
 def muted(text: str) -> str:
-    """Muted text for secondary info."""
     return f"[dim]{text}[/dim]"
 
 
 def id_style(text: str) -> str:
-    """Style for IDs, hashes - visible but subtle (gh-style yellow)."""
     return f"[yellow]{text}[/yellow]"
 
 
 def cyan(text: str) -> str:
-    """Cyan text for links and URLs."""
     return f"[cyan]{text}[/cyan]"
 
 
 def bold(text: str) -> str:
-    """Bold text for emphasis."""
     return f"[bold]{text}[/bold]"
 
 
 def success(text: str) -> str:
-    """Green success text."""
     return f"[green]{text}[/green]"
 
 
+def success_message(text: str) -> None:
+    console.print(f"[green]✓ {text}[/green]")
+
+
 def error(text: str) -> str:
-    """Red error text."""
     return f"[red]{text}[/red]"
 
 
 def warning(text: str) -> str:
-    """Yellow warning text."""
     return f"[yellow]{text}[/yellow]"
 
 
 def link(text: str, url: str) -> str:
-    """Clickable link (cyan)."""
     return f"[cyan][link={url}]{text}[/link][/cyan]"
+
+
+def truncate(text: str, length: int = 60) -> str:
+    if len(text) > length:
+        return text[:length] + "..."
+    return text

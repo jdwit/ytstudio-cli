@@ -1,41 +1,27 @@
-"""YouTube OAuth authentication."""
-
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from rich.console import Console
-from rich.panel import Panel
-
 from ytstudio.config import (
     CLIENT_SECRETS_FILE,
     clear_credentials,
     load_credentials,
     save_credentials,
 )
-
-console = Console()
+from ytstudio.ui import console, success_message
 
 
 def handle_api_error(error: HttpError) -> None:
-    """Handle YouTube API errors with user-friendly messages."""
     if error.resp.status == 403:
         error_details = error.error_details[0] if error.error_details else {}
         reason = error_details.get("reason", "")
 
         if reason == "quotaExceeded":
             console.print(
-                Panel(
-                    "[bold red]YouTube API quota exceeded[/bold red]\n\n"
-                    "Your daily quota (10,000 units) has been used up.\n\n"
-                    "[bold]Options:[/bold]\n"
-                    "• [cyan]Wait[/cyan] - Quota resets at midnight Pacific Time (~9 AM CET)\n"
-                    "• [cyan]Request more[/cyan] - Visit Google Cloud Console → APIs → YouTube Data API v3 → Quotas\n\n"
-                    "[dim]Tip: Update operations cost 50 units each. Use --dry-run to preview changes.[/dim]",
-                    title="⚠️  Quota Exceeded",
-                    border_style="red",
-                )
+                "[red]Daily YouTube API quota exceeded.[/red] "
+                "Quota resets at midnight Pacific Time (PT).\n"
+                "See: https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits"
             )
             raise SystemExit(1)
 
@@ -67,10 +53,9 @@ SCOPES = [
 ]
 
 
-def authenticate():
-    """Run OAuth authentication flow."""
+def authenticate() -> None:
     if not CLIENT_SECRETS_FILE.exists():
-        console.print("[red]No client secrets found. Run 'yt init' first.[/red]")
+        console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
         raise SystemExit(1)
 
     console.print("[bold]Authenticating with YouTube...[/bold]\n")
@@ -102,15 +87,15 @@ def authenticate():
     service = build("youtube", "v3", credentials=credentials)
     response = service.channels().list(part="snippet", mine=True).execute()
 
+    console.print()
     if response.get("items"):
         channel = response["items"][0]["snippet"]
-        console.print(f"\n[green]✓ Logged in as: {channel['title']}[/green]")
+        success_message(f"Logged in as: {channel['title']}")
     else:
-        console.print("\n[green]✓ Authentication successful[/green]")
+        success_message("Authentication successful")
 
 
 def get_credentials() -> Credentials | None:
-    """Get valid credentials, refreshing if needed."""
     creds_data = load_credentials()
     if not creds_data:
         return None
@@ -133,25 +118,26 @@ def get_credentials() -> Credentials | None:
     return credentials
 
 
-def get_authenticated_service(api: str = "youtube", version: str = "v3"):
-    """Get an authenticated YouTube API service."""
+def get_authenticated_service(api_name: str = "youtube", version: str = "v3"):
+    import typer
+
     credentials = get_credentials()
     if not credentials:
-        return None
-    return build(api, version, credentials=credentials)
+        console.print("[red]Not authenticated. Run 'ytstudio login' first.[/red]")
+        raise typer.Exit(1)
+    return build(api_name, version, credentials=credentials)
 
 
-def get_status():
-    """Show authentication status."""
+def get_status() -> None:
     creds_data = load_credentials()
 
     if not creds_data:
-        console.print("[yellow]Not authenticated. Run 'yt login' to authenticate.[/yellow]")
+        console.print("[yellow]Not authenticated. Run 'ytstudio login' to authenticate.[/yellow]")
         return
 
     credentials = get_credentials()
     if not credentials or not credentials.valid:
-        console.print("[yellow]Credentials expired. Run 'yt login' to re-authenticate.[/yellow]")
+        console.print("[yellow]Credentials expired. Run 'ytstudio login' to re-authenticate.[/yellow]")
         return
 
     # Get channel info
@@ -163,13 +149,12 @@ def get_status():
         snippet = channel["snippet"]
         stats = channel["statistics"]
 
-        console.print("[green]✓ Authenticated[/green]")
+        success_message("Authenticated")
         console.print(f"  Channel: [bold]{snippet['title']}[/bold]")
         console.print(f"  Subscribers: {stats.get('subscriberCount', 'N/A')}")
         console.print(f"  Videos: {stats.get('videoCount', 'N/A')}")
 
 
-def logout():
-    """Remove stored credentials."""
+def logout() -> None:
     clear_credentials()
-    console.print("[green]✓ Logged out successfully[/green]")
+    success_message("Logged out successfully")

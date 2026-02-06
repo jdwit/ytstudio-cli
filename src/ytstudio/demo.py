@@ -1,7 +1,7 @@
-"""Demo mode with mock data for screencasts."""
+"""Demo mode with mock data for screencasts"""
 
 import os
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 DEMO_MODE = os.environ.get("YTSTUDIO_DEMO", "").lower() in ("1", "true", "yes")
 
@@ -282,34 +282,44 @@ DEMO_ANALYTICS = {
 
 DEMO_COMMENTS = [
     {
+        "id": "Ugw1abc123",
         "author": "CodeNewbie",
         "text": "This is the best explanation I've ever seen! 🔥",
         "likes": 1542,
-        "published": datetime.now() - timedelta(hours=2),
+        "published": datetime.now(UTC) - timedelta(hours=2),
+        "video_id": "zQnBQ4tB3ZA",
     },
     {
+        "id": "Ugw2def456",
         "author": "DevSenior",
         "text": "100 seconds well spent. Subscribed!",
         "likes": 856,
-        "published": datetime.now() - timedelta(hours=5),
+        "published": datetime.now(UTC) - timedelta(hours=5),
+        "video_id": "Ata9cSC2WpM",
     },
     {
+        "id": "Ugw3ghi789",
         "author": "TechEnthusiast",
         "text": "Fireship videos are like coffee for developers ☕",
         "likes": 2341,
-        "published": datetime.now() - timedelta(hours=8),
+        "published": datetime.now(UTC) - timedelta(hours=8),
+        "video_id": "w7ejDZ8SWv8",
     },
     {
+        "id": "Ugw4jkl012",
         "author": "JuniorDev2024",
         "text": "Finally understand this after watching 10 other tutorials",
         "likes": 634,
-        "published": datetime.now() - timedelta(days=1),
+        "published": datetime.now(UTC) - timedelta(days=1),
+        "video_id": "zQnBQ4tB3ZA",
     },
     {
+        "id": "Ugw5mno345",
         "author": "FullStackFan",
         "text": "The production quality is insane for these short videos",
         "likes": 421,
-        "published": datetime.now() - timedelta(days=1),
+        "published": datetime.now(UTC) - timedelta(days=1),
+        "video_id": "dQw4w9WgXcQ",
     },
 ]
 
@@ -336,7 +346,6 @@ DEMO_SEO = {
 
 
 def get_demo_video(video_id: str) -> dict | None:
-    """Get a demo video by ID."""
     for video in DEMO_VIDEOS:
         if video["id"] == video_id:
             return video
@@ -345,5 +354,4 @@ def get_demo_video(video_id: str) -> dict | None:
 
 
 def is_demo_mode() -> bool:
-    """Check if demo mode is enabled."""
     return DEMO_MODE

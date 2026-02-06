@@ -1,6 +1,4 @@
-"""Main CLI entry point."""
-
-from importlib.metadata import version
+import atexit
 
 import typer
 from rich.console import Console
@@ -8,6 +6,7 @@ from rich.console import Console
 from ytstudio.auth import authenticate, get_status
 from ytstudio.commands import analytics, auth, comments, videos
 from ytstudio.config import setup_credentials
+from ytstudio.version import get_current_version, is_update_available
 
 app = typer.Typer(
     name="ytstudio",
@@ -33,20 +32,35 @@ def init(
         help="Path to Google OAuth client secrets JSON file",
     ),
 ):
-    """Initialize with Google OAuth credentials."""
+    """Initialize with Google OAuth credentials"""
     setup_credentials(client_secrets_file)
 
 
 @app.command()
 def login():
-    """Authenticate with YouTube via OAuth."""
+    """Authenticate with YouTube via OAuth"""
     authenticate()
 
 
 @app.command()
 def status():
-    """Show current authentication status."""
+    """Show current authentication status"""
     get_status()
+
+
+_update_check_registered = False
+
+
+def _show_update_notification():
+    try:
+        available, latest = is_update_available()
+        if available:
+            console.print(
+                f"\n[cyan]Update available: {get_current_version()} → {latest}[/cyan]\n"
+                f"Run: [bold]uv tool upgrade ytstudio-cli[/bold]"
+            )
+    except Exception:
+        pass  # Silent on errors
 
 
 @app.callback(invoke_without_command=True)
@@ -55,8 +69,13 @@ def main(
 ):
     """ytstudio - Manage your YouTube channel from the terminal"""
     if show_version:
-        console.print(f"ytstudio v{version('ytstudio')}")
+        console.print(f"ytstudio v{get_current_version()}")
         raise typer.Exit()
+
+    global _update_check_registered
+    if not _update_check_registered:
+        atexit.register(_show_update_notification)
+        _update_check_registered = True
 
 
 if __name__ == "__main__":
