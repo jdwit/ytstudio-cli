@@ -1,23 +1,23 @@
 import json
 from dataclasses import asdict, dataclass
-from enum import Enum
+from enum import StrEnum
 
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, handle_api_error, get_authenticated_service
+from ytstudio.auth import api, get_authenticated_service, handle_api_error
 from ytstudio.demo import DEMO_COMMENTS, is_demo_mode
 from ytstudio.ui import console, time_ago
 
 app = typer.Typer(help="Comment commands")
 
 
-class SortOrder(str, Enum):
+class SortOrder(StrEnum):
     relevance = "relevance"
     time = "time"
 
 
-class ModerationStatus(str, Enum):
+class ModerationStatus(StrEnum):
     published = "published"
     held = "held"
     spam = "spam"
@@ -141,5 +141,7 @@ def list_comments(
 
         like_str = f" [dim]({c.likes} likes)[/dim]" if c.likes else ""
         video_str = f" [dim cyan]on {c.video_id}[/dim cyan]" if c.video_id and not video_id else ""
-        console.print(f"[bold]{c.author}[/bold]{like_str}{video_str} [dim]{time_ago(c.published_at)}[/dim]")
+        console.print(
+            f"[bold]{c.author}[/bold]{like_str}{video_str} [dim]{time_ago(c.published_at)}[/dim]"
+        )
         console.print(f"  {text}\n")

@@ -48,7 +48,7 @@ def status():
     get_status()
 
 
-_update_check_registered = False
+_update_state = {"registered": False}
 
 
 def _show_update_notification():
@@ -72,10 +72,9 @@ def main(
         console.print(f"ytstudio v{get_current_version()}")
         raise typer.Exit()
 
-    global _update_check_registered
-    if not _update_check_registered:
+    if not _update_state["registered"]:
         atexit.register(_show_update_notification)
-        _update_check_registered = True
+        _update_state["registered"] = True
 
 
 if __name__ == "__main__":

@@ -213,7 +213,12 @@ def video(
     analytics = fetch_video_analytics(data_service, analytics_service, video_id, days)
 
     if output == "json":
-        print(json.dumps({"video": video_data, "analytics": asdict(analytics) if analytics else None}, indent=2))
+        print(
+            json.dumps(
+                {"video": video_data, "analytics": asdict(analytics) if analytics else None},
+                indent=2,
+            )
+        )
         return
 
     console.print(f"\n[bold]{snippet['title']}[/bold]")

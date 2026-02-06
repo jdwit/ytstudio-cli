@@ -1,8 +1,10 @@
+import typer
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
 from ytstudio.config import (
     CLIENT_SECRETS_FILE,
     clear_credentials,
@@ -119,8 +121,6 @@ def get_credentials() -> Credentials | None:
 
 
 def get_authenticated_service(api_name: str = "youtube", version: str = "v3"):
-    import typer
-
     credentials = get_credentials()
     if not credentials:
         console.print("[red]Not authenticated. Run 'ytstudio login' first.[/red]")
@@ -137,7 +137,9 @@ def get_status() -> None:
 
     credentials = get_credentials()
     if not credentials or not credentials.valid:
-        console.print("[yellow]Credentials expired. Run 'ytstudio login' to re-authenticate.[/yellow]")
+        console.print(
+            "[yellow]Credentials expired. Run 'ytstudio login' to re-authenticate.[/yellow]"
+        )
         return
 
     # Get channel info

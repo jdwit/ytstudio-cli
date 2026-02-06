@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from click.exceptions import Exit
 from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
@@ -42,11 +43,8 @@ class TestApi:
 
 class TestGetAuthenticatedService:
     def test_exits_when_no_credentials(self):
-        from click.exceptions import Exit
-
-        with patch("ytstudio.auth.get_credentials", return_value=None):
-            with pytest.raises(Exit):
-                get_authenticated_service()
+        with patch("ytstudio.auth.get_credentials", return_value=None), pytest.raises(Exit):
+            get_authenticated_service()
 
 
 class TestCommands:

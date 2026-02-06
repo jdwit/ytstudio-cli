@@ -24,9 +24,7 @@ class TestVideosCommands:
         assert result.exit_code == 1
 
     def test_update_preview(self, mock_auth):
-        result = runner.invoke(
-            app, ["videos", "update", "test_video_123", "--title", "New Title"]
-        )
+        result = runner.invoke(app, ["videos", "update", "test_video_123", "--title", "New Title"])
         assert result.exit_code == 0
         assert "Preview" in result.stdout
         mock_auth.videos.return_value.update.assert_not_called()

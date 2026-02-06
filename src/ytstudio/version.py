@@ -2,7 +2,6 @@ import json
 import urllib.request
 from datetime import datetime, timedelta
 from importlib.metadata import version
-from pathlib import Path
 
 from packaging.version import Version
 

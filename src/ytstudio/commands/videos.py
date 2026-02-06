@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass, field
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, handle_api_error, get_authenticated_service
+from ytstudio.auth import api, get_authenticated_service, handle_api_error
 from ytstudio.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
 from ytstudio.ui import (
     console,
