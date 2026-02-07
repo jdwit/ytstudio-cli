@@ -110,17 +110,19 @@ class TestQueryCommand:
             result = runner.invoke(
                 app,
                 [
-                    "analytics", "query",
-                    "-m", "views",
-                    "-f", "video==abc123",
-                    "-f", "country==NL",
+                    "analytics",
+                    "query",
+                    "-m",
+                    "views",
+                    "-f",
+                    "video==abc123",
+                    "-f",
+                    "country==NL",
                 ],
             )
             assert result.exit_code == 0
             # verify filters were passed
-            call_kwargs = (
-                analytics_svc.reports.return_value.query.call_args
-            )
+            call_kwargs = analytics_svc.reports.return_value.query.call_args
             assert "video==abc123;country==NL" in str(call_kwargs)
 
     def test_query_invalid_metric(self):

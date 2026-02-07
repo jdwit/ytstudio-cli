@@ -426,9 +426,7 @@ def query(
     sort: str = typer.Option(None, "--sort", help="Sort field (prefix with - for descending)"),
     limit: int = typer.Option(None, "--limit", "-n", help="Maximum number of rows"),
     currency: str = typer.Option(None, "--currency", help="Currency code for revenue (e.g. EUR)"),
-    output: str = typer.Option(
-        "table", "--output", "-o", help="Output format: table, json, csv"
-    ),
+    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
 ):
     """Run a custom analytics query with any metrics and dimensions.
 
@@ -580,8 +578,7 @@ def list_metrics(
     if group:
         if group not in METRIC_GROUPS:
             console.print(
-                f"[red]Unknown group '{group}'. "
-                f"Available: {', '.join(METRIC_GROUPS)}[/red]"
+                f"[red]Unknown group '{group}'. Available: {', '.join(METRIC_GROUPS)}[/red]"
             )
             raise typer.Exit(1)
         filtered = [m for m in filtered if m.group == group]
@@ -683,8 +680,7 @@ def list_dimensions(
     if group:
         if group not in DIMENSION_GROUPS:
             console.print(
-                f"[red]Unknown group '{group}'. "
-                f"Available: {', '.join(DIMENSION_GROUPS)}[/red]"
+                f"[red]Unknown group '{group}'. Available: {', '.join(DIMENSION_GROUPS)}[/red]"
             )
             raise typer.Exit(1)
         filtered = [d for d in filtered if d.group == group]
