@@ -119,7 +119,7 @@ def list_comments(
     ),
     limit: int = typer.Option(20, "--limit", "-n", help="Number of comments"),
     sort: SortOrder = typer.Option(SortOrder.relevance, "--sort", "-s", help="Sort order"),
-    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+    output: str = typer.Option("json", "--output", "-o", help="Output format: json, table"),
 ):
     """List comments across channel or for a specific video"""
     service = get_service()
@@ -143,3 +143,47 @@ def list_comments(
             f"[bold]{c.author}[/bold]{like_str}{video_str} [dim]{time_ago(c.published_at)}[/dim]"
         )
         console.print(f"  {text}\n")
+
+
+def set_moderation_status(service, comment_ids: list[str], status: str) -> int:
+    """Set moderation status for comments. Returns number of successful operations."""
+    if is_demo_mode():
+        console.print(f"[dim]Demo mode: would set {len(comment_ids)} comments to {status}[/dim]")
+        return len(comment_ids)
+
+    success = 0
+    # YouTube API accepts individual IDs per call
+    for comment_id in comment_ids:
+        try:
+            api(
+                service.comments().setModerationStatus(
+                    id=comment_id,
+                    moderationStatus=status,
+                )
+            )
+            success += 1
+        except HttpError as e:
+            console.print(f"[red]Failed to update {comment_id}: {e}[/red]", stderr=True)
+    return success
+
+
+@app.command()
+def approve(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to approve"),
+):
+    """Approve comments (set status to published)"""
+    service = get_service()
+    count = set_moderation_status(service, comment_ids, "published")
+    result = {"approved": count, "failed": len(comment_ids) - count}
+    print(json.dumps(result))
+
+
+@app.command()
+def hide(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to hide"),
+):
+    """Hide comments (reject)"""
+    service = get_service()
+    count = set_moderation_status(service, comment_ids, "rejected")
+    result = {"hidden": count, "failed": len(comment_ids) - count}
+    print(json.dumps(result))
