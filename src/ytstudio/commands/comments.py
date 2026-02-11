@@ -119,7 +119,7 @@ def list_comments(
     ),
     limit: int = typer.Option(20, "--limit", "-n", help="Number of comments"),
     sort: SortOrder = typer.Option(SortOrder.relevance, "--sort", "-s", help="Sort order"),
-    output: str = typer.Option("json", "--output", "-o", help="Output format: json, table"),
+    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """List comments across channel or for a specific video"""
     service = get_service()
