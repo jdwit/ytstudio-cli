@@ -145,45 +145,65 @@ def list_comments(
         console.print(f"  {text}\n")
 
 
-def set_moderation_status(service, comment_ids: list[str], status: str) -> int:
-    """Set moderation status for comments. Returns number of successful operations."""
+def set_moderation_status(
+    service, comment_ids: list[str], status: str, ban_author: bool = False
+) -> int:
+    """Set moderation status for comments using comma-separated batch calls.
+
+    YouTube API accepts comma-separated IDs (saves quota: 50 units per call).
+    """
     if is_demo_mode():
         console.print(f"[dim]Demo mode: would set {len(comment_ids)} comments to {status}[/dim]")
         return len(comment_ids)
 
     success = 0
-    # YouTube API accepts individual IDs per call
-    for comment_id in comment_ids:
+    # batch in groups of 50 IDs per call
+    batch_size = 50
+    for i in range(0, len(comment_ids), batch_size):
+        batch = comment_ids[i : i + batch_size]
         try:
-            api(
-                service.comments().setModerationStatus(
-                    id=comment_id,
-                    moderationStatus=status,
-                )
-            )
-            success += 1
+            params = {
+                "id": ",".join(batch),
+                "moderationStatus": status,
+            }
+            if ban_author and status == "rejected":
+                params["banAuthor"] = True
+            api(service.comments().setModerationStatus(**params))
+            success += len(batch)
         except HttpError as e:
-            console.print(f"[red]Failed to update {comment_id}: {e}[/red]", stderr=True)
+            console.print(f"[red]Failed to update batch: {e}[/red]", stderr=True)
     return success
 
 
 @app.command()
-def approve(
-    comment_ids: list[str] = typer.Argument(help="Comment IDs to approve"),
+def publish(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to publish"),
 ):
-    """Approve comments (set status to published)"""
+    """Publish comments (approve for public display)"""
     service = get_service()
     count = set_moderation_status(service, comment_ids, "published")
-    result = {"approved": count, "failed": len(comment_ids) - count}
+    result = {"published": count, "failed": len(comment_ids) - count}
     print(json.dumps(result))
 
 
 @app.command()
-def hide(
-    comment_ids: list[str] = typer.Argument(help="Comment IDs to hide"),
+def reject(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to reject"),
+    ban: bool = typer.Option(False, "--ban", help="Also ban the comment author"),
 ):
-    """Hide comments (reject)"""
+    """Reject comments (hide from public display)"""
     service = get_service()
-    count = set_moderation_status(service, comment_ids, "rejected")
-    result = {"hidden": count, "failed": len(comment_ids) - count}
+    count = set_moderation_status(service, comment_ids, "rejected", ban_author=ban)
+    result = {"rejected": count, "failed": len(comment_ids) - count}
+    print(json.dumps(result))
+
+
+@app.command()
+def hold(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to hold for review"),
+):
+    """Hold comments for review"""
+    service = get_service()
+    count = set_moderation_status(service, comment_ids, "heldForReview")
+    result = {"held": count, "failed": len(comment_ids) - count}
     print(json.dumps(result))
