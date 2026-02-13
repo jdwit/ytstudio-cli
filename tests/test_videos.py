@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import typer
 from typer.testing import CliRunner
 
 from ytstudio.main import app
@@ -34,9 +35,9 @@ class TestVideosCommands:
         assert result.exit_code == 1
 
     def test_not_authenticated(self):
-        with (
-            patch("ytstudio.auth.get_authenticated_service", return_value=None),
-            patch("ytstudio.commands.videos.is_demo_mode", return_value=False),
+        with patch(
+            "ytstudio.commands.videos.get_data_service",
+            side_effect=typer.Exit(1),
         ):
             result = runner.invoke(app, ["videos", "list"])
             assert result.exit_code == 1

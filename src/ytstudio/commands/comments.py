@@ -5,9 +5,9 @@ from enum import StrEnum
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, get_authenticated_service, handle_api_error
-from ytstudio.demo import DEMO_COMMENTS, is_demo_mode
-from ytstudio.ui import console, time_ago, truncate
+from ytstudio.api import api, handle_api_error
+from ytstudio.services import get_data_service
+from ytstudio.ui import console, create_table, time_ago, truncate
 
 app = typer.Typer(help="Comment commands")
 
@@ -37,10 +37,6 @@ class Comment:
     video_id: str = ""
 
 
-def get_service():
-    return get_authenticated_service()
-
-
 def get_channel_id(service) -> str:
     response = api(service.channels().list(part="id", mine=True))
     if not response.get("items"):
@@ -56,21 +52,6 @@ def fetch_comments(
     order: SortOrder = SortOrder.relevance,
     moderation_status: ModerationStatus = ModerationStatus.published,
 ) -> list[Comment]:
-    if is_demo_mode():
-        return [
-            Comment(
-                id=c.get("id", f"comment_{i}"),
-                author=c["author"],
-                text=c["text"],
-                likes=c["likes"],
-                published_at=c["published"].isoformat()
-                if hasattr(c["published"], "isoformat")
-                else c["published"],
-                video_id=c.get("video_id", "demo_video"),
-            )
-            for i, c in enumerate(DEMO_COMMENTS[:limit])
-        ]
-
     try:
         # Build query parameters based on filters
         params = {
@@ -80,13 +61,12 @@ def fetch_comments(
         }
 
         if video_id:
-            # Video-specific query (moderationStatus not supported)
             params["videoId"] = video_id
         else:
-            # Channel-wide query (supports moderation filtering)
             channel_id = get_channel_id(data_service)
             params["allThreadsRelatedToChannelId"] = channel_id
-            params["moderationStatus"] = moderation_status.to_api_value()
+            if moderation_status != ModerationStatus.published:
+                params["moderationStatus"] = moderation_status.to_api_value()
 
         response = api(data_service.commentThreads().list(**params))
     except HttpError as e:
@@ -118,11 +98,15 @@ def list_comments(
         ModerationStatus.published, "--status", help="Moderation status: published, held, spam"
     ),
     limit: int = typer.Option(20, "--limit", "-n", help="Number of comments"),
-    sort: SortOrder = typer.Option(SortOrder.relevance, "--sort", "-s", help="Sort order"),
+    sort: SortOrder = typer.Option(SortOrder.time, "--sort", "-s", help="Sort order"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """List comments across channel or for a specific video"""
-    service = get_service()
+    if sort == SortOrder.relevance and not video_id:
+        console.print("[red]--sort relevance requires --video (YouTube API limitation)[/red]")
+        raise typer.Exit(1)
+
+    service = get_data_service()
     comments = fetch_comments(service, video_id, limit, sort, status)
 
     if output == "json":
@@ -134,12 +118,59 @@ def list_comments(
     scope = f"video {video_id}" if video_id else "channel"
     console.print(f"\n[bold]{label} Comments ({len(comments)})[/bold] — {scope}\n")
 
-    for c in comments:
-        text = truncate(c.text, 150)
+    table = create_table()
+    table.add_column("ID", style="yellow")
+    if not video_id:
+        table.add_column("Video", style="cyan")
+    table.add_column("Author")
+    table.add_column("Posted")
+    table.add_column("Comment")
 
-        like_str = f" [dim]({c.likes} likes)[/dim]" if c.likes else ""
-        video_str = f" [dim cyan]on {c.video_id}[/dim cyan]" if c.video_id and not video_id else ""
-        console.print(
-            f"[bold]{c.author}[/bold]{like_str}{video_str} [dim]{time_ago(c.published_at)}[/dim]"
-        )
-        console.print(f"  {text}\n")
+    for c in comments:
+        date = f"{c.published_at[:16].replace('T', ' ')} ({time_ago(c.published_at)})"
+        row = [c.id]
+        if not video_id:
+            row.append(c.video_id)
+        row += [c.author, date, truncate(c.text, 80)]
+        table.add_row(*row)
+
+    console.print(table)
+
+
+def _set_moderation_status(comment_ids: list[str], status: str, ban_author: bool = False) -> int:
+    service = get_data_service()
+    success = 0
+    batch_size = 50
+    for i in range(0, len(comment_ids), batch_size):
+        batch = comment_ids[i : i + batch_size]
+        try:
+            params = {
+                "id": ",".join(batch),
+                "moderationStatus": status,
+            }
+            if ban_author and status == "rejected":
+                params["banAuthor"] = True
+            api(service.comments().setModerationStatus(**params))
+            success += len(batch)
+        except HttpError as e:
+            handle_api_error(e)
+    return success
+
+
+@app.command()
+def publish(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to publish"),
+):
+    """Publish held comments (approve for public display)"""
+    count = _set_moderation_status(comment_ids, "published")
+    console.print(f"{count} comment(s) published")
+
+
+@app.command()
+def reject(
+    comment_ids: list[str] = typer.Argument(help="Comment IDs to reject"),
+    ban: bool = typer.Option(False, "--ban", help="Also ban the comment author"),
+):
+    """Reject comments (hide from public display)"""
+    count = _set_moderation_status(comment_ids, "rejected", ban_author=ban)
+    console.print(f"{count} comment(s) rejected")

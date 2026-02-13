@@ -5,8 +5,8 @@ from dataclasses import asdict, dataclass, field
 import typer
 from googleapiclient.errors import HttpError
 
-from ytstudio.auth import api, get_authenticated_service, handle_api_error
-from ytstudio.demo import DEMO_VIDEOS, get_demo_video, is_demo_mode
+from ytstudio.api import api, handle_api_error
+from ytstudio.services import get_data_service
 from ytstudio.ui import (
     console,
     create_kv_table,
@@ -57,12 +57,6 @@ def format_duration(iso_duration: str) -> str:
     return f"{minutes}:{seconds:02d}"
 
 
-def get_service():
-    if is_demo_mode():
-        return None
-    return get_authenticated_service()
-
-
 def get_channel_uploads_playlist(service) -> str:
     response = api(service.channels().list(part="contentDetails", mine=True))
     if not response.get("items"):
@@ -72,26 +66,6 @@ def get_channel_uploads_playlist(service) -> str:
 
 
 def fetch_video(data_service, video_id: str) -> Video | None:
-    if is_demo_mode():
-        demo = get_demo_video(video_id)
-        if not demo:
-            return None
-        return Video(
-            id=demo["id"],
-            title=demo["title"],
-            description=demo.get("description", ""),
-            published_at=demo["published"].strftime("%Y-%m-%dT%H:%M:%SZ"),
-            views=demo["views"],
-            likes=demo["likes"],
-            comments=demo["comments"],
-            duration=demo["duration"],
-            privacy=demo["privacy"],
-            tags=demo.get("tags", []),
-            default_language=demo.get("defaultLanguage"),
-            default_audio_language=demo.get("defaultAudioLanguage"),
-            localizations=demo.get("localizations", {}),
-        )
-
     response = api(
         data_service.videos().list(
             part="snippet,statistics,contentDetails,status,localizations",
@@ -127,27 +101,6 @@ def fetch_video(data_service, video_id: str) -> Video | None:
 def fetch_videos(
     data_service, limit: int = 50, page_token: str | None = None
 ) -> dict[str, list[Video] | str | int | None]:
-    if is_demo_mode():
-        videos = [
-            Video(
-                id=v["id"],
-                title=v["title"],
-                description=v.get("description", ""),
-                published_at=v["published"].strftime("%Y-%m-%dT%H:%M:%SZ"),
-                views=v["views"],
-                likes=v["likes"],
-                comments=v["comments"],
-                privacy=v["privacy"],
-                tags=v.get("tags", []),
-                duration=v["duration"],
-                localizations=v.get("localizations", {}),
-                default_language=v.get("defaultLanguage"),
-                default_audio_language=v.get("defaultAudioLanguage"),
-            )
-            for v in DEMO_VIDEOS[:limit]
-        ]
-        return {"videos": videos, "next_page_token": None, "total_results": len(DEMO_VIDEOS)}
-
     uploads_playlist_id = get_channel_uploads_playlist(data_service)
 
     all_videos = []
@@ -243,7 +196,7 @@ def list_videos(
     ),
 ):
     """List your YouTube videos"""
-    service = get_service()
+    service = get_data_service()
     result = fetch_videos(service, limit, page_token)
     videos: list[Video] = result["videos"]
 
@@ -312,7 +265,7 @@ def show(
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """Show details for a specific video"""
-    service = get_service()
+    service = get_data_service()
     video = fetch_video(service, video_id)
 
     if not video:
@@ -365,7 +318,7 @@ def update(
         )
         raise typer.Exit(1)
 
-    service = get_service()
+    service = get_data_service()
 
     response = api(service.videos().list(part="snippet", id=video_id))
     if not response.get("items"):
@@ -413,7 +366,7 @@ def search_replace(
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
     """Bulk update videos using search and replace"""
-    service = get_service()
+    service = get_data_service()
     uploads_playlist_id = get_channel_uploads_playlist(service)
 
     changes = []

@@ -1,20 +1,27 @@
-# ytstudio
+# YT Studio CLI
 
 [![CI](https://github.com/jdwit/ytstudio/actions/workflows/ci.yml/badge.svg)](https://github.com/jdwit/ytstudio/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/ytstudio-cli)](https://pypi.org/project/ytstudio-cli/)
+[![Python](https://img.shields.io/pypi/pyversions/ytstudio-cli)](https://pypi.org/project/ytstudio-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Manage and analyze your YouTube channel from the terminal. Ideal for agent workflows and automation.
+Manage and analyze your YouTube channel from the terminal. Ideal for automation and AI workflows.
+
+![demo](demo.gif)
 
 ## Motivation
 
-I built this tool to bulk update video titles on my channel, something YouTube Studio doesn't support. It uses the YouTube Data API for search-and-replace operations, plus analytics and other channel management features. Simple and scriptable for automating common tasks.
+I built this because I needed to bulk update video titles for a YouTube channel I manage with 300+ videos. YouTube 
+Studio does not support bulk search-replace operations, which made it a tedious manual process. This tool uses the 
+YouTube Data API to perform bulk operations on video metadata. Furthermore, it provides features for analytics and 
+comment moderation, all accesible from the command line.
 
 ## Installation
 
 I recommend the excellent [uv](https://uv.io/) tool for installation:
 
 ```bash
-uv tool install ytstudio
+uv tool install ytstudio-cli
 ```
 
 ## Setup
@@ -40,3 +47,8 @@ ytstudio login
 ```
 
 Credentials stored in `~/.config/ytstudio/`.
+
+## Disclaimer
+
+This project is not affiliated with or endorsed by Google. YouTube and YouTube Studio are trademarks of Google.
+All channel data is accessed exclusively through the official [YouTube Data API](https://developers.google.com/youtube/v3) and [YouTube Analytics API](https://developers.google.com/youtube/analytics).
