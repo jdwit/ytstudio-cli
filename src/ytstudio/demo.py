@@ -1,356 +1,188 @@
-"""Demo mode with mock data for screencasts"""
-
+import functools
+import json
 import os
+import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 DEMO_MODE = os.environ.get("YTSTUDIO_DEMO", "").lower() in ("1", "true", "yes")
 
-# Demo data based on Fireship (https://youtube.com/@Fireship)
-# Used with appreciation for educational purposes
+_DATA_DIR = Path(__file__).parent / "demo_data"
 
-DEMO_CHANNEL = {
-    "id": "UCsBjURrPoezykLs9EqgamOA",
-    "title": "Fireship",
-    "subscribers": 4060000,
-    "videos": 850,
-    "views": 654000000,
-}
 
-DEMO_VIDEOS = [
-    {
-        "id": "zQnBQ4tB3ZA",
-        "title": "TypeScript in 100 Seconds",
-        "published": datetime(2020, 11, 25),
-        "views": 3200000,
-        "likes": 98000,
-        "comments": 2400,
-        "duration": "PT2M1S",
-        "privacy": "public",
-        "tags": ["typescript", "javascript", "100SecondsOfCode", "programming"],
-        "description": "Learn the basics of TypeScript in 100 seconds...",
-        "defaultLanguage": "en",
-        "defaultAudioLanguage": "en",
-        "localizations": {
-            "en": {
-                "title": "TypeScript in 100 Seconds",
-                "description": "Learn the basics of TypeScript in 100 seconds...",
+@functools.cache
+def _load(name: str) -> dict:
+    return json.loads((_DATA_DIR / name).read_text())
+
+
+class DemoRequest:
+    def __init__(self, response: dict, delay: float = 0):
+        self._response = response
+        self._delay = delay
+
+    def execute(self) -> dict:
+        if self._delay:
+            time.sleep(self._delay)
+        return self._response
+
+
+class _DemoChannels:
+    def list(self, **kwargs):
+        return DemoRequest(_load("channel.json"))
+
+
+class _DemoVideos:
+    def list(self, **kwargs):
+        id_param = kwargs.get("id", "")
+        requested_ids = [i.strip() for i in id_param.split(",") if i.strip()]
+
+        if not requested_ids:
+            return DemoRequest(_load("videos.json"))
+
+        matched = [v for v in _load("videos.json")["items"] if v["id"] in requested_ids]
+        return DemoRequest({"items": matched})
+
+    def update(self, **kwargs):
+        body = kwargs.get("body", {})
+        return DemoRequest(body, delay=0.3)
+
+
+class _DemoPlaylistItems:
+    def list(self, **kwargs):
+        max_results = kwargs.get("maxResults", 50)
+        data = _load("playlist_items.json")
+        items = data["items"][:max_results]
+        return DemoRequest(
+            {
+                "items": items,
+                "pageInfo": {"totalResults": len(data["items"])},
             }
-        },
-    },
-    {
-        "id": "lHhRhPV--G0",
-        "title": "Flutter in 100 Seconds",
-        "published": datetime(2020, 4, 14),
-        "views": 2100000,
-        "likes": 72000,
-        "comments": 1800,
-        "duration": "PT2M8S",
-        "privacy": "public",
-        "tags": ["flutter", "dart", "mobile", "100SecondsOfCode"],
-        "description": "Build apps on iOS, Android, the web, and desktop with Flutter...",
-    },
-    {
-        "id": "rf60MejMz3E",
-        "title": "Recursion in 100 Seconds",
-        "published": datetime(2019, 12, 30),
-        "views": 1800000,
-        "likes": 65000,
-        "comments": 1500,
-        "duration": "PT1M48S",
-        "privacy": "public",
-        "tags": ["recursion", "algorithms", "100SecondsOfCode", "compsci"],
-        "description": "Learn how recursion works in 100 seconds...",
-    },
-    {
-        "id": "Ata9cSC2WpM",
-        "title": "React in 100 Seconds",
-        "published": datetime(2021, 5, 12),
-        "views": 4500000,
-        "likes": 125000,
-        "comments": 3200,
-        "duration": "PT2M15S",
-        "privacy": "public",
-        "tags": ["react", "javascript", "frontend", "100SecondsOfCode"],
-        "description": "Learn the basics of React in 100 seconds...",
-    },
-    {
-        "id": "w7ejDZ8SWv8",
-        "title": "God-Tier Developer Roadmap",
-        "published": datetime(2022, 8, 15),
-        "views": 6800000,
-        "likes": 215000,
-        "comments": 8500,
-        "duration": "PT11M42S",
-        "privacy": "public",
-        "tags": ["roadmap", "developer", "career", "programming"],
-        "description": "The mass extinction satisfies both business and our lizard brain...",
-    },
-    {
-        "id": "dQw4w9WgXcQ",
-        "title": "Python in 100 Seconds",
-        "published": datetime(2021, 3, 8),
-        "views": 5200000,
-        "likes": 142000,
-        "comments": 4100,
-        "duration": "PT2M12S",
-        "privacy": "public",
-        "tags": ["python", "programming", "100SecondsOfCode", "backend"],
-        "description": "Learn Python in 100 seconds...",
-    },
-    {
-        "id": "7C2z4GqqS5E",
-        "title": "Rust in 100 Seconds",
-        "published": datetime(2021, 7, 22),
-        "views": 2800000,
-        "likes": 89000,
-        "comments": 2200,
-        "duration": "PT2M24S",
-        "privacy": "public",
-        "tags": ["rust", "systems", "100SecondsOfCode", "programming"],
-        "description": "Rust is a blazingly fast systems programming language...",
-    },
-    {
-        "id": "8C3z4GqqS5F",
-        "title": "I built the same app 10 times",
-        "published": datetime(2023, 1, 18),
-        "views": 3900000,
-        "likes": 156000,
-        "comments": 5600,
-        "duration": "PT14M33S",
-        "privacy": "public",
-        "tags": ["frameworks", "comparison", "webdev", "javascript"],
-        "description": "Which JavaScript framework is best?...",
-    },
-    {
-        "id": "9D4z5HrrT6G",
-        "title": "Docker in 100 Seconds",
-        "published": datetime(2020, 8, 3),
-        "views": 2400000,
-        "likes": 78000,
-        "comments": 1900,
-        "duration": "PT2M6S",
-        "privacy": "public",
-        "tags": ["docker", "devops", "100SecondsOfCode", "containers"],
-        "description": "Containerize your applications with Docker...",
-    },
-    {
-        "id": "0E5z6IssU7H",
-        "title": "Kubernetes in 100 Seconds",
-        "published": datetime(2021, 2, 15),
-        "views": 1900000,
-        "likes": 62000,
-        "comments": 1400,
-        "duration": "PT2M18S",
-        "privacy": "public",
-        "tags": ["kubernetes", "k8s", "devops", "100SecondsOfCode"],
-        "description": "Orchestrate containers at scale with K8s...",
-    },
-    {
-        "id": "1F6z7JttV8I",
-        "title": "GraphQL in 100 Seconds",
-        "published": datetime(2020, 6, 20),
-        "views": 1600000,
-        "likes": 54000,
-        "comments": 1200,
-        "duration": "PT2M4S",
-        "privacy": "public",
-        "tags": ["graphql", "api", "100SecondsOfCode", "backend"],
-        "description": "A query language for your API...",
-    },
-    {
-        "id": "2G7z8KuuW9J",
-        "title": "10 CSS tricks you didn't know",
-        "published": datetime(2022, 11, 5),
-        "views": 1100000,
-        "likes": 45000,
-        "comments": 890,
-        "duration": "PT8M22S",
-        "privacy": "public",
-        "tags": ["css", "frontend", "webdev", "tricks"],
-        "description": "Level up your CSS game with these tips...",
-    },
-    {
-        "id": "3H8z9LvvX0K",
-        "title": "SQL Explained in 100 Seconds",
-        "published": datetime(2021, 9, 12),
-        "views": 2100000,
-        "likes": 71000,
-        "comments": 1600,
-        "duration": "PT2M9S",
-        "privacy": "public",
-        "tags": ["sql", "database", "100SecondsOfCode", "backend"],
-        "description": "The most important language for data...",
-    },
-    {
-        "id": "4I9z0MwwY1L",
-        "title": "Linux in 100 Seconds",
-        "published": datetime(2020, 10, 28),
-        "views": 2600000,
-        "likes": 82000,
-        "comments": 2100,
-        "duration": "PT2M15S",
-        "privacy": "public",
-        "tags": ["linux", "os", "100SecondsOfCode", "devops"],
-        "description": "The operating system that runs the world...",
-    },
-    {
-        "id": "5J0z1NxxZ2M",
-        "title": "AI is getting satisfying",
-        "published": datetime(2024, 2, 1),
-        "views": 890000,
-        "likes": 38000,
-        "comments": 1200,
-        "duration": "PT5M44S",
-        "privacy": "public",
-        "tags": ["ai", "code", "news", "tech"],
-        "description": "This week in AI and code...",
-    },
-    {
-        "id": "6K1z2OyyA3N",
-        "title": "Next.js in 100 Seconds",
-        "published": datetime(2021, 11, 3),
-        "views": 1800000,
-        "likes": 58000,
-        "comments": 1300,
-        "duration": "PT2M11S",
-        "privacy": "public",
-        "tags": ["nextjs", "react", "100SecondsOfCode", "fullstack"],
-        "description": "The React framework for production...",
-    },
-    {
-        "id": "7L2z3PzzB4O",
-        "title": "Git in 100 Seconds",
-        "published": datetime(2020, 5, 18),
-        "views": 3100000,
-        "likes": 95000,
-        "comments": 2300,
-        "duration": "PT2M3S",
-        "privacy": "public",
-        "tags": ["git", "vcs", "100SecondsOfCode", "devtools"],
-        "description": "Version control for the modern developer...",
-    },
-    {
-        "id": "8M3z4QaaC5P",
-        "title": "MongoDB in 100 Seconds",
-        "published": datetime(2021, 4, 7),
-        "views": 1500000,
-        "likes": 49000,
-        "comments": 1100,
-        "duration": "PT2M7S",
-        "privacy": "public",
-        "tags": ["mongodb", "nosql", "100SecondsOfCode", "database"],
-        "description": "A document database built for modern apps...",
-    },
-    {
-        "id": "9N4z5RbbD6Q",
-        "title": "AWS in 100 Seconds",
-        "published": datetime(2022, 3, 14),
-        "views": 1400000,
-        "likes": 46000,
-        "comments": 980,
-        "duration": "PT2M19S",
-        "privacy": "public",
-        "tags": ["aws", "cloud", "100SecondsOfCode", "devops"],
-        "description": "The cloud platform that powers the internet...",
-    },
-    {
-        "id": "0O5z6SccE7R",
-        "title": "Svelte in 100 Seconds",
-        "published": datetime(2021, 6, 25),
-        "views": 1700000,
-        "likes": 56000,
-        "comments": 1250,
-        "duration": "PT2M5S",
-        "privacy": "public",
-        "tags": ["svelte", "frontend", "100SecondsOfCode", "javascript"],
-        "description": "A radical new approach to building UIs...",
-    },
-]
-
-DEMO_ANALYTICS = {
-    "views": 2500000,
-    "watch_time_hours": 185000,
-    "subscribers_gained": 45000,
-    "subscribers_lost": 3200,
-    "likes": 89000,
-    "comments": 6200,
-    "shares": 12000,
-    "avg_view_duration": "3:45",
-    "ctr": 12.5,
-    "impressions": 20000000,
-}
-
-DEMO_COMMENTS = [
-    {
-        "id": "Ugw1abc123",
-        "author": "CodeNewbie",
-        "text": "This is the best explanation I've ever seen! 🔥",
-        "likes": 1542,
-        "published": datetime.now(UTC) - timedelta(hours=2),
-        "video_id": "zQnBQ4tB3ZA",
-    },
-    {
-        "id": "Ugw2def456",
-        "author": "DevSenior",
-        "text": "100 seconds well spent. Subscribed!",
-        "likes": 856,
-        "published": datetime.now(UTC) - timedelta(hours=5),
-        "video_id": "Ata9cSC2WpM",
-    },
-    {
-        "id": "Ugw3ghi789",
-        "author": "TechEnthusiast",
-        "text": "Fireship videos are like coffee for developers ☕",
-        "likes": 2341,
-        "published": datetime.now(UTC) - timedelta(hours=8),
-        "video_id": "w7ejDZ8SWv8",
-    },
-    {
-        "id": "Ugw4jkl012",
-        "author": "JuniorDev2024",
-        "text": "Finally understand this after watching 10 other tutorials",
-        "likes": 634,
-        "published": datetime.now(UTC) - timedelta(days=1),
-        "video_id": "zQnBQ4tB3ZA",
-    },
-    {
-        "id": "Ugw5mno345",
-        "author": "FullStackFan",
-        "text": "The production quality is insane for these short videos",
-        "likes": 421,
-        "published": datetime.now(UTC) - timedelta(days=1),
-        "video_id": "dQw4w9WgXcQ",
-    },
-]
-
-DEMO_SEO = {
-    "score": 92,
-    "title_length": 28,
-    "description_length": 850,
-    "tags_count": 15,
-    "has_thumbnail": True,
-    "has_end_screen": True,
-    "has_cards": True,
-    "issues": [
-        "Consider a longer title for better discoverability",
-    ],
-    "passed": [
-        "Strong keyword in title",
-        "Description well-optimized",
-        "Good tag coverage",
-        "Custom thumbnail",
-        "End screen configured",
-        "Cards added",
-    ],
-}
+        )
 
 
-def get_demo_video(video_id: str) -> dict | None:
-    for video in DEMO_VIDEOS:
-        if video["id"] == video_id:
-            return video
-    # Return first video as fallback for any ID in demo mode
-    return DEMO_VIDEOS[0] if DEMO_VIDEOS else None
+class _DemoCommentThreads:
+    def list(self, **kwargs):
+        max_results = kwargs.get("maxResults", 100)
+        video_id = kwargs.get("videoId")
+
+        items = _load("comments.json")["items"]
+        if video_id:
+            items = [
+                c
+                for c in items
+                if c["snippet"]["topLevelComment"]["snippet"].get("videoId") == video_id
+            ]
+
+        return DemoRequest({"items": items[:max_results]})
+
+
+class _DemoComments:
+    def setModerationStatus(self, **kwargs):
+        return DemoRequest({})
+
+
+class DemoDataService:
+    def channels(self):
+        return _DemoChannels()
+
+    def videos(self):
+        return _DemoVideos()
+
+    def playlistItems(self):
+        return _DemoPlaylistItems()
+
+    def comments(self):
+        return _DemoComments()
+
+    def commentThreads(self):
+        return _DemoCommentThreads()
+
+
+class _DemoReports:
+    def query(self, **params):
+        metrics = [m.strip() for m in params.get("metrics", "").split(",") if m.strip()]
+        dimensions = [d.strip() for d in params.get("dimensions", "").split(",") if d.strip()]
+        filters = params.get("filters", "")
+        sort = params.get("sort", "")
+        max_results = params.get("maxResults")
+
+        analytics = _load("analytics_metrics.json")
+        video_metrics = {k: v for k, v in analytics.items() if k != "countries"}
+        countries = analytics.get("countries", ["US", "IN", "GB", "DE", "BR"])
+
+        headers = _make_column_headers(dimensions, metrics)
+
+        def _metric_vals(base: dict) -> list:
+            return [base.get(m, 0) for m in metrics]
+
+        rows = []
+
+        # Single video filter
+        filter_video_id = None
+        if filters:
+            for part in filters.split(";"):
+                if part.startswith("video=="):
+                    filter_video_id = part.split("==", 1)[1]
+
+        if not dimensions:
+            totals = {m: 0 for m in metrics}
+            sources = video_metrics
+            if filter_video_id and filter_video_id in video_metrics:
+                sources = {filter_video_id: video_metrics[filter_video_id]}
+            for base in sources.values():
+                for m in metrics:
+                    totals[m] += base.get(m, 0)
+            rows.append([totals[m] for m in metrics])
+
+        elif dimensions == ["day"]:
+            today = datetime.now(UTC).date()
+            n_days = 7
+            for i in range(n_days, 0, -1):
+                date_str = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+                vid = list(video_metrics.values())[i % len(video_metrics)]
+                rows.append([date_str, *_metric_vals(vid)])
+
+        elif dimensions == ["country"]:
+            for j, country in enumerate(countries):
+                vid = list(video_metrics.values())[j % len(video_metrics)]
+                rows.append([country, *_metric_vals(vid)])
+
+        elif "video" in dimensions:
+            for vid_id, base in video_metrics.items():
+                rows.append([vid_id, *_metric_vals(base)])
+
+        else:
+            totals = {m: 0 for m in metrics}
+            for base in video_metrics.values():
+                for m in metrics:
+                    totals[m] += base.get(m, 0)
+            dim_vals = ["unknown"] * len(dimensions)
+            rows.append([*dim_vals, *[totals[m] for m in metrics]])
+
+        # Apply sort
+        if sort and rows and dimensions:
+            sort_desc = sort.startswith("-")
+            sort_field = sort.lstrip("-")
+            all_names = dimensions + metrics
+            if sort_field in all_names:
+                idx = all_names.index(sort_field)
+                rows.sort(key=lambda r: r[idx], reverse=sort_desc)
+
+        if max_results and len(rows) > max_results:
+            rows = rows[:max_results]
+
+        return DemoRequest({"columnHeaders": headers, "rows": rows})
+
+
+def _make_column_headers(dimensions: list[str], metrics: list[str]) -> list[dict]:
+    return [{"name": d, "columnType": "DIMENSION", "dataType": "STRING"} for d in dimensions] + [
+        {"name": m, "columnType": "METRIC", "dataType": "INTEGER"} for m in metrics
+    ]
+
+
+class DemoAnalyticsService:
+    def reports(self):
+        return _DemoReports()
 
 
 def is_demo_mode() -> bool:

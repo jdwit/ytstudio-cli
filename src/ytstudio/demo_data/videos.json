@@ -1,0 +1,451 @@
+{
+  "items": [
+    {
+      "id": "zQnBQ4tB3ZA",
+      "snippet": {
+        "title": "TypeScript in 100 Seconds",
+        "description": "Learn the basics of TypeScript in 100 seconds...",
+        "publishedAt": "2020-11-25T00:00:00Z",
+        "tags": ["typescript", "javascript", "100SecondsOfCode", "programming"],
+        "categoryId": "28",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "3200000",
+        "likeCount": "98000",
+        "commentCount": "2400"
+      },
+      "contentDetails": {
+        "duration": "PT2M1S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {
+        "en": {
+          "title": "TypeScript in 100 Seconds",
+          "description": "Learn the basics of TypeScript in 100 seconds..."
+        }
+      }
+    },
+    {
+      "id": "lHhRhPV--G0",
+      "snippet": {
+        "title": "Flutter in 100 Seconds",
+        "description": "Build apps on iOS, Android, the web, and desktop with Flutter...",
+        "publishedAt": "2020-04-14T00:00:00Z",
+        "tags": ["flutter", "dart", "mobile", "100SecondsOfCode"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "2100000",
+        "likeCount": "72000",
+        "commentCount": "1800"
+      },
+      "contentDetails": {
+        "duration": "PT2M8S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "rf60MejMz3E",
+      "snippet": {
+        "title": "Recursion in 100 Seconds",
+        "description": "Learn how recursion works in 100 seconds...",
+        "publishedAt": "2019-12-30T00:00:00Z",
+        "tags": ["recursion", "algorithms", "100SecondsOfCode", "compsci"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1800000",
+        "likeCount": "65000",
+        "commentCount": "1500"
+      },
+      "contentDetails": {
+        "duration": "PT1M48S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "Ata9cSC2WpM",
+      "snippet": {
+        "title": "React in 100 Seconds",
+        "description": "Learn the basics of React in 100 seconds...",
+        "publishedAt": "2021-05-12T00:00:00Z",
+        "tags": ["react", "javascript", "frontend", "100SecondsOfCode"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "4500000",
+        "likeCount": "125000",
+        "commentCount": "3200"
+      },
+      "contentDetails": {
+        "duration": "PT2M15S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "w7ejDZ8SWv8",
+      "snippet": {
+        "title": "God-Tier Developer Roadmap",
+        "description": "The mass extinction satisfies both business and our lizard brain...",
+        "publishedAt": "2022-08-15T00:00:00Z",
+        "tags": ["roadmap", "developer", "career", "programming"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "6800000",
+        "likeCount": "215000",
+        "commentCount": "8500"
+      },
+      "contentDetails": {
+        "duration": "PT11M42S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "dQw4w9WgXcQ",
+      "snippet": {
+        "title": "Python in 100 Seconds",
+        "description": "Learn Python in 100 seconds...",
+        "publishedAt": "2021-03-08T00:00:00Z",
+        "tags": ["python", "programming", "100SecondsOfCode", "backend"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "5200000",
+        "likeCount": "142000",
+        "commentCount": "4100"
+      },
+      "contentDetails": {
+        "duration": "PT2M12S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "7C2z4GqqS5E",
+      "snippet": {
+        "title": "Rust in 100 Seconds",
+        "description": "Rust is a blazingly fast systems programming language...",
+        "publishedAt": "2021-07-22T00:00:00Z",
+        "tags": ["rust", "systems", "100SecondsOfCode", "programming"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "2800000",
+        "likeCount": "89000",
+        "commentCount": "2200"
+      },
+      "contentDetails": {
+        "duration": "PT2M24S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "8C3z4GqqS5F",
+      "snippet": {
+        "title": "I built the same app 10 times",
+        "description": "Which JavaScript framework is best?...",
+        "publishedAt": "2023-01-18T00:00:00Z",
+        "tags": ["frameworks", "comparison", "webdev", "javascript"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "3900000",
+        "likeCount": "156000",
+        "commentCount": "5600"
+      },
+      "contentDetails": {
+        "duration": "PT14M33S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "9D4z5HrrT6G",
+      "snippet": {
+        "title": "Docker in 100 Seconds",
+        "description": "Containerize your applications with Docker...",
+        "publishedAt": "2020-08-03T00:00:00Z",
+        "tags": ["docker", "devops", "100SecondsOfCode", "containers"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "2400000",
+        "likeCount": "78000",
+        "commentCount": "1900"
+      },
+      "contentDetails": {
+        "duration": "PT2M6S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "0E5z6IssU7H",
+      "snippet": {
+        "title": "Kubernetes in 100 Seconds",
+        "description": "Orchestrate containers at scale with K8s...",
+        "publishedAt": "2021-02-15T00:00:00Z",
+        "tags": ["kubernetes", "k8s", "devops", "100SecondsOfCode"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1900000",
+        "likeCount": "62000",
+        "commentCount": "1400"
+      },
+      "contentDetails": {
+        "duration": "PT2M18S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "1F6z7JttV8I",
+      "snippet": {
+        "title": "GraphQL in 100 Seconds",
+        "description": "A query language for your API...",
+        "publishedAt": "2020-06-20T00:00:00Z",
+        "tags": ["graphql", "api", "100SecondsOfCode", "backend"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1600000",
+        "likeCount": "54000",
+        "commentCount": "1200"
+      },
+      "contentDetails": {
+        "duration": "PT2M4S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "2G7z8KuuW9J",
+      "snippet": {
+        "title": "10 CSS tricks you didn't know",
+        "description": "Level up your CSS game with these tips...",
+        "publishedAt": "2022-11-05T00:00:00Z",
+        "tags": ["css", "frontend", "webdev", "tricks"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1100000",
+        "likeCount": "45000",
+        "commentCount": "890"
+      },
+      "contentDetails": {
+        "duration": "PT8M22S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "3H8z9LvvX0K",
+      "snippet": {
+        "title": "SQL Explained in 100 Seconds",
+        "description": "The most important language for data...",
+        "publishedAt": "2021-09-12T00:00:00Z",
+        "tags": ["sql", "database", "100SecondsOfCode", "backend"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "2100000",
+        "likeCount": "71000",
+        "commentCount": "1600"
+      },
+      "contentDetails": {
+        "duration": "PT2M9S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "4I9z0MwwY1L",
+      "snippet": {
+        "title": "Linux in 100 Seconds",
+        "description": "The operating system that runs the world...",
+        "publishedAt": "2020-10-28T00:00:00Z",
+        "tags": ["linux", "os", "100SecondsOfCode", "devops"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "2600000",
+        "likeCount": "82000",
+        "commentCount": "2100"
+      },
+      "contentDetails": {
+        "duration": "PT2M15S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "5J0z1NxxZ2M",
+      "snippet": {
+        "title": "AI is getting satisfying",
+        "description": "This week in AI and code...",
+        "publishedAt": "2024-02-01T00:00:00Z",
+        "tags": ["ai", "code", "news", "tech"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "890000",
+        "likeCount": "38000",
+        "commentCount": "1200"
+      },
+      "contentDetails": {
+        "duration": "PT5M44S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "6K1z2OyyA3N",
+      "snippet": {
+        "title": "Next.js in 100 Seconds",
+        "description": "The React framework for production...",
+        "publishedAt": "2021-11-03T00:00:00Z",
+        "tags": ["nextjs", "react", "100SecondsOfCode", "fullstack"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1800000",
+        "likeCount": "58000",
+        "commentCount": "1300"
+      },
+      "contentDetails": {
+        "duration": "PT2M11S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "7L2z3PzzB4O",
+      "snippet": {
+        "title": "Git in 100 Seconds",
+        "description": "Version control for the modern developer...",
+        "publishedAt": "2020-05-18T00:00:00Z",
+        "tags": ["git", "vcs", "100SecondsOfCode", "devtools"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "3100000",
+        "likeCount": "95000",
+        "commentCount": "2300"
+      },
+      "contentDetails": {
+        "duration": "PT2M3S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "8M3z4QaaC5P",
+      "snippet": {
+        "title": "MongoDB in 100 Seconds",
+        "description": "A document database built for modern apps...",
+        "publishedAt": "2021-04-07T00:00:00Z",
+        "tags": ["mongodb", "nosql", "100SecondsOfCode", "database"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1500000",
+        "likeCount": "49000",
+        "commentCount": "1100"
+      },
+      "contentDetails": {
+        "duration": "PT2M7S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "9N4z5RbbD6Q",
+      "snippet": {
+        "title": "AWS in 100 Seconds",
+        "description": "The cloud platform that powers the internet...",
+        "publishedAt": "2022-03-14T00:00:00Z",
+        "tags": ["aws", "cloud", "100SecondsOfCode", "devops"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1400000",
+        "likeCount": "46000",
+        "commentCount": "980"
+      },
+      "contentDetails": {
+        "duration": "PT2M19S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    },
+    {
+      "id": "0O5z6SccE7R",
+      "snippet": {
+        "title": "Svelte in 100 Seconds",
+        "description": "A radical new approach to building UIs...",
+        "publishedAt": "2021-06-25T00:00:00Z",
+        "tags": ["svelte", "frontend", "100SecondsOfCode", "javascript"],
+        "categoryId": "28"
+      },
+      "statistics": {
+        "viewCount": "1700000",
+        "likeCount": "56000",
+        "commentCount": "1250"
+      },
+      "contentDetails": {
+        "duration": "PT2M5S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {}
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import typer
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -25,11 +26,11 @@ def handle_api_error(error: HttpError) -> None:
                 "Quota resets at midnight Pacific Time (PT).\n"
                 "See: https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits"
             )
-            raise SystemExit(1)
+            raise SystemExit(1) from None
 
         if reason == "forbidden":
             console.print("[red]Access denied. You may not have permission for this action.[/red]")
-            raise SystemExit(1)
+            raise SystemExit(1) from None
 
     # Re-raise for other errors
     raise error
@@ -45,6 +46,11 @@ def api(request):
         return request.execute()
     except HttpError as e:
         handle_api_error(e)
+    except RefreshError:
+        console.print(
+            "[red]Session expired or revoked.[/red] Run [bold]ytstudio login[/bold] to re-authenticate."
+        )
+        raise SystemExit(1) from None
 
 
 # YouTube API scopes
@@ -58,7 +64,7 @@ SCOPES = [
 def authenticate() -> None:
     if not CLIENT_SECRETS_FILE.exists():
         console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
     console.print("[bold]Authenticating with YouTube...[/bold]\n")
 
@@ -112,7 +118,13 @@ def get_credentials() -> Credentials | None:
     )
 
     if credentials.expired and credentials.refresh_token:
-        credentials.refresh(Request())
+        try:
+            credentials.refresh(Request())
+        except RefreshError:
+            console.print(
+                "[red]Session expired or revoked.[/red] Run [bold]ytstudio login[/bold] to re-authenticate."
+            )
+            raise SystemExit(1) from None
         # Save refreshed credentials
         creds_data["token"] = credentials.token
         save_credentials(creds_data)

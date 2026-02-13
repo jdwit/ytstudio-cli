@@ -27,8 +27,16 @@ def create_kv_table() -> Table:
     )
 
 
+_state = {"raw": False}
+
+
+def set_raw_output(value: bool):
+    _state["raw"] = value
+
+
 def format_number(n: int) -> str:
-    """Format large numbers (1234567 -> 1.2M)"""
+    if _state["raw"]:
+        return str(n)
     if n >= 1_000_000:
         return f"{n / 1_000_000:.1f}M"
     if n >= 1_000:

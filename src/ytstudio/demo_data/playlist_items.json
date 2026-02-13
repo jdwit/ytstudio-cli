@@ -1,0 +1,26 @@
+{
+  "items": [
+    {"snippet": {"title": "TypeScript in 100 Seconds", "publishedAt": "2020-11-25T00:00:00Z"}, "contentDetails": {"videoId": "zQnBQ4tB3ZA"}},
+    {"snippet": {"title": "Flutter in 100 Seconds", "publishedAt": "2020-04-14T00:00:00Z"}, "contentDetails": {"videoId": "lHhRhPV--G0"}},
+    {"snippet": {"title": "Recursion in 100 Seconds", "publishedAt": "2019-12-30T00:00:00Z"}, "contentDetails": {"videoId": "rf60MejMz3E"}},
+    {"snippet": {"title": "React in 100 Seconds", "publishedAt": "2021-05-12T00:00:00Z"}, "contentDetails": {"videoId": "Ata9cSC2WpM"}},
+    {"snippet": {"title": "God-Tier Developer Roadmap", "publishedAt": "2022-08-15T00:00:00Z"}, "contentDetails": {"videoId": "w7ejDZ8SWv8"}},
+    {"snippet": {"title": "Python in 100 Seconds", "publishedAt": "2021-03-08T00:00:00Z"}, "contentDetails": {"videoId": "dQw4w9WgXcQ"}},
+    {"snippet": {"title": "Rust in 100 Seconds", "publishedAt": "2021-07-22T00:00:00Z"}, "contentDetails": {"videoId": "7C2z4GqqS5E"}},
+    {"snippet": {"title": "I built the same app 10 times", "publishedAt": "2023-01-18T00:00:00Z"}, "contentDetails": {"videoId": "8C3z4GqqS5F"}},
+    {"snippet": {"title": "Docker in 100 Seconds", "publishedAt": "2020-08-03T00:00:00Z"}, "contentDetails": {"videoId": "9D4z5HrrT6G"}},
+    {"snippet": {"title": "Kubernetes in 100 Seconds", "publishedAt": "2021-02-15T00:00:00Z"}, "contentDetails": {"videoId": "0E5z6IssU7H"}},
+    {"snippet": {"title": "GraphQL in 100 Seconds", "publishedAt": "2020-06-20T00:00:00Z"}, "contentDetails": {"videoId": "1F6z7JttV8I"}},
+    {"snippet": {"title": "10 CSS tricks you didn't know", "publishedAt": "2022-11-05T00:00:00Z"}, "contentDetails": {"videoId": "2G7z8KuuW9J"}},
+    {"snippet": {"title": "SQL Explained in 100 Seconds", "publishedAt": "2021-09-12T00:00:00Z"}, "contentDetails": {"videoId": "3H8z9LvvX0K"}},
+    {"snippet": {"title": "Linux in 100 Seconds", "publishedAt": "2020-10-28T00:00:00Z"}, "contentDetails": {"videoId": "4I9z0MwwY1L"}},
+    {"snippet": {"title": "AI is getting satisfying", "publishedAt": "2024-02-01T00:00:00Z"}, "contentDetails": {"videoId": "5J0z1NxxZ2M"}},
+    {"snippet": {"title": "Next.js in 100 Seconds", "publishedAt": "2021-11-03T00:00:00Z"}, "contentDetails": {"videoId": "6K1z2OyyA3N"}},
+    {"snippet": {"title": "Git in 100 Seconds", "publishedAt": "2020-05-18T00:00:00Z"}, "contentDetails": {"videoId": "7L2z3PzzB4O"}},
+    {"snippet": {"title": "MongoDB in 100 Seconds", "publishedAt": "2021-04-07T00:00:00Z"}, "contentDetails": {"videoId": "8M3z4QaaC5P"}},
+    {"snippet": {"title": "AWS in 100 Seconds", "publishedAt": "2022-03-14T00:00:00Z"}, "contentDetails": {"videoId": "9N4z5RbbD6Q"}},
+    {"snippet": {"title": "Svelte in 100 Seconds", "publishedAt": "2021-06-25T00:00:00Z"}, "contentDetails": {"videoId": "0O5z6SccE7R"}}
+  ],
+  "pageInfo": {"totalResults": 20},
+  "nextPageToken": null
+}

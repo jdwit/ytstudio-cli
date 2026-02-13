@@ -3,8 +3,8 @@ import atexit
 import typer
 from rich.console import Console
 
-from ytstudio.auth import authenticate, get_status
-from ytstudio.commands import analytics, auth, comments, videos
+from ytstudio.api import authenticate, get_status
+from ytstudio.commands import analytics, comments, videos
 from ytstudio.config import setup_credentials
 from ytstudio.version import get_current_version, is_update_available
 
@@ -17,7 +17,6 @@ app = typer.Typer(
 
 console = Console()
 
-app.add_typer(auth.app, name="auth")
 app.add_typer(videos.app, name="videos")
 app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")

@@ -139,8 +139,8 @@ def mock_service():
 def mock_auth(mock_service):
     mock_creds = MagicMock()
     with (
-        patch("ytstudio.auth.get_credentials", return_value=mock_creds),
-        patch("ytstudio.auth.build", return_value=mock_service),
+        patch("ytstudio.api.get_credentials", return_value=mock_creds),
+        patch("ytstudio.api.build", return_value=mock_service),
     ):
         yield mock_service
 

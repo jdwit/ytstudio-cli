@@ -3,6 +3,8 @@ from ytstudio.registry import (
     DIMENSIONS,
     METRIC_GROUPS,
     METRICS,
+    DimensionName,
+    MetricName,
     find_closest_dimension,
     find_closest_metric,
     validate_dimensions,
@@ -68,6 +70,26 @@ class TestValidation:
         errors = validate_dimensions(["cuntry"])
         assert len(errors) == 1
         assert "cuntry" in errors[0]
+
+
+class TestEnums:
+    def test_metric_string_equality(self):
+        assert MetricName.VIEWS == "views"
+        assert MetricName.ESTIMATED_MINUTES_WATCHED == "estimatedMinutesWatched"
+
+    def test_dimension_string_equality(self):
+        assert DimensionName.DAY == "day"
+        assert DimensionName.INSIGHT_TRAFFIC_SOURCE_TYPE == "insightTrafficSourceType"
+
+    def test_isinstance_str(self):
+        assert isinstance(MetricName.VIEWS, str)
+        assert isinstance(DimensionName.VIDEO, str)
+
+    def test_string_lookup_in_dicts(self):
+        assert "views" in METRICS
+        assert MetricName.VIEWS in METRICS
+        assert "day" in DIMENSIONS
+        assert DimensionName.DAY in DIMENSIONS
 
 
 class TestFuzzyMatching:

@@ -5,7 +5,7 @@ from click.exceptions import Exit
 from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
-from ytstudio.auth import api, get_authenticated_service, handle_api_error
+from ytstudio.api import api, get_authenticated_service, handle_api_error
 from ytstudio.main import app
 
 runner = CliRunner()
@@ -43,23 +43,18 @@ class TestApi:
 
 class TestGetAuthenticatedService:
     def test_exits_when_no_credentials(self):
-        with patch("ytstudio.auth.get_credentials", return_value=None), pytest.raises(Exit):
+        with patch("ytstudio.api.get_credentials", return_value=None), pytest.raises(Exit):
             get_authenticated_service()
 
 
 class TestCommands:
     def test_login_requires_client_secrets(self):
-        with patch("ytstudio.auth.CLIENT_SECRETS_FILE") as mock_file:
+        with patch("ytstudio.api.CLIENT_SECRETS_FILE") as mock_file:
             mock_file.exists.return_value = False
             result = runner.invoke(app, ["login"])
             assert result.exit_code == 1
 
     def test_status_not_authenticated(self):
-        with patch("ytstudio.auth.load_credentials", return_value=None):
+        with patch("ytstudio.api.load_credentials", return_value=None):
             result = runner.invoke(app, ["status"])
             assert "Not authenticated" in result.stdout
-
-    def test_logout(self):
-        with patch("ytstudio.auth.clear_credentials"):
-            result = runner.invoke(app, ["auth", "logout"])
-            assert "Logged out" in result.stdout

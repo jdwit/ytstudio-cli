@@ -1,0 +1,284 @@
+{
+  "items": [
+    {
+      "id": "Ugw1abc123",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "CodeNewbie",
+            "textOriginal": "This is the best explanation I've ever seen!",
+            "likeCount": 1542,
+            "publishedAt": "2026-01-15T10:00:00Z",
+            "videoId": "zQnBQ4tB3ZA"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw2def456",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "DevSenior",
+            "textOriginal": "100 seconds well spent. Subscribed!",
+            "likeCount": 856,
+            "publishedAt": "2026-01-15T07:00:00Z",
+            "videoId": "Ata9cSC2WpM"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw3ghi789",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "EarnBigNow",
+            "textOriginal": "I make $5,000/week from home! Visit my profile for the FREE method",
+            "likeCount": 0,
+            "publishedAt": "2026-01-15T04:00:00Z",
+            "videoId": "zQnBQ4tB3ZA"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw4jkl012",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "JuniorDev2024",
+            "textOriginal": "Finally understand this after watching 10 other tutorials",
+            "likeCount": 634,
+            "publishedAt": "2026-01-14T12:00:00Z",
+            "videoId": "zQnBQ4tB3ZA"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw5mno345",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "CryptoKing99",
+            "textOriginal": "CHECK OUT MY CHANNEL for daily crypto signals!! 100% guaranteed gains!!!",
+            "likeCount": 0,
+            "publishedAt": "2026-01-14T12:00:00Z",
+            "videoId": "dQw4w9WgXcQ"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw6pqr678",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "RustEvangelist",
+            "textOriginal": "The borrow checker is your friend, not your enemy. Great intro!",
+            "likeCount": 1203,
+            "publishedAt": "2026-01-14T09:30:00Z",
+            "videoId": "7C2z4GqqS5E"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw7stu901",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "CloudArchitect",
+            "textOriginal": "I wish someone showed me Docker this clearly 5 years ago",
+            "likeCount": 742,
+            "publishedAt": "2026-01-13T22:15:00Z",
+            "videoId": "9D4z5HrrT6G"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw8vwx234",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "DataEngineer42",
+            "textOriginal": "SQL is still king in 2026. This aged perfectly.",
+            "likeCount": 489,
+            "publishedAt": "2026-01-13T18:45:00Z",
+            "videoId": "3H8z9LvvX0K"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw9yza567",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "LinuxGuru",
+            "textOriginal": "btw I use Arch. But seriously, great summary.",
+            "likeCount": 1876,
+            "publishedAt": "2026-01-13T15:00:00Z",
+            "videoId": "4I9z0MwwY1L"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw10bcd890",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "FrontendWizard",
+            "textOriginal": "The CSS container queries trick blew my mind",
+            "likeCount": 367,
+            "publishedAt": "2026-01-13T11:20:00Z",
+            "videoId": "2G7z8KuuW9J"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw11efg123",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "StartupFounder",
+            "textOriginal": "Showed this to my entire team. Next.js adoption starts Monday.",
+            "likeCount": 523,
+            "publishedAt": "2026-01-12T20:30:00Z",
+            "videoId": "6K1z2OyyA3N"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw12hij456",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "GitMaster",
+            "textOriginal": "git rebase --interactive is the real superpower nobody talks about",
+            "likeCount": 934,
+            "publishedAt": "2026-01-12T16:00:00Z",
+            "videoId": "7L2z3PzzB4O"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw13klm789",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "BackendDev",
+            "textOriginal": "MongoDB is great until you need joins. Then you cry.",
+            "likeCount": 2105,
+            "publishedAt": "2026-01-12T12:45:00Z",
+            "videoId": "8M3z4QaaC5P"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw14nop012",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "DevOpsNinja",
+            "textOriginal": "K8s in 100 seconds but it takes 100 days to master",
+            "likeCount": 1458,
+            "publishedAt": "2026-01-11T21:00:00Z",
+            "videoId": "0E5z6IssU7H"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw15qrs345",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "AIResearcher",
+            "textOriginal": "The pace of AI progress is genuinely hard to keep up with",
+            "likeCount": 312,
+            "publishedAt": "2026-01-11T14:30:00Z",
+            "videoId": "5J0z1NxxZ2M"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw16tuv678",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "WebDevDaily",
+            "textOriginal": "Svelte compiles away the framework. Still blows my mind every time.",
+            "likeCount": 678,
+            "publishedAt": "2026-01-11T08:15:00Z",
+            "videoId": "0O5z6SccE7R"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw17wxy901",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "Pythonista",
+            "textOriginal": "Python: where indentation is not a style choice, it's the law",
+            "likeCount": 1789,
+            "publishedAt": "2026-01-10T19:00:00Z",
+            "videoId": "dQw4w9WgXcQ"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw18zab234",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "FrameworkHopper",
+            "textOriginal": "Built the same app 10 times and still can't decide which framework to use",
+            "likeCount": 2567,
+            "publishedAt": "2026-01-10T13:45:00Z",
+            "videoId": "8C3z4GqqS5F"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw19cde567",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "AWSCertified",
+            "textOriginal": "My AWS bill after following this tutorial: $0.03. Worth it.",
+            "likeCount": 445,
+            "publishedAt": "2026-01-10T07:30:00Z",
+            "videoId": "9N4z5RbbD6Q"
+          }
+        }
+      }
+    },
+    {
+      "id": "Ugw20fgh890",
+      "snippet": {
+        "topLevelComment": {
+          "snippet": {
+            "authorDisplayName": "FlutterDev",
+            "textOriginal": "Hot reload alone makes Flutter worth learning",
+            "likeCount": 398,
+            "publishedAt": "2026-01-09T16:00:00Z",
+            "videoId": "lHhRhPV--G0"
+          }
+        }
+      }
+    }
+  ]
+}
