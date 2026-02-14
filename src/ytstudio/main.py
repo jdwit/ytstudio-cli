@@ -4,6 +4,7 @@ import typer
 from rich.console import Console
 
 from ytstudio.api import authenticate, get_status
+from ytstudio.banner import get_banner
 from ytstudio.commands import analytics, comments, videos
 from ytstudio.config import setup_credentials
 from ytstudio.version import get_current_version, is_update_available
@@ -64,11 +65,12 @@ def _show_update_notification():
 
 @app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     show_version: bool = typer.Option(False, "--version", "-v", help="Show version"),
 ):
     """ytstudio - Manage your YouTube channel from the terminal"""
     if show_version:
-        console.print(f"ytstudio v{get_current_version()}")
+        console.print(get_banner(get_current_version()))
         raise typer.Exit()
 
     if not _update_state["registered"]:
