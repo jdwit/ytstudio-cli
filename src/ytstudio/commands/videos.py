@@ -367,27 +367,26 @@ def search_replace(
 ):
     """Bulk update videos using search and replace"""
     service = get_data_service()
-    uploads_playlist_id = get_channel_uploads_playlist(service)
 
     changes = []
     page_token = None
 
-    while len(changes) < limit:
-        # Fetch batch of videos
-        playlist_response = api(
-            service.playlistItems().list(
-                part="snippet,contentDetails",
-                playlistId=uploads_playlist_id,
+    while True:
+        search_response = api(
+            service.search().list(
+                part="id",
+                forMine=True,
+                type="video",
                 maxResults=50,
                 pageToken=page_token,
             )
         )
 
-        items = playlist_response.get("items", [])
+        items = search_response.get("items", [])
         if not items:
             break
 
-        video_ids = [item["contentDetails"]["videoId"] for item in items]
+        video_ids = [item["id"]["videoId"] for item in items]
 
         videos_response = api(
             service.videos().list(
@@ -397,9 +396,6 @@ def search_replace(
         )
 
         for video in videos_response.get("items", []):
-            if len(changes) >= limit:
-                break
-
             old_value = video["snippet"].get(field, "")
             if regex:
                 new_value = re.sub(search, replace, old_value)
@@ -416,9 +412,11 @@ def search_replace(
                     }
                 )
 
-        page_token = playlist_response.get("nextPageToken")
+        page_token = search_response.get("nextPageToken")
         if not page_token:
             break
+
+    changes = changes[:limit]
 
     if not changes:
         console.print("[yellow]No matches found[/yellow]")

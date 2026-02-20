@@ -127,6 +127,12 @@ def create_mock_service():
     }
     service.commentThreads.return_value.list.return_value = comments_list
 
+    search_list = MagicMock()
+    search_list.execute.return_value = {
+        "items": [{"id": {"videoId": MOCK_VIDEO["id"]}}],
+    }
+    service.search.return_value.list.return_value = search_list
+
     return service
 
 
