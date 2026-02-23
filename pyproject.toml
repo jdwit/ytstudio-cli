@@ -26,6 +26,7 @@ dependencies = [
     "google-auth-oauthlib>=1.0.0",
     "google-api-python-client>=2.0.0",
     "packaging>=21.0",
+    "textual>=7.5.0",
 ]
 
 [dependency-groups]
