@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs, urlparse
+
 import typer
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
@@ -5,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from rich.prompt import Prompt
 
 from ytstudio.config import (
     CLIENT_SECRETS_FILE,
@@ -60,27 +63,17 @@ SCOPES = [
     "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
 
+HEADLESS_REDIRECT_URI = "http://127.0.0.1:9876/"
 
-def authenticate() -> None:
-    if not CLIENT_SECRETS_FILE.exists():
-        console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
-        raise SystemExit(1) from None
 
-    console.print("[bold]Authenticating with YouTube...[/bold]\n")
-
-    flow = InstalledAppFlow.from_client_secrets_file(
+def _create_flow() -> InstalledAppFlow:
+    return InstalledAppFlow.from_client_secrets_file(
         str(CLIENT_SECRETS_FILE),
         scopes=SCOPES,
     )
 
-    # Run local server for OAuth callback
-    credentials = flow.run_local_server(
-        port=9876,
-        prompt="consent",
-        open_browser=True,
-    )
 
-    # Save credentials
+def _save_credentials(credentials: Credentials) -> None:
     creds_data = {
         "token": credentials.token,
         "refresh_token": credentials.refresh_token,
@@ -91,7 +84,8 @@ def authenticate() -> None:
     }
     save_credentials(creds_data)
 
-    # Get channel info
+
+def _show_login_success(credentials: Credentials) -> None:
     service = build("youtube", "v3", credentials=credentials)
     response = service.channels().list(part="snippet", mine=True).execute()
 
@@ -101,6 +95,66 @@ def authenticate() -> None:
         success_message(f"Logged in as: {channel['title']}")
     else:
         success_message("Authentication successful")
+
+
+def _validate_authorization_response(authorization_response: str) -> None:
+    parsed_url = urlparse(authorization_response)
+    query = parse_qs(parsed_url.query)
+
+    if error := query.get("error"):
+        error_description = query.get("error_description", [""])[0]
+        message = error_description or error[0]
+        console.print(f"[red]Authorization failed: {message}[/red]")
+        raise SystemExit(1) from None
+
+    if not query.get("code"):
+        console.print("[red]Redirect URL is missing an authorization code.[/red]")
+        raise SystemExit(1) from None
+
+
+def _authenticate_headless() -> Credentials:
+    flow = _create_flow()
+    flow.redirect_uri = HEADLESS_REDIRECT_URI
+    authorization_url, _ = flow.authorization_url(prompt="consent")
+
+    console.print("Open this URL in a browser on any machine:\n")
+    console.print(f"[bold]{authorization_url}[/bold]\n")
+    console.print(
+        "After approving access, the browser will fail to load a 127.0.0.1 page. "
+        "Copy the full failed redirect URL from the address bar and paste it below."
+    )
+
+    authorization_response = Prompt.ask("Redirect URL").strip()
+    _validate_authorization_response(authorization_response)
+
+    try:
+        flow.fetch_token(authorization_response=authorization_response)
+    except Exception as error:
+        console.print(f"[red]Could not complete OAuth token exchange: {error}[/red]")
+        raise SystemExit(1) from None
+
+    return flow.credentials
+
+
+def authenticate(headless: bool = False) -> None:
+    if not CLIENT_SECRETS_FILE.exists():
+        console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
+        raise SystemExit(1) from None
+
+    console.print("[bold]Authenticating with YouTube...[/bold]\n")
+
+    if headless:
+        credentials = _authenticate_headless()
+    else:
+        flow = _create_flow()
+        credentials = flow.run_local_server(
+            port=9876,
+            prompt="consent",
+            open_browser=True,
+        )
+
+    _save_credentials(credentials)
+    _show_login_success(credentials)
 
 
 def get_credentials() -> Credentials | None:
