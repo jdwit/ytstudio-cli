@@ -97,7 +97,7 @@ def _show_login_success(credentials: Credentials) -> None:
         success_message("Authentication successful")
 
 
-def _validate_authorization_response(authorization_response: str) -> None:
+def _parse_authorization_response(authorization_response: str, expected_state: str) -> str:
     parsed_url = urlparse(authorization_response)
     query = parse_qs(parsed_url.query)
 
@@ -111,11 +111,18 @@ def _validate_authorization_response(authorization_response: str) -> None:
         console.print("[red]Redirect URL is missing an authorization code.[/red]")
         raise SystemExit(1) from None
 
+    state = query.get("state", [""])[0]
+    if state != expected_state:
+        console.print("[red]Redirect URL state does not match this login attempt.[/red]")
+        raise SystemExit(1) from None
+
+    return query["code"][0]
+
 
 def _authenticate_headless() -> Credentials:
     flow = _create_flow()
     flow.redirect_uri = HEADLESS_REDIRECT_URI
-    authorization_url, _ = flow.authorization_url(prompt="consent")
+    authorization_url, state = flow.authorization_url(prompt="consent")
 
     console.print("Open this URL in a browser on any machine:\n")
     console.print(f"[bold]{authorization_url}[/bold]\n")
@@ -125,10 +132,10 @@ def _authenticate_headless() -> Credentials:
     )
 
     authorization_response = Prompt.ask("Redirect URL").strip()
-    _validate_authorization_response(authorization_response)
+    code = _parse_authorization_response(authorization_response, state)
 
     try:
-        flow.fetch_token(authorization_response=authorization_response)
+        flow.fetch_token(code=code)
     except Exception as error:
         console.print(f"[red]Could not complete OAuth token exchange: {error}[/red]")
         raise SystemExit(1) from None

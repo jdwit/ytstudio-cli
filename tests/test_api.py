@@ -113,30 +113,41 @@ class TestAuthenticate:
 
         assert flow.redirect_uri == api_module.HEADLESS_REDIRECT_URI
         flow.authorization_url.assert_called_once_with(prompt="consent")
-        flow.fetch_token.assert_called_once_with(authorization_response=redirect_url)
+        flow.fetch_token.assert_called_once_with(code="test-code")
         save_credentials.assert_called_once_with(credentials)
         show_login_success.assert_called_once_with(credentials)
 
     def test_headless_login_rejects_missing_code(self):
         with pytest.raises(SystemExit):
-            api_module._validate_authorization_response("http://127.0.0.1:9876/?state=test-state")
+            api_module._parse_authorization_response(
+                "http://127.0.0.1:9876/?state=test-state",
+                "test-state",
+            )
 
     def test_headless_login_rejects_authorization_error(self):
         with pytest.raises(SystemExit):
-            api_module._validate_authorization_response(
-                "http://127.0.0.1:9876/?error=access_denied"
+            api_module._parse_authorization_response(
+                "http://127.0.0.1:9876/?error=access_denied",
+                "test-state",
+            )
+
+    def test_headless_login_rejects_state_mismatch(self):
+        with pytest.raises(SystemExit):
+            api_module._parse_authorization_response(
+                "http://127.0.0.1:9876/?state=wrong&code=test-code",
+                "test-state",
             )
 
     def test_headless_login_exits_when_token_exchange_fails(self):
         flow = MagicMock()
         flow.authorization_url.return_value = ("https://accounts.google.com/o/oauth2/auth", "state")
-        flow.fetch_token.side_effect = ValueError("state mismatch")
+        flow.fetch_token.side_effect = ValueError("token exchange failed")
 
         with (
             patch("ytstudio.api._create_flow", return_value=flow),
             patch(
                 "ytstudio.api.Prompt.ask",
-                return_value="http://127.0.0.1:9876/?state=wrong&code=test-code",
+                return_value="http://127.0.0.1:9876/?state=state&code=test-code",
             ),
             pytest.raises(SystemExit),
         ):
