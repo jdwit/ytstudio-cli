@@ -36,9 +36,15 @@ def init(
 
 
 @app.command()
-def login():
+def login(
+    headless: bool = typer.Option(
+        False,
+        "--headless",
+        help="Authenticate by pasting a redirect URL from another browser",
+    ),
+):
     """Authenticate with YouTube via OAuth"""
-    authenticate()
+    authenticate(headless=headless)
 
 
 @app.command()

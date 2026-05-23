@@ -47,7 +47,19 @@ ytstudio init --client-secrets path/to/client_secret_<id>.json
 ytstudio login
 ```
 
-Credentials stored in `~/.config/ytstudio/`.
+Credentials stored in `~/.config/ytstudio-cli/`.
+
+### Headless Linux login
+
+If you are logging in from a server without a browser, run:
+
+```bash
+ytstudio login --headless
+```
+
+The command prints a Google OAuth URL. Open that URL in a browser on any machine and approve
+access. The browser will then fail to load a `127.0.0.1` page; this is expected. Copy the full URL
+from the browser address bar, paste it back into the terminal, and ytstudio will finish the login.
 
 ## API quota
 
