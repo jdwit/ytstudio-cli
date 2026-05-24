@@ -19,16 +19,37 @@ LEGACY_CREDENTIALS_FILE = CONFIG_DIR / "credentials.json"
 DEFAULT_PROFILE = "default"
 PROFILE_ENV_VAR = "YTSTUDIO_PROFILE"
 
-_VALID_PROFILE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
+_VALID_PROFILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+
+
+def is_valid_profile_name(name: str) -> bool:
+    return bool(_VALID_PROFILE_NAME.fullmatch(name))
+
+
+def _ensure_private_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    path.chmod(0o700)
 
 
 def ensure_config_dir() -> None:
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_private_dir(CONFIG_DIR)
+
+
+def _ensure_profile_dir(name: str) -> Path:
+    ensure_config_dir()
+    _ensure_private_dir(PROFILES_DIR)
+    target = profile_dir(name)
+    _ensure_private_dir(target)
+    return target
 
 
 def _write_private(path: Path, text: str) -> None:
-    """Write a file that holds secrets with owner-only permissions."""
-    path.write_text(text)
+    """Write a secret file with owner-only permissions, with no readable window."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.write(fd, text.encode())
+    finally:
+        os.close(fd)
     path.chmod(0o600)
 
 
@@ -82,10 +103,6 @@ def get_client_secrets() -> dict | None:
 # --- profiles (one named credential set per YouTube channel) ---
 
 
-def is_valid_profile_name(name: str) -> bool:
-    return bool(_VALID_PROFILE_NAME.match(name))
-
-
 def _load_state() -> dict:
     if not STATE_FILE.exists():
         return {}
@@ -103,8 +120,15 @@ def _save_state(state: dict) -> None:
 def get_active_profile() -> str:
     env = os.environ.get(PROFILE_ENV_VAR)
     if env:
-        return env
-    return _load_state().get("active_profile", DEFAULT_PROFILE)
+        if is_valid_profile_name(env):
+            return env
+        console.print(
+            f"[yellow]Ignoring invalid {PROFILE_ENV_VAR}='{env}'; "
+            f"using the configured active channel.[/yellow]"
+        )
+
+    name = _load_state().get("active_profile", DEFAULT_PROFILE)
+    return name if is_valid_profile_name(name) else DEFAULT_PROFILE
 
 
 def set_active_profile(name: str) -> None:
@@ -114,6 +138,8 @@ def set_active_profile(name: str) -> None:
 
 
 def profile_dir(name: str) -> Path:
+    if not is_valid_profile_name(name):
+        raise ValueError(f"Invalid profile name: {name!r}")
     return PROFILES_DIR / name
 
 
@@ -132,7 +158,7 @@ def list_profiles() -> list[str]:
 
 
 def profile_exists(name: str) -> bool:
-    return profile_dir(name).is_dir()
+    return is_valid_profile_name(name) and profile_dir(name).is_dir()
 
 
 def remove_profile(name: str) -> None:
@@ -147,8 +173,7 @@ def remove_profile(name: str) -> None:
 
 
 def save_credentials(credentials: dict, name: str | None = None) -> None:
-    target = profile_dir(name or get_active_profile())
-    target.mkdir(parents=True, exist_ok=True)
+    target = _ensure_profile_dir(name or get_active_profile())
     _write_private(target / "credentials.json", json.dumps(credentials, indent=2))
 
 
@@ -156,7 +181,10 @@ def load_credentials(name: str | None = None) -> dict | None:
     path = credentials_path(name)
     if not path.exists():
         return None
-    return json.loads(path.read_text())
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return None
 
 
 def clear_credentials(name: str | None = None) -> None:
@@ -166,8 +194,7 @@ def clear_credentials(name: str | None = None) -> None:
 
 
 def save_profile_meta(name: str, meta: dict) -> None:
-    target = profile_dir(name)
-    target.mkdir(parents=True, exist_ok=True)
+    _ensure_profile_dir(name)
     _meta_path(name).write_text(json.dumps(meta, indent=2))
 
 
@@ -186,8 +213,7 @@ def migrate_legacy_credentials() -> bool:
     if not LEGACY_CREDENTIALS_FILE.exists() or list_profiles():
         return False
 
-    dest = profile_dir(DEFAULT_PROFILE)
-    dest.mkdir(parents=True, exist_ok=True)
+    dest = _ensure_profile_dir(DEFAULT_PROFILE)
     _write_private(dest / "credentials.json", LEGACY_CREDENTIALS_FILE.read_text())
     LEGACY_CREDENTIALS_FILE.unlink()
     set_active_profile(DEFAULT_PROFILE)

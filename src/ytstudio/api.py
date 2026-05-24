@@ -88,8 +88,12 @@ def _save_credentials(credentials: Credentials, profile: str | None = None) -> N
 
 
 def _fetch_channel_info(credentials: Credentials) -> dict | None:
-    service = build("youtube", "v3", credentials=credentials)
-    response = service.channels().list(part="snippet", mine=True).execute()
+    # Best-effort: a quota/network error here must not fail a successful login.
+    try:
+        service = build("youtube", "v3", credentials=credentials)
+        response = service.channels().list(part="snippet", mine=True).execute()
+    except Exception:
+        return None
 
     items = response.get("items")
     if not items:
@@ -182,6 +186,7 @@ def authenticate(headless: bool = False, profile: str | None = None) -> None:
 
 
 def get_credentials(profile: str | None = None) -> Credentials | None:
+    profile = profile or get_active_profile()
     creds_data = load_credentials(profile)
     if not creds_data:
         return None

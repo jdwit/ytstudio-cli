@@ -111,3 +111,16 @@ class TestChannelStatus:
 
         assert result.exit_code == 0
         get_status.assert_called_once_with("work")
+
+    def test_status_defaults_to_active(self, temp_config):
+        _make_channel("work")
+        config.set_active_profile("work")
+        with patch("ytstudio.commands.channel.get_status") as get_status:
+            result = runner.invoke(app, ["channel", "status"])
+
+        assert result.exit_code == 0
+        get_status.assert_called_once_with("work")
+
+    def test_status_missing_channel_exits(self, temp_config):
+        result = runner.invoke(app, ["channel", "status", "ghost"])
+        assert result.exit_code == 1

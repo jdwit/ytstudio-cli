@@ -48,12 +48,14 @@ def list_channels():
     table.add_column("")
     table.add_column("Name")
     table.add_column("YouTube channel")
+    table.add_column("Handle")
 
     for name in profiles:
         meta = config.load_profile_meta(name)
         marker = "[green]*[/green]" if name == active else " "
         title = meta.get("title") or dim("unknown (run login for this channel)")
-        table.add_row(marker, name, title)
+        handle = meta.get("custom_url") or ""
+        table.add_row(marker, name, title, handle)
 
     console.print(table)
 
@@ -72,6 +74,9 @@ def use(name: str = typer.Argument(help="Channel to make active")):
 def status(name: str = typer.Argument(None, help="Channel name (default: active)")):
     """Show authentication status for a channel"""
     target = name or config.get_active_profile()
+    if not config.profile_exists(target):
+        console.print(f"[red]No channel named '{target}'. See 'ytstudio channel list'.[/red]")
+        raise typer.Exit(1)
     console.print(f"[bold]Channel:[/bold] {target}")
     get_status(target)
 

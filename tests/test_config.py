@@ -42,6 +42,16 @@ class TestCredentials:
         mode = stat.S_IMODE(config.credentials_path().stat().st_mode)
         assert mode == 0o600
 
+    def test_profile_dir_is_private(self, temp_config):
+        config.save_credentials({"token": "secret"}, name="work")
+        mode = stat.S_IMODE(config.profile_dir("work").stat().st_mode)
+        assert mode == 0o700
+
+    def test_load_returns_none_on_corrupt_json(self, temp_config):
+        config.save_credentials({"token": "ok"}, name="work")
+        config.credentials_path("work").write_text("{not json")
+        assert config.load_credentials("work") is None
+
 
 class TestSetupCredentials:
     def test_setup_with_file(self, temp_config, tmp_path):
@@ -69,6 +79,11 @@ class TestActiveProfile:
         config.set_active_profile("work")
         monkeypatch.setenv(config.PROFILE_ENV_VAR, "personal")
         assert config.get_active_profile() == "personal"
+
+    def test_invalid_env_is_ignored(self, temp_config, monkeypatch):
+        config.set_active_profile("work")
+        monkeypatch.setenv(config.PROFILE_ENV_VAR, "../../etc")
+        assert config.get_active_profile() == "work"
 
 
 class TestProfiles:
@@ -112,9 +127,18 @@ class TestProfileNames:
     def test_valid(self, name):
         assert config.is_valid_profile_name(name)
 
-    @pytest.mark.parametrize("name", ["", "..", "a/b", "a b", ".hidden", "work.tv", "wo:rk"])
+    @pytest.mark.parametrize(
+        "name", ["", "..", "a/b", "a b", ".hidden", "work.tv", "wo:rk", "work\n", "/abs"]
+    )
     def test_invalid(self, name):
         assert not config.is_valid_profile_name(name)
+
+    def test_profile_dir_rejects_traversal(self, temp_config):
+        with pytest.raises(ValueError):
+            config.profile_dir("../../etc")
+
+    def test_profile_exists_false_for_invalid_name(self, temp_config):
+        assert config.profile_exists("../../etc") is False
 
 
 class TestProfileMeta:
