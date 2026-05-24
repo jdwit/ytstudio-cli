@@ -89,8 +89,8 @@ class TestAuthenticate:
             prompt="consent",
             open_browser=True,
         )
-        save_credentials.assert_called_once_with(credentials)
-        show_login_success.assert_called_once_with(credentials)
+        save_credentials.assert_called_once_with(credentials, None)
+        show_login_success.assert_called_once_with(credentials, None)
 
     def test_headless_login_exchanges_pasted_redirect_url(self):
         credentials = MagicMock()
@@ -114,8 +114,8 @@ class TestAuthenticate:
         assert flow.redirect_uri == api_module.HEADLESS_REDIRECT_URI
         flow.authorization_url.assert_called_once_with(prompt="consent")
         flow.fetch_token.assert_called_once_with(code="test-code")
-        save_credentials.assert_called_once_with(credentials)
-        show_login_success.assert_called_once_with(credentials)
+        save_credentials.assert_called_once_with(credentials, None)
+        show_login_success.assert_called_once_with(credentials, None)
 
     def test_headless_login_rejects_missing_code(self):
         with pytest.raises(SystemExit):
