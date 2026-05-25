@@ -67,12 +67,12 @@ If you run more than one YouTube channel, ytstudio stores each login under its o
 Every command (`videos`, `analytics`, `comments`, ...) operates on the active channel.
 
 ```bash
-ytstudio channel add work       # authenticate a new channel and make it active
-ytstudio channel add personal   # add another
-ytstudio channel list           # show channels; the active one is marked with *
-ytstudio channel use work       # switch the active channel
-ytstudio channel status work    # auth status for one channel (defaults to active)
-ytstudio channel remove personal
+ytstudio profile add work       # authenticate a new channel and make it active
+ytstudio profile add personal   # add another
+ytstudio profile list           # show profiles; the active one is marked with *
+ytstudio profile use work       # switch the active profile
+ytstudio profile status work    # auth status for one profile (defaults to active)
+ytstudio profile remove personal
 ```
 
 For scripting you can override the active channel per command without switching:
@@ -83,7 +83,7 @@ YTSTUDIO_PROFILE=work ytstudio videos list
 
 Credentials live in `~/.config/ytstudio-cli/profiles/<name>/` with owner-only (`600`) permissions.
 The shared OAuth client secrets stay at the top level, so `ytstudio init` is only needed once.
-A plain `ytstudio login` (no `channel add`) authenticates the active channel, which is `default`
+A plain `ytstudio login` (no `profile add`) authenticates the active profile, which is `default`
 on a fresh setup. Existing single-channel installs are migrated to the `default` profile
 automatically on first run.
 

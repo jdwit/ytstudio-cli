@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from ytstudio.api import authenticate, get_status
-from ytstudio.commands import analytics, channel, comments, videos
+from ytstudio.commands import analytics, comments, profile, videos
 from ytstudio.config import migrate_legacy_credentials, setup_credentials
 from ytstudio.version import get_current_version, is_update_available
 
@@ -20,7 +20,7 @@ console = Console()
 app.add_typer(videos.app, name="videos")
 app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")
-app.add_typer(channel.app, name="channel")
+app.add_typer(profile.app, name="profile")
 
 
 @app.command()
