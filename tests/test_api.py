@@ -47,6 +47,17 @@ class TestGetAuthenticatedService:
         with patch("ytstudio.api.get_credentials", return_value=None), pytest.raises(Exit):
             get_authenticated_service()
 
+    def test_passes_profile_to_get_credentials(self):
+        credentials = MagicMock()
+        with (
+            patch("ytstudio.api.get_credentials", return_value=credentials) as get_creds,
+            patch("ytstudio.api.build") as build,
+        ):
+            get_authenticated_service("youtube", "v3", profile="work")
+
+        get_creds.assert_called_once_with("work")
+        build.assert_called_once_with("youtube", "v3", credentials=credentials)
+
 
 class TestCommands:
     def test_login_requires_client_secrets(self):
@@ -77,6 +88,7 @@ class TestAuthenticate:
         with (
             patch("ytstudio.api.CLIENT_SECRETS_FILE") as mock_file,
             patch("ytstudio.api._create_flow", return_value=flow),
+            patch("ytstudio.api.get_active_profile", return_value="default"),
             patch("ytstudio.api._save_credentials") as save_credentials,
             patch("ytstudio.api._show_login_success") as show_login_success,
         ):
@@ -89,8 +101,29 @@ class TestAuthenticate:
             prompt="consent",
             open_browser=True,
         )
-        save_credentials.assert_called_once_with(credentials, None)
-        show_login_success.assert_called_once_with(credentials, None)
+        save_credentials.assert_called_once_with(credentials, "default")
+        show_login_success.assert_called_once_with(credentials, "default")
+
+    def test_login_resolves_active_profile_once(self):
+        """A profile switch mid-OAuth must not redirect freshly minted credentials."""
+        credentials = MagicMock()
+        flow = MagicMock()
+        flow.run_local_server.return_value = credentials
+
+        with (
+            patch("ytstudio.api.CLIENT_SECRETS_FILE") as mock_file,
+            patch("ytstudio.api._create_flow", return_value=flow),
+            patch("ytstudio.api.get_active_profile") as get_active,
+            patch("ytstudio.api._save_credentials") as save_credentials,
+            patch("ytstudio.api._show_login_success") as show_login_success,
+        ):
+            mock_file.exists.return_value = True
+            get_active.side_effect = ["work", "personal", "personal"]
+
+            api_module.authenticate()
+
+        save_credentials.assert_called_once_with(credentials, "work")
+        show_login_success.assert_called_once_with(credentials, "work")
 
     def test_headless_login_exchanges_pasted_redirect_url(self):
         credentials = MagicMock()
@@ -103,6 +136,7 @@ class TestAuthenticate:
         with (
             patch("ytstudio.api.CLIENT_SECRETS_FILE") as mock_file,
             patch("ytstudio.api._create_flow", return_value=flow),
+            patch("ytstudio.api.get_active_profile", return_value="default"),
             patch("ytstudio.api.Prompt.ask", return_value=redirect_url),
             patch("ytstudio.api._save_credentials") as save_credentials,
             patch("ytstudio.api._show_login_success") as show_login_success,
@@ -114,8 +148,8 @@ class TestAuthenticate:
         assert flow.redirect_uri == api_module.HEADLESS_REDIRECT_URI
         flow.authorization_url.assert_called_once_with(prompt="consent")
         flow.fetch_token.assert_called_once_with(code="test-code")
-        save_credentials.assert_called_once_with(credentials, None)
-        show_login_success.assert_called_once_with(credentials, None)
+        save_credentials.assert_called_once_with(credentials, "default")
+        show_login_success.assert_called_once_with(credentials, "default")
 
     def test_headless_login_rejects_missing_code(self):
         with pytest.raises(SystemExit):

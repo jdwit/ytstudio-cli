@@ -1,7 +1,9 @@
+import fcntl
 import json
 import os
 import re
 import shutil
+from contextlib import contextmanager
 from pathlib import Path
 
 from rich.prompt import Prompt
@@ -44,13 +46,39 @@ def _ensure_profile_dir(name: str) -> Path:
 
 
 def _write_private(path: Path, text: str) -> None:
-    """Write a secret file with owner-only permissions, with no readable window."""
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    """Atomically write a secret with owner-only permissions, with no readable window."""
+    tmp = path.with_name(path.name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     try:
         os.write(fd, text.encode())
+        os.fsync(fd)
     finally:
         os.close(fd)
-    path.chmod(0o600)
+    tmp.replace(path)
+
+
+def _atomic_write_text(path: Path, text: str, mode: int = 0o644) -> None:
+    tmp = path.with_name(path.name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    try:
+        os.write(fd, text.encode())
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    tmp.replace(path)
+
+
+@contextmanager
+def _config_lock():
+    """Serialize state mutations and the legacy migration across CLI invocations."""
+    ensure_config_dir()
+    lock_path = CONFIG_DIR / ".lock"
+    with lock_path.open("w") as fh:
+        try:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            yield
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 # --- client secrets (shared OAuth app, identical for every profile) ---
@@ -114,7 +142,7 @@ def _load_state() -> dict:
 
 def _save_state(state: dict) -> None:
     ensure_config_dir()
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    _atomic_write_text(STATE_FILE, json.dumps(state, indent=2))
 
 
 def get_active_profile() -> str:
@@ -132,9 +160,10 @@ def get_active_profile() -> str:
 
 
 def set_active_profile(name: str) -> None:
-    state = _load_state()
-    state["active_profile"] = name
-    _save_state(state)
+    with _config_lock():
+        state = _load_state()
+        state["active_profile"] = name
+        _save_state(state)
 
 
 def profile_dir(name: str) -> Path:
@@ -154,7 +183,9 @@ def _meta_path(name: str) -> Path:
 def list_profiles() -> list[str]:
     if not PROFILES_DIR.exists():
         return []
-    return sorted(p.name for p in PROFILES_DIR.iterdir() if p.is_dir())
+    return sorted(
+        p.name for p in PROFILES_DIR.iterdir() if p.is_dir() and is_valid_profile_name(p.name)
+    )
 
 
 def profile_exists(name: str) -> bool:
@@ -166,10 +197,11 @@ def remove_profile(name: str) -> None:
     if target.exists():
         shutil.rmtree(target)
 
-    state = _load_state()
-    if state.get("active_profile") == name:
-        state.pop("active_profile", None)
-        _save_state(state)
+    with _config_lock():
+        state = _load_state()
+        if state.get("active_profile") == name:
+            state.pop("active_profile", None)
+            _save_state(state)
 
 
 def save_credentials(credentials: dict, name: str | None = None) -> None:
@@ -209,12 +241,22 @@ def load_profile_meta(name: str) -> dict:
 
 
 def migrate_legacy_credentials() -> bool:
-    """Move a pre-profiles credentials.json into the default profile. One-shot."""
+    """Move a pre-profiles credentials.json into the default profile. One-shot.
+
+    Held under the config lock so concurrent first-run invocations cannot both
+    pass the existence check and race on read/unlink.
+    """
     if not LEGACY_CREDENTIALS_FILE.exists() or list_profiles():
         return False
 
-    dest = _ensure_profile_dir(DEFAULT_PROFILE)
-    _write_private(dest / "credentials.json", LEGACY_CREDENTIALS_FILE.read_text())
-    LEGACY_CREDENTIALS_FILE.unlink()
-    set_active_profile(DEFAULT_PROFILE)
+    with _config_lock():
+        if not LEGACY_CREDENTIALS_FILE.exists() or list_profiles():
+            return False
+
+        dest = _ensure_profile_dir(DEFAULT_PROFILE)
+        _write_private(dest / "credentials.json", LEGACY_CREDENTIALS_FILE.read_text())
+        LEGACY_CREDENTIALS_FILE.unlink()
+        state = _load_state()
+        state["active_profile"] = DEFAULT_PROFILE
+        _save_state(state)
     return True

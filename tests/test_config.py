@@ -1,3 +1,4 @@
+import json
 import stat
 from unittest.mock import patch
 
@@ -172,3 +173,36 @@ class TestMigration:
 
         assert config.migrate_legacy_credentials() is False
         assert config.LEGACY_CREDENTIALS_FILE.exists()
+
+
+class TestAtomicState:
+    def test_state_file_write_is_atomic(self, temp_config):
+        """A truncated/partial state.json must not slip past _save_state."""
+        config.set_active_profile("work")
+        # No leftover temp file from the atomic rename.
+        assert not (temp_config / "state.json.tmp").exists()
+        assert json.loads(config.STATE_FILE.read_text())["active_profile"] == "work"
+
+
+class TestListProfilesFiltering:
+    def test_list_profiles_skips_invalid_directory_names(self, temp_config):
+        config.save_credentials({"token": "a"}, name="work")
+        # Simulate a stray directory with an invalid profile name (e.g. left over
+        # from a manual edit). list_profiles must not surface it.
+        config.PROFILES_DIR.mkdir(parents=True, exist_ok=True)
+        (config.PROFILES_DIR / "not.a.profile").mkdir()
+        (config.PROFILES_DIR / ".hidden").mkdir()
+
+        assert config.list_profiles() == ["work"]
+
+    def test_migration_skips_when_only_invalid_dirs_exist(self, temp_config):
+        """Stray invalid directories must not block legacy migration."""
+        config.ensure_config_dir()
+        config.PROFILES_DIR.mkdir(parents=True)
+        (config.PROFILES_DIR / "not.a.profile").mkdir()
+        config.LEGACY_CREDENTIALS_FILE.write_text('{"token": "legacy"}')
+
+        migrated = config.migrate_legacy_credentials()
+
+        assert migrated is True
+        assert config.load_credentials("default") == {"token": "legacy"}

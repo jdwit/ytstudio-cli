@@ -107,12 +107,12 @@ def _fetch_channel_info(credentials: Credentials) -> dict | None:
     }
 
 
-def _show_login_success(credentials: Credentials, profile: str | None = None) -> None:
+def _show_login_success(credentials: Credentials, profile: str) -> None:
     info = _fetch_channel_info(credentials)
 
     console.print()
     if info:
-        save_profile_meta(profile or get_active_profile(), info)
+        save_profile_meta(profile, info)
         success_message(f"Logged in as: {info['title']}")
     else:
         success_message("Authentication successful")
@@ -169,6 +169,10 @@ def authenticate(headless: bool = False, profile: str | None = None) -> None:
         console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
         raise SystemExit(1) from None
 
+    # Resolve the target profile up-front: a profile switch during a long OAuth
+    # flow must not redirect the freshly minted credentials to a different one.
+    profile = profile or get_active_profile()
+
     console.print("[bold]Authenticating with YouTube...[/bold]\n")
 
     if headless:
@@ -215,8 +219,12 @@ def get_credentials(profile: str | None = None) -> Credentials | None:
     return credentials
 
 
-def get_authenticated_service(api_name: str = "youtube", version: str = "v3"):
-    credentials = get_credentials()
+def get_authenticated_service(
+    api_name: str = "youtube",
+    version: str = "v3",
+    profile: str | None = None,
+):
+    credentials = get_credentials(profile)
     if not credentials:
         console.print("[red]Not authenticated. Run 'ytstudio login' first.[/red]")
         raise typer.Exit(1)
