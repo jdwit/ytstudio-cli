@@ -4,6 +4,7 @@ import os
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import ClassVar
 
 DEMO_MODE = os.environ.get("YTSTUDIO_DEMO", "").lower() in ("1", "true", "yes")
 
@@ -81,6 +82,79 @@ class _DemoComments:
         return DemoRequest({})
 
 
+class _DemoLiveBroadcasts:
+    _STATUS_MAP: ClassVar[dict[str, str]] = {
+        "ready": "upcoming",
+        "created": "upcoming",
+        "live": "active",
+        "testing": "active",
+        "complete": "completed",
+    }
+
+    def _all(self) -> list[dict]:
+        return _load("broadcasts.json")["items"]
+
+    def list(self, **kwargs):
+        id_param = kwargs.get("id")
+        status_param = kwargs.get("broadcastStatus", "all")
+        max_results = kwargs.get("maxResults", 50)
+
+        items = self._all()
+        if id_param:
+            ids = {i.strip() for i in str(id_param).split(",") if i.strip()}
+            items = [b for b in items if b.get("id") in ids]
+        elif status_param and status_param != "all":
+            items = [
+                b
+                for b in items
+                if self._STATUS_MAP.get(b.get("status", {}).get("lifeCycleStatus", ""))
+                == status_param
+            ]
+        return DemoRequest({"items": items[:max_results]})
+
+    def transition(self, **kwargs):
+        broadcast_id = kwargs.get("id", "")
+        target = kwargs.get("broadcastStatus", "live")
+        return DemoRequest(
+            {
+                "id": broadcast_id,
+                "snippet": {"title": f"Demo broadcast {broadcast_id}"},
+                "status": {"lifeCycleStatus": target},
+            }
+        )
+
+    def insert(self, **kwargs):
+        body = kwargs.get("body", {}) or {}
+        snippet = body.get("snippet", {})
+        status = body.get("status", {})
+        return DemoRequest(
+            {
+                "id": "demo-broadcast-new",
+                "snippet": snippet,
+                "status": {
+                    "lifeCycleStatus": "created",
+                    "privacyStatus": status.get("privacyStatus", "public"),
+                    "selfDeclaredMadeForKids": status.get("selfDeclaredMadeForKids", False),
+                },
+                "contentDetails": {},
+            }
+        )
+
+    def update(self, **kwargs):
+        body = kwargs.get("body", {}) or {}
+        return DemoRequest(body)
+
+
+class _DemoLiveStreams:
+    def list(self, **kwargs):
+        id_param = kwargs.get("id", "")
+        items = _load("live_streams.json")["items"]
+        if id_param:
+            ids = {i.strip() for i in str(id_param).split(",") if i.strip()}
+            items = [s for s in items if s.get("id") in ids]
+        return DemoRequest({"items": items})
+
+
 class DemoDataService:
     def channels(self):
         return _DemoChannels()
@@ -96,6 +170,12 @@ class DemoDataService:
 
     def commentThreads(self):
         return _DemoCommentThreads()
+
+    def liveBroadcasts(self):
+        return _DemoLiveBroadcasts()
+
+    def liveStreams(self):
+        return _DemoLiveStreams()
 
 
 class _DemoReports:

@@ -89,6 +89,34 @@ A plain `ytstudio login` (no `profile add`) authenticates the active profile, wh
 on a fresh setup. Existing single-channel installs are migrated to the `default` profile
 automatically on first run.
 
+## Live broadcasts
+
+Manage your YouTube livestream broadcasts from the CLI. This drives YouTube's
+`liveBroadcasts` API (scheduling, starting, stopping, updating); the actual
+video push to YouTube still goes through your encoder of choice (OBS, etc.).
+
+```bash
+ytstudio livestreams list --status upcoming        # what is scheduled
+ytstudio livestreams show <broadcast-id>           # details for one broadcast
+ytstudio livestreams show <id> --ingest            # also fetch the bound stream's RTMP URL
+ytstudio livestreams show <id> --show-key          # reveal the stream key (treat as secret)
+ytstudio livestreams schedule \
+    --title "Title" --scheduled-start 2026-06-01T19:00:00+02:00   # dry-run
+ytstudio livestreams schedule ... --execute        # actually create
+ytstudio livestreams start <id>                    # transition to live
+ytstudio livestreams start <id> --to testing       # transition to the monitor stream first
+ytstudio livestreams stop <id>                     # transition to complete
+ytstudio livestreams update <id> --privacy unlisted --no-dvr   # dry-run by default
+```
+
+Notes:
+
+- `schedule` and `update` default to a dry-run preview; pass `--execute` to apply.
+- `--show-key` on `show` reveals the bound stream key; without it the key is
+  redacted. Stream keys are credentials.
+- `liveBroadcasts.insert`/`update` are write operations (~50 quota units each);
+  see [API quota](#api-quota) below.
+
 ## API quota
 
 The YouTube Data API enforces a default quota of 10_000 units per project per day. Most read
