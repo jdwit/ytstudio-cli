@@ -57,6 +57,11 @@ class TransitionTarget(StrEnum):
     live = "live"
 
 
+class OutputFormat(StrEnum):
+    table = "table"
+    json = "json"
+
+
 EMPTY = "-"
 
 
@@ -81,6 +86,10 @@ class Broadcast:
     latency_preference: str = "normal"
     projection: str = "rectangular"
     made_for_kids: bool = False
+    # YouTube requires both of these whenever contentDetails is included in an
+    # update, so we keep them on the parsed object and round-trip them.
+    monitor_stream_enabled: bool = True
+    broadcast_stream_delay_ms: int = 0
 
 
 @dataclass
@@ -91,6 +100,7 @@ class StreamIngest:
     ingestion_address: str = ""
     backup_ingestion_address: str = ""
     rtmps_ingestion_address: str = ""
+    rtmps_backup_ingestion_address: str = ""
     stream_name: str = ""  # the actual stream key, redacted unless explicitly shown
     format: str = ""
     frame_rate: str = ""
@@ -108,6 +118,22 @@ _LIVESTREAM_ERRORS = {
         "or bind a stream first."
     ),
     "liveBroadcastNotFound": "Broadcast not found.",
+    "errorExecutingTransition": (
+        "YouTube could not execute this transition. Check encoder health and try again."
+    ),
+    "livePermissionBlocked": (
+        "Live streaming is blocked for this channel (account standing, age, or strikes)."
+    ),
+    "insufficientLivePermissions": (
+        "This channel does not have permission for live streaming yet."
+    ),
+    "userRequestsExceedRateLimit": "Too many requests; wait a moment and retry.",
+    "concurrentBroadcastsExceedLimit": (
+        "You already have the maximum number of concurrent live broadcasts."
+    ),
+    "sharedIngestionBroadcastsExceedLimit": (
+        "Too many broadcasts share this ingestion stream; stop one and try again."
+    ),
 }
 
 
@@ -124,6 +150,7 @@ def _parse_broadcast(item: dict[str, Any]) -> Broadcast:
     snippet = item.get("snippet") or {}
     status = item.get("status") or {}
     content = item.get("contentDetails") or {}
+    monitor = content.get("monitorStream") or {}
     return Broadcast(
         id=str(item["id"]),
         title=snippet.get("title", ""),
@@ -144,6 +171,8 @@ def _parse_broadcast(item: dict[str, Any]) -> Broadcast:
         latency_preference=content.get("latencyPreference", "normal"),
         projection=content.get("projection", "rectangular"),
         made_for_kids=status.get("selfDeclaredMadeForKids", False),
+        monitor_stream_enabled=monitor.get("enableMonitorStream", True),
+        broadcast_stream_delay_ms=int(monitor.get("broadcastStreamDelayMs", 0) or 0),
     )
 
 
@@ -171,6 +200,7 @@ def _fetch_stream_ingest(service, stream_id: str) -> StreamIngest | None:
         ingestion_address=ingestion_info.get("ingestionAddress", ""),
         backup_ingestion_address=ingestion_info.get("backupIngestionAddress", ""),
         rtmps_ingestion_address=ingestion_info.get("rtmpsIngestionAddress", ""),
+        rtmps_backup_ingestion_address=ingestion_info.get("rtmpsBackupIngestionAddress", ""),
         stream_name=ingestion_info.get("streamName", ""),
         format=cdn.get("format", ""),
         frame_rate=cdn.get("frameRate", ""),
@@ -197,7 +227,9 @@ def list_broadcasts(
     ),
     limit: int = typer.Option(20, "--limit", "-n", min=1, max=50, help="Number of broadcasts"),
     page_token: str = typer.Option(None, "--page-token", "-p", help="Page token for pagination"),
-    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+    output: OutputFormat = typer.Option(
+        OutputFormat.table, "--output", "-o", help="Output format: table or json"
+    ),
 ):
     """List your YouTube live broadcasts."""
     service = get_data_service()
@@ -219,7 +251,7 @@ def list_broadcasts(
         console.print("[yellow]No broadcasts found[/yellow]")
         return
 
-    if output == "json":
+    if output is OutputFormat.json:
         print(
             json.dumps(
                 {
@@ -270,7 +302,9 @@ def show(
         "--show-key",
         help="Reveal the bound stream key (implies --ingest). Treat output as a secret.",
     ),
-    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+    output: OutputFormat = typer.Option(
+        OutputFormat.table, "--output", "-o", help="Output format: table or json"
+    ),
 ):
     """Show details for a specific broadcast."""
     service = get_data_service()
@@ -284,7 +318,7 @@ def show(
     if (ingest or show_key) and broadcast.bound_stream_id:
         stream = _fetch_stream_ingest(service, broadcast.bound_stream_id)
 
-    if output == "json":
+    if output is OutputFormat.json:
         payload: dict[str, Any] = {"broadcast": asdict(broadcast)}
         if stream:
             ingest_dump = asdict(stream)
@@ -337,6 +371,8 @@ def show(
             ingest_table.add_row("rtmp (backup)", stream.backup_ingestion_address)
         if stream.rtmps_ingestion_address:
             ingest_table.add_row("rtmps", stream.rtmps_ingestion_address)
+        if stream.rtmps_backup_ingestion_address:
+            ingest_table.add_row("rtmps (backup)", stream.rtmps_backup_ingestion_address)
         key_display = stream.stream_name if show_key else _redact_key(stream.stream_name)
         ingest_table.add_row("stream key", key_display or EMPTY)
         console.print(ingest_table)
@@ -500,12 +536,14 @@ def update(
     projection: Projection = typer.Option(
         None, "--projection", help="Projection: rectangular or 360"
     ),
-    made_for_kids: bool | None = typer.Option(
-        None, "--made-for-kids/--not-made-for-kids", help="Made-for-kids designation"
-    ),
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
-    """Update a broadcast's metadata or settings (partial update)."""
+    """Update a broadcast's metadata or settings (partial update).
+
+    Note: liveBroadcasts.update only accepts privacyStatus under status; the
+    made-for-kids designation is set at schedule time and managed on the
+    resulting video resource afterwards.
+    """
     snippet_changes: dict[str, Any] = {}
     if title is not None:
         snippet_changes["title"] = title
@@ -519,8 +557,6 @@ def update(
     status_changes: dict[str, Any] = {}
     if privacy is not None:
         status_changes["privacyStatus"] = privacy.value
-    if made_for_kids is not None:
-        status_changes["selfDeclaredMadeForKids"] = made_for_kids
 
     content_changes: dict[str, Any] = {}
     if auto_start is not None:
@@ -545,7 +581,7 @@ def update(
             "[yellow]Nothing to update. Pass at least one of --title, --description, "
             "--privacy, --scheduled-start, --scheduled-end, --auto-start, --auto-stop, "
             "--dvr, --embed, --record-from-start, --closed-captions, --latency, "
-            "--projection, or --made-for-kids.[/yellow]"
+            "or --projection.[/yellow]"
         )
         raise typer.Exit(1)
 
@@ -566,10 +602,9 @@ def update(
         snippet_body["scheduledEndTime"] = current.scheduled_end
     snippet_body.update(snippet_changes)
 
-    status_body: dict[str, Any] = {
-        "privacyStatus": current.privacy,
-        "selfDeclaredMadeForKids": current.made_for_kids,
-    }
+    # liveBroadcasts.update only accepts privacyStatus under status (per the API
+    # reference), so we deliberately omit selfDeclaredMadeForKids here.
+    status_body: dict[str, Any] = {"privacyStatus": current.privacy}
     status_body.update(status_changes)
 
     parts = ["snippet", "status"]
@@ -581,7 +616,14 @@ def update(
 
     if content_changes:
         parts.append("contentDetails")
+        # contentDetails is replace-on-update. Include both monitorStream fields
+        # (YouTube rejects the request otherwise) and round-trip the rest from
+        # the freshly-read broadcast so unchanged fields are preserved.
         content_body: dict[str, Any] = {
+            "monitorStream": {
+                "enableMonitorStream": current.monitor_stream_enabled,
+                "broadcastStreamDelayMs": current.broadcast_stream_delay_ms,
+            },
             "enableAutoStart": current.auto_start,
             "enableAutoStop": current.auto_stop,
             "enableDvr": current.dvr,
@@ -614,7 +656,6 @@ _SNIPPET_LABELS: dict[str, tuple[str, str]] = {
 }
 _STATUS_LABELS: dict[str, tuple[str, str]] = {
     "privacyStatus": ("privacy", "privacy"),
-    "selfDeclaredMadeForKids": ("made for kids", "made_for_kids"),
 }
 _CONTENT_LABELS: dict[str, tuple[str, str]] = {
     "enableAutoStart": ("auto start", "auto_start"),

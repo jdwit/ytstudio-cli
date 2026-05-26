@@ -20,6 +20,8 @@ def _broadcast_item(
     scheduled_end: str = "2026-06-01T20:00:00Z",
     bound_stream_id: str = "",
     made_for_kids: bool = False,
+    monitor_enabled: bool = True,
+    stream_delay_ms: int = 0,
     content_overrides: dict | None = None,
 ) -> dict:
     content = {
@@ -32,6 +34,10 @@ def _broadcast_item(
         "closedCaptionsType": "closedCaptionsDisabled",
         "latencyPreference": "normal",
         "projection": "rectangular",
+        "monitorStream": {
+            "enableMonitorStream": monitor_enabled,
+            "broadcastStreamDelayMs": stream_delay_ms,
+        },
     }
     if content_overrides:
         content.update(content_overrides)
@@ -362,7 +368,14 @@ class TestUpdate:
 
     def test_partial_update_keeps_other_fields(self):
         service = _service(
-            [_broadcast_item(bound_stream_id="s1", content_overrides={"enableDvr": True})]
+            [
+                _broadcast_item(
+                    bound_stream_id="s1",
+                    monitor_enabled=True,
+                    stream_delay_ms=5000,
+                    content_overrides={"enableDvr": True},
+                )
+            ]
         )
         with patch("ytstudio.commands.livestreams.get_data_service", return_value=service):
             result = runner.invoke(
@@ -378,9 +391,17 @@ class TestUpdate:
         assert body["contentDetails"]["enableDvr"] is False
         # Other content fields keep their fetched-current values.
         assert body["contentDetails"]["enableAutoStart"] is True
+        # monitorStream must be carried over verbatim; YouTube rejects updates
+        # to contentDetails that omit it.
+        monitor = body["contentDetails"]["monitorStream"]
+        assert monitor["enableMonitorStream"] is True
+        assert monitor["broadcastStreamDelayMs"] == 5000
         # Snippet must still have title/start/end to avoid clearing them via PUT.
         assert body["snippet"]["title"] == "My Stream"
         assert body["snippet"]["scheduledStartTime"] == "2026-06-01T19:00:00Z"
+        # status only carries privacyStatus; selfDeclaredMadeForKids is not a
+        # writable field on liveBroadcasts.update.
+        assert body["status"] == {"privacyStatus": "public"}
 
     def test_metadata_only_update_skips_content_part(self):
         service = _service([_broadcast_item()])
@@ -394,3 +415,46 @@ class TestUpdate:
         assert "contentDetails" not in kwargs["part"]
         assert "snippet" in kwargs["part"]
         assert kwargs["body"]["snippet"]["title"] == "Renamed"
+
+
+class TestOutputValidation:
+    def test_invalid_output_format_rejected(self):
+        result = runner.invoke(app, ["list", "--output", "yaml"])
+        assert result.exit_code != 0
+
+    def test_show_json_redacted_without_show_key(self):
+        service = _service(
+            [_broadcast_item(bound_stream_id="s1")],
+            stream_items=[_stream_item("s1", "secret-key-FOUR-LAST")],
+        )
+        with patch("ytstudio.commands.livestreams.get_data_service", return_value=service):
+            result = runner.invoke(app, ["show", "abc123", "--ingest", "-o", "json"])
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout)
+        assert payload["ingest"]["stream_name"].endswith("LAST")
+        assert "secret-key" not in payload["ingest"]["stream_name"]
+
+    def test_show_json_reveals_key_with_show_key(self):
+        service = _service(
+            [_broadcast_item(bound_stream_id="s1")],
+            stream_items=[_stream_item("s1", "full-secret-key-XYZ")],
+        )
+        with patch("ytstudio.commands.livestreams.get_data_service", return_value=service):
+            result = runner.invoke(app, ["show", "abc123", "--ingest", "--show-key", "-o", "json"])
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout)
+        assert payload["ingest"]["stream_name"] == "full-secret-key-XYZ"
+
+
+class TestRtmpsBackup:
+    def test_rtmps_backup_url_rendered(self):
+        stream = _stream_item("s1")
+        stream["cdn"]["ingestionInfo"]["rtmpsBackupIngestionAddress"] = "rtmps://backup-secure"
+        service = _service(
+            [_broadcast_item(bound_stream_id="s1")],
+            stream_items=[stream],
+        )
+        with patch("ytstudio.commands.livestreams.get_data_service", return_value=service):
+            result = runner.invoke(app, ["show", "abc123", "--ingest"])
+        assert result.exit_code == 0
+        assert "rtmps://backup-secure" in result.stdout

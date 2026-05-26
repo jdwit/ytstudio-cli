@@ -22,7 +22,8 @@
         "recordFromStart": true,
         "closedCaptionsType": "closedCaptionsDisabled",
         "latencyPreference": "low",
-        "projection": "rectangular"
+        "projection": "rectangular",
+        "monitorStream": {"enableMonitorStream": true, "broadcastStreamDelayMs": 0}
       }
     },
     {
@@ -47,7 +48,8 @@
         "recordFromStart": false,
         "closedCaptionsType": "closedCaptionsEmbedded",
         "latencyPreference": "normal",
-        "projection": "rectangular"
+        "projection": "rectangular",
+        "monitorStream": {"enableMonitorStream": true, "broadcastStreamDelayMs": 5000}
       }
     },
     {
@@ -73,7 +75,8 @@
         "recordFromStart": true,
         "closedCaptionsType": "closedCaptionsDisabled",
         "latencyPreference": "normal",
-        "projection": "rectangular"
+        "projection": "rectangular",
+        "monitorStream": {"enableMonitorStream": false, "broadcastStreamDelayMs": 0}
       }
     }
   ]
