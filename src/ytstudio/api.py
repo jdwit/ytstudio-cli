@@ -12,8 +12,10 @@ from rich.prompt import Prompt
 from ytstudio.config import (
     CLIENT_SECRETS_FILE,
     clear_credentials,
+    get_active_profile,
     load_credentials,
     save_credentials,
+    save_profile_meta,
 )
 from ytstudio.ui import console, success_message
 
@@ -73,7 +75,7 @@ def _create_flow() -> InstalledAppFlow:
     )
 
 
-def _save_credentials(credentials: Credentials) -> None:
+def _save_credentials(credentials: Credentials, profile: str | None = None) -> None:
     creds_data = {
         "token": credentials.token,
         "refresh_token": credentials.refresh_token,
@@ -82,17 +84,36 @@ def _save_credentials(credentials: Credentials) -> None:
         "client_secret": credentials.client_secret,
         "scopes": credentials.scopes,
     }
-    save_credentials(creds_data)
+    save_credentials(creds_data, profile)
 
 
-def _show_login_success(credentials: Credentials) -> None:
-    service = build("youtube", "v3", credentials=credentials)
-    response = service.channels().list(part="snippet", mine=True).execute()
+def _fetch_channel_info(credentials: Credentials) -> dict | None:
+    # Best-effort: a quota/network error here must not fail a successful login.
+    try:
+        service = build("youtube", "v3", credentials=credentials)
+        response = service.channels().list(part="snippet", mine=True).execute()
+    except Exception:
+        return None
+
+    items = response.get("items")
+    if not items:
+        return None
+
+    snippet = items[0]["snippet"]
+    return {
+        "id": items[0].get("id", ""),
+        "title": snippet.get("title", ""),
+        "custom_url": snippet.get("customUrl", ""),
+    }
+
+
+def _show_login_success(credentials: Credentials, profile: str) -> None:
+    info = _fetch_channel_info(credentials)
 
     console.print()
-    if response.get("items"):
-        channel = response["items"][0]["snippet"]
-        success_message(f"Logged in as: {channel['title']}")
+    if info:
+        save_profile_meta(profile, info)
+        success_message(f"Logged in as: {info['title']}")
     else:
         success_message("Authentication successful")
 
@@ -143,10 +164,14 @@ def _authenticate_headless() -> Credentials:
     return flow.credentials
 
 
-def authenticate(headless: bool = False) -> None:
+def authenticate(headless: bool = False, profile: str | None = None) -> None:
     if not CLIENT_SECRETS_FILE.exists():
         console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
         raise SystemExit(1) from None
+
+    # Resolve the target profile up-front: a profile switch during a long OAuth
+    # flow must not redirect the freshly minted credentials to a different one.
+    profile = profile or get_active_profile()
 
     console.print("[bold]Authenticating with YouTube...[/bold]\n")
 
@@ -160,12 +185,13 @@ def authenticate(headless: bool = False) -> None:
             open_browser=True,
         )
 
-    _save_credentials(credentials)
-    _show_login_success(credentials)
+    _save_credentials(credentials, profile)
+    _show_login_success(credentials, profile)
 
 
-def get_credentials() -> Credentials | None:
-    creds_data = load_credentials()
+def get_credentials(profile: str | None = None) -> Credentials | None:
+    profile = profile or get_active_profile()
+    creds_data = load_credentials(profile)
     if not creds_data:
         return None
 
@@ -188,27 +214,31 @@ def get_credentials() -> Credentials | None:
             raise SystemExit(1) from None
         # Save refreshed credentials
         creds_data["token"] = credentials.token
-        save_credentials(creds_data)
+        save_credentials(creds_data, profile)
 
     return credentials
 
 
-def get_authenticated_service(api_name: str = "youtube", version: str = "v3"):
-    credentials = get_credentials()
+def get_authenticated_service(
+    api_name: str = "youtube",
+    version: str = "v3",
+    profile: str | None = None,
+):
+    credentials = get_credentials(profile)
     if not credentials:
         console.print("[red]Not authenticated. Run 'ytstudio login' first.[/red]")
         raise typer.Exit(1)
     return build(api_name, version, credentials=credentials)
 
 
-def get_status() -> None:
-    creds_data = load_credentials()
+def get_status(profile: str | None = None) -> None:
+    creds_data = load_credentials(profile)
 
     if not creds_data:
         console.print("[yellow]Not authenticated. Run 'ytstudio login' to authenticate.[/yellow]")
         return
 
-    credentials = get_credentials()
+    credentials = get_credentials(profile)
     if not credentials or not credentials.valid:
         console.print(
             "[yellow]Credentials expired. Run 'ytstudio login' to re-authenticate.[/yellow]"

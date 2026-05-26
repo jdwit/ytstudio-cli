@@ -61,6 +61,32 @@ The command prints a Google OAuth URL. Open that URL in a browser on any machine
 access. The browser will then fail to load a `127.0.0.1` page; this is expected. Copy the full URL
 from the browser address bar, paste it back into the terminal, and ytstudio will finish the login.
 
+## Managing multiple channels
+
+If you run more than one YouTube channel, ytstudio stores each login under its own named profile.
+Every command (`videos`, `analytics`, `comments`, ...) operates on the active channel.
+
+```bash
+ytstudio profile add work       # authenticate a new channel and make it active
+ytstudio profile add personal   # add another
+ytstudio profile list           # show profiles; the active one is marked with *
+ytstudio profile use work       # switch the active profile
+ytstudio profile status work    # auth status for one profile (defaults to active)
+ytstudio profile remove personal
+```
+
+For scripting you can override the active channel per command without switching:
+
+```bash
+YTSTUDIO_PROFILE=work ytstudio videos list
+```
+
+Credentials live in `~/.config/ytstudio-cli/profiles/<name>/` with owner-only (`600`) permissions.
+The shared OAuth client secrets stay at the top level, so `ytstudio init` is only needed once.
+A plain `ytstudio login` (no `profile add`) authenticates the active profile, which is `default`
+on a fresh setup. Existing single-channel installs are migrated to the `default` profile
+automatically on first run.
+
 ## API quota
 
 The YouTube Data API enforces a default quota of 10_000 units per project per day. Most read
