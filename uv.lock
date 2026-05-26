@@ -1152,18 +1152,6 @@ wheels = [
 ]
 
 [[package]]
-name = "typer-cli"
-version = "0.24.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/e5/4debd04edf65dbd72a099a1fbcd98f246da6bd0b26993ff02f68fa7d6eec/typer_cli-0.24.0.tar.gz", hash = "sha256:ce902c5ae858d9a8df684c950cbb2e351ae6d686f397fee8c8e77cf5d99041a1", size = 4616, upload-time = "2026-02-16T22:08:49.072Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/ed/db873e6fe6154f5de6dc6096870b4aca2ad7f8e8f34e0b4e4e18d44f354c/typer_cli-0.24.0-py3-none-any.whl", hash = "sha256:e3bd84cf7c03fe92c5c53e68233abeaa81fb4d3dd9eff49bf2b19b788e85302d", size = 3220, upload-time = "2026-02-16T22:08:47.882Z" },
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1267,7 +1255,6 @@ docs = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "pymdown-extensions" },
-    { name = "typer-cli" },
 ]
 
 [package.metadata]
@@ -1294,5 +1281,4 @@ docs = [
     { name = "mkdocs", specifier = ">=1.6" },
     { name = "mkdocs-material", specifier = ">=9.5" },
     { name = "pymdown-extensions", specifier = ">=10.7" },
-    { name = "typer-cli", specifier = ">=0.0.13" },
 ]
