@@ -25,6 +25,8 @@ I recommend the excellent [uv](https://uv.io/) tool for installation:
 uv tool install ytstudio-cli
 ```
 
+The CLI is installed as `ytstudio`; `yts` is a short alias for the same entry point.
+
 ## Setup
 
 1. Create a [Google Cloud project](https://console.cloud.google.com/)
