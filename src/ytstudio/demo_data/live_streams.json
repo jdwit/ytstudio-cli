@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "demo-stream-1",
+      "snippet": {"title": "Demo reusable stream"},
+      "cdn": {
+        "format": "1080p",
+        "frameRate": "30fps",
+        "resolution": "1080p",
+        "ingestionInfo": {
+          "ingestionAddress": "rtmp://a.rtmp.youtube.com/live2",
+          "backupIngestionAddress": "rtmp://b.rtmp.youtube.com/live2?backup=1",
+          "rtmpsIngestionAddress": "rtmps://a.rtmps.youtube.com/live2",
+          "streamName": "demo-key-1234-abcd-zxcv-XYZ9"
+        }
+      },
+      "status": {"streamStatus": "active"}
+    },
+    {
+      "id": "demo-stream-2",
+      "snippet": {"title": "Demo backup stream"},
+      "cdn": {
+        "format": "720p",
+        "frameRate": "60fps",
+        "resolution": "720p",
+        "ingestionInfo": {
+          "ingestionAddress": "rtmp://a.rtmp.youtube.com/live2",
+          "streamName": "demo-key-9999-zzzz-PEXX"
+        }
+      },
+      "status": {"streamStatus": "active"}
+    }
+  ]
+}
