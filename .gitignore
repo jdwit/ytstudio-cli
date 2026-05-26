@@ -13,3 +13,7 @@ htmlcov/
 .vscode/
 .DS_Store
 demo/
+
+# Docs build artefacts and generated content
+site/
+docs/reference.md

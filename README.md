@@ -27,6 +27,8 @@ uv tool install ytstudio-cli
 
 The CLI is installed as `ytstudio`; `yts` is a short alias for the same entry point.
 
+Full documentation: [https://jdwit.github.io/ytstudio-cli/](https://jdwit.github.io/ytstudio-cli/).
+
 ## Setup
 
 1. Create a [Google Cloud project](https://console.cloud.google.com/)

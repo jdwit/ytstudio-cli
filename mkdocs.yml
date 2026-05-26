@@ -1,0 +1,100 @@
+site_name: ytstudio
+site_description: Manage and analyze your YouTube channel from the terminal.
+site_url: https://jdwit.github.io/ytstudio-cli/
+site_author: Jelmer de Wit
+repo_name: jdwit/ytstudio-cli
+repo_url: https://github.com/jdwit/ytstudio-cli
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; Jelmer de Wit
+
+theme:
+  name: material
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.indexes
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+hooks:
+  - scripts/build_docs_reference.py
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: installation.md
+      - OAuth setup: setup.md
+  - Guides:
+      - Multi-channel profiles: profiles.md
+      - Live broadcasts: livestreams.md
+      - Bulk video updates: videos.md
+      - Analytics: analytics.md
+      - Comments: comments.md
+  - Reference:
+      - Commands: reference.md
+      - API quota: api-quota.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jdwit
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/ytstudio-cli/
