@@ -174,3 +174,12 @@ def reject(
     """Reject comments (hide from public display)"""
     count = _set_moderation_status(comment_ids, "rejected", ban_author=ban)
     console.print(f"{count} comment(s) rejected")
+
+
+def _register_moderate():
+    from ytstudio.commands.moderate import moderate  # noqa: PLC0415
+
+    app.command()(moderate)
+
+
+_register_moderate()
