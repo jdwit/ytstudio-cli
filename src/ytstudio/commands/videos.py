@@ -6,6 +6,7 @@ import typer
 from googleapiclient.errors import HttpError
 
 from ytstudio.api import api, handle_api_error
+from ytstudio.commands.upload import upload as _upload_cmd
 from ytstudio.services import get_data_service
 from ytstudio.ui import (
     console,
@@ -471,3 +472,6 @@ def search_replace(
             failed += 1
 
     console.print(f"\n[bold]Done:[/bold] {success} updated, {failed} failed")
+
+
+app.command("upload")(_upload_cmd)
