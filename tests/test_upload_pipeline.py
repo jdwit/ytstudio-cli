@@ -34,7 +34,9 @@ def test_minimal_valid_spec():
 
 def test_publish_at_forces_privacy_to_private():
     spec = UploadSpec(
-        title="x", description="x", privacy="public",
+        title="x",
+        description="x",
+        privacy="public",
         publish_at="2099-01-01T10:00:00+02:00",
     )
     assert spec.privacy == Privacy.private
@@ -43,7 +45,8 @@ def test_publish_at_forces_privacy_to_private():
 def test_publish_at_must_be_future():
     with pytest.raises(ValidationError, match="publish_at must be in the future"):
         UploadSpec(
-            title="x", description="x",
+            title="x",
+            description="x",
             publish_at="2000-01-01T10:00:00+02:00",
         )
 
@@ -51,7 +54,8 @@ def test_publish_at_must_be_future():
 def test_publish_at_requires_timezone():
     with pytest.raises(ValidationError, match="timezone"):
         UploadSpec(
-            title="x", description="x",
+            title="x",
+            description="x",
             publish_at="2099-01-01T10:00:00",  # naive
         )
 
@@ -212,20 +216,26 @@ def test_body_minimal():
 
 def test_body_with_publish_at_uses_iso():
     spec = UploadSpec(
-        title="Scheduled", description="x",
+        title="Scheduled",
+        description="x",
         publish_at="2099-06-01T19:00:00+02:00",
     )
     body = to_youtube_body(spec)
 
     assert body["status"]["privacyStatus"] == "private"
     assert body["status"]["publishAt"].startswith("2099-06-01T")
-    assert body["status"]["publishAt"].endswith("+02:00") or body["status"]["publishAt"].endswith("Z")
+    assert body["status"]["publishAt"].endswith("+02:00") or body["status"]["publishAt"].endswith(
+        "Z"
+    )
 
 
 def test_body_includes_languages_and_tags():
     spec = UploadSpec(
-        title="Localised", description="x",
-        tags=["a", "b"], default_language="nl", default_audio_language="nl",
+        title="Localised",
+        description="x",
+        tags=["a", "b"],
+        default_language="nl",
+        default_audio_language="nl",
     )
     body = to_youtube_body(spec)
 
@@ -250,7 +260,10 @@ def test_write_back_adds_video_id_and_uploaded_at(tmp_path):
 
     text = sidecar.read_text()
     assert "video_id: abc123" in text
-    assert "uploaded_at: '2026-05-28T12:00:00+02:00'" in text or "uploaded_at: 2026-05-28T12:00:00+02:00" in text
+    assert (
+        "uploaded_at: '2026-05-28T12:00:00+02:00'" in text
+        or "uploaded_at: 2026-05-28T12:00:00+02:00" in text
+    )
 
 
 def test_write_back_preserves_comments(tmp_path):

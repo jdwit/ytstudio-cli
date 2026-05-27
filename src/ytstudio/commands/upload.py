@@ -55,9 +55,7 @@ def _upload_one(service, job: UploadJob) -> str:
         try:
             set_thumbnail(service, video_id=video_id, thumbnail_path=job.thumbnail_path)
         except HttpError as e:
-            console.print(
-                f"[yellow]thumbnail for {job.video_path.name} failed: {e}[/yellow]"
-            )
+            console.print(f"[yellow]thumbnail for {job.video_path.name} failed: {e}[/yellow]")
 
     write_back(
         job.sidecar_path,
@@ -131,8 +129,7 @@ def upload(
             _upload_one(service, job)
         except _QuotaExceeded as e:
             console.print(
-                f"\n[red]Quota exceeded after {succeeded} upload(s).[/red] "
-                "Try again tomorrow."
+                f"\n[red]Quota exceeded after {succeeded} upload(s).[/red] Try again tomorrow."
             )
             handle_api_error(e.cause)
             break

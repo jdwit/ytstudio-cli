@@ -199,7 +199,9 @@ def list_videos(
     has_localization: str = typer.Option(
         None, "--has-localization", help="Filter by available translation (e.g., en, nl)"
     ),
-    scheduled: bool = typer.Option(False, "--scheduled", help="Only show videos scheduled for future publish"),
+    scheduled: bool = typer.Option(
+        False, "--scheduled", help="Only show videos scheduled for future publish"
+    ),
 ):
     """List your YouTube videos"""
     service = get_data_service()
