@@ -1,5 +1,7 @@
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
 from ytstudio.main import app
@@ -41,3 +43,77 @@ def test_upload_dry_run_validation_error_exits_nonzero(tmp_path, mock_auth):
     result = runner.invoke(app, ["videos", "upload", str(tmp_path)])
 
     assert result.exit_code != 0
+
+
+def _mock_insert_success(mock_auth, video_id="vid1"):
+    insert_request = MagicMock()
+    insert_request.next_chunk.side_effect = [(None, {"id": video_id})]
+    mock_auth.videos.return_value.insert.return_value = insert_request
+
+
+def test_upload_execute_uploads_and_writes_back(tmp_path, mock_auth):
+    _stage(tmp_path)
+    _mock_insert_success(mock_auth, video_id="vid1")
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        result = runner.invoke(app, ["videos", "upload", str(tmp_path), "--execute"])
+
+    assert result.exit_code == 0
+    mock_auth.videos.return_value.insert.assert_called_once()
+
+    sidecar_text = (tmp_path / "demo.yaml").read_text()
+    assert "video_id: vid1" in sidecar_text
+    assert "uploaded_at:" in sidecar_text
+
+
+def test_upload_execute_skips_already_uploaded(tmp_path, mock_auth):
+    _stage(tmp_path)
+    (tmp_path / "demo.yaml").write_text(SIDECAR + "\nvideo_id: already-there\n")
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        result = runner.invoke(app, ["videos", "upload", str(tmp_path), "--execute"])
+
+    assert result.exit_code == 0
+    mock_auth.videos.return_value.insert.assert_not_called()
+
+
+def test_upload_execute_stops_on_quota_exceeded(tmp_path, mock_auth):
+    # Two jobs; first succeeds, second hits quotaExceeded.
+    _stage(tmp_path)
+    (tmp_path / "second.mp4").write_bytes(b"fake")
+    (tmp_path / "second.yaml").write_text(SIDECAR.replace("Dry Run Sample", "Second"))
+
+    insert_ok = MagicMock()
+    insert_ok.next_chunk.side_effect = [(None, {"id": "v-ok"})]
+
+    quota_resp = MagicMock(status=403, reason="quotaExceeded")
+    quota_err = HttpError(quota_resp, b'{"error":{"errors":[{"reason":"quotaExceeded"}]}}')
+
+    insert_fail = MagicMock()
+    insert_fail.next_chunk.side_effect = quota_err
+
+    mock_auth.videos.return_value.insert.side_effect = [insert_ok, insert_fail]
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        result = runner.invoke(app, ["videos", "upload", str(tmp_path), "--execute"])
+
+    assert "quota" in result.stdout.lower() or "quota" in result.stderr.lower()
+    # First sidecar should be patched, second not.
+    assert "video_id: v-ok" in (tmp_path / "demo.yaml").read_text()
+    assert "video_id:" not in (tmp_path / "second.yaml").read_text()
+
+
+def test_upload_execute_max_caps_uploads(tmp_path, mock_auth):
+    _stage(tmp_path)
+    (tmp_path / "second.mp4").write_bytes(b"fake")
+    (tmp_path / "second.yaml").write_text(SIDECAR.replace("Dry Run Sample", "Second"))
+
+    insert = MagicMock()
+    insert.next_chunk.side_effect = [(None, {"id": "v1"})]
+    mock_auth.videos.return_value.insert.return_value = insert
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        result = runner.invoke(app, ["videos", "upload", str(tmp_path), "--execute", "--max", "1"])
+
+    assert result.exit_code == 0
+    assert mock_auth.videos.return_value.insert.call_count == 1
