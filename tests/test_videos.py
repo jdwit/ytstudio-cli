@@ -71,6 +71,61 @@ class TestVideosCommands:
             result = runner.invoke(app, ["videos", "list"])
             assert result.exit_code == 1
 
+    def test_list_scheduled_filters_to_future_private(self, mock_auth):
+        future = "2099-01-01T00:00:00Z"
+        scheduled = {
+            "id": "scheduled_vid",
+            "snippet": {
+                "title": "Scheduled Drop",
+                "description": "",
+                "publishedAt": "2026-01-01T00:00:00Z",
+                "tags": [],
+                "categoryId": "22",
+            },
+            "statistics": {"viewCount": "0", "likeCount": "0", "commentCount": "0"},
+            "contentDetails": {"duration": "PT1M"},
+            "status": {"privacyStatus": "private", "publishAt": future},
+        }
+        public = {
+            "id": "public_vid",
+            "snippet": {
+                "title": "Public Already",
+                "description": "",
+                "publishedAt": "2025-01-01T00:00:00Z",
+                "tags": [],
+                "categoryId": "22",
+            },
+            "statistics": {"viewCount": "0", "likeCount": "0", "commentCount": "0"},
+            "contentDetails": {"duration": "PT1M"},
+            "status": {"privacyStatus": "public"},
+        }
+        videos_list = MagicMock()
+        videos_list.execute.return_value = {"items": [scheduled, public]}
+        mock_auth.videos.return_value.list.return_value = videos_list
+
+        playlist_items = MagicMock()
+        playlist_items.execute.return_value = {
+            "items": [
+                {
+                    "snippet": {"title": "x", "publishedAt": "2026-01-01T00:00:00Z"},
+                    "contentDetails": {"videoId": "scheduled_vid"},
+                },
+                {
+                    "snippet": {"title": "y", "publishedAt": "2025-01-01T00:00:00Z"},
+                    "contentDetails": {"videoId": "public_vid"},
+                },
+            ],
+            "nextPageToken": None,
+            "pageInfo": {"totalResults": 2},
+        }
+        mock_auth.playlistItems.return_value.list.return_value = playlist_items
+
+        result = runner.invoke(app, ["videos", "list", "--scheduled"])
+
+        assert result.exit_code == 0
+        assert "Scheduled Drop" in result.stdout
+        assert "Public Already" not in result.stdout
+
 
 class TestSearchReplace:
     def test_dry_run_shows_preview(self, mock_auth):
