@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -18,7 +18,7 @@ class UploadSpec(BaseModel):
     privacy: Privacy = Privacy.private
     publish_at: datetime | None = None
     tags: list[str] = Field(default_factory=list)
-    category_id: str = "22"
+    category_id: str = "22"  # YouTube category 22 = People & Blogs
     default_language: str | None = None
     default_audio_language: str | None = None
     made_for_kids: bool = False
@@ -39,8 +39,8 @@ class UploadSpec(BaseModel):
     @model_validator(mode="after")
     def _apply_publish_at_rules(self) -> "UploadSpec":
         if self.publish_at is not None:
-            now = datetime.now(self.publish_at.tzinfo)
+            now = datetime.now(timezone.utc)  # noqa: UP017 - `datetime` here is the class, not the module
             if self.publish_at <= now:
                 raise ValueError("publish_at must be in the future")
-            object.__setattr__(self, "privacy", Privacy.private)
+            self.privacy = Privacy.private
         return self
