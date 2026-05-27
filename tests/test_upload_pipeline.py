@@ -10,6 +10,7 @@ from ytstudio.upload_pipeline import (
     discover,
     to_youtube_body,
     validate_jobs,
+    write_back,
 )
 from ytstudio.upload_pipeline import (
     ValidationError as JobValidationError,
@@ -228,3 +229,45 @@ def test_body_includes_languages_and_tags():
     assert body["snippet"]["tags"] == ["a", "b"]
     assert body["snippet"]["defaultLanguage"] == "nl"
     assert body["snippet"]["defaultAudioLanguage"] == "nl"
+
+
+SIDECAR_WITH_COMMENT = """\
+# Master comment
+title: Sample           # inline comment
+description: |
+  Demo
+tags: [a, b]
+"""
+
+
+def test_write_back_adds_video_id_and_uploaded_at(tmp_path):
+    sidecar = _write(tmp_path / "v.yaml", SIDECAR_WITH_COMMENT)
+
+    write_back(sidecar, video_id="abc123", uploaded_at_iso="2026-05-28T12:00:00+02:00")
+
+    text = sidecar.read_text()
+    assert "video_id: abc123" in text
+    assert "uploaded_at: '2026-05-28T12:00:00+02:00'" in text or "uploaded_at: 2026-05-28T12:00:00+02:00" in text
+
+
+def test_write_back_preserves_comments(tmp_path):
+    sidecar = _write(tmp_path / "v.yaml", SIDECAR_WITH_COMMENT)
+
+    write_back(sidecar, video_id="abc123", uploaded_at_iso="2026-05-28T12:00:00+02:00")
+
+    text = sidecar.read_text()
+    assert "# Master comment" in text
+    assert "# inline comment" in text
+
+
+def test_write_back_overwrites_existing_video_id(tmp_path):
+    sidecar = _write(
+        tmp_path / "v.yaml",
+        "title: x\ndescription: y\nvideo_id: OLD\n",
+    )
+
+    write_back(sidecar, video_id="NEW", uploaded_at_iso="2026-05-28T12:00:00+02:00")
+
+    text = sidecar.read_text()
+    assert "OLD" not in text
+    assert "NEW" in text

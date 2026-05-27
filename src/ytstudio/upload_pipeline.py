@@ -1,3 +1,4 @@
+import io
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -152,6 +153,18 @@ def to_youtube_body(spec: UploadSpec) -> dict:
         status["publishAt"] = spec.publish_at.isoformat()
 
     return {"snippet": snippet, "status": status}
+
+
+def write_back(sidecar_path: Path, *, video_id: str, uploaded_at_iso: str) -> None:
+    """Patch the sidecar yaml with video_id and uploaded_at, preserving comments."""
+    yaml = _yaml_loader()
+    data = yaml.load(sidecar_path.read_text())
+    data["video_id"] = video_id
+    data["uploaded_at"] = uploaded_at_iso
+
+    buf = io.StringIO()
+    yaml.dump(data, buf)
+    sidecar_path.write_text(buf.getvalue())
 
 
 def discover(path: Path) -> list[UploadJob]:
