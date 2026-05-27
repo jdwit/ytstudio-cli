@@ -8,6 +8,7 @@ from ytstudio.upload_pipeline import (
     Privacy,
     UploadSpec,
     discover,
+    to_youtube_body,
     validate_jobs,
 )
 from ytstudio.upload_pipeline import (
@@ -190,3 +191,40 @@ def test_validate_jobs_collects_all_errors(tmp_path):
     msg = str(ei.value)
     assert "one.jpg" in msg
     assert "two.png" in msg
+
+
+def test_body_minimal():
+    spec = UploadSpec(title="Hi", description="Body")
+    body = to_youtube_body(spec)
+
+    assert body["snippet"]["title"] == "Hi"
+    assert body["snippet"]["description"] == "Body"
+    assert body["snippet"]["categoryId"] == "22"
+    assert body["snippet"]["tags"] == []
+    assert body["status"]["privacyStatus"] == "private"
+    assert body["status"]["selfDeclaredMadeForKids"] is False
+    assert "publishAt" not in body["status"]
+
+
+def test_body_with_publish_at_uses_iso():
+    spec = UploadSpec(
+        title="Scheduled", description="x",
+        publish_at="2099-06-01T19:00:00+02:00",
+    )
+    body = to_youtube_body(spec)
+
+    assert body["status"]["privacyStatus"] == "private"
+    assert body["status"]["publishAt"].startswith("2099-06-01T")
+    assert body["status"]["publishAt"].endswith("+02:00") or body["status"]["publishAt"].endswith("Z")
+
+
+def test_body_includes_languages_and_tags():
+    spec = UploadSpec(
+        title="Localised", description="x",
+        tags=["a", "b"], default_language="nl", default_audio_language="nl",
+    )
+    body = to_youtube_body(spec)
+
+    assert body["snippet"]["tags"] == ["a", "b"]
+    assert body["snippet"]["defaultLanguage"] == "nl"
+    assert body["snippet"]["defaultAudioLanguage"] == "nl"

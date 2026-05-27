@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from ruamel.yaml import YAML
@@ -128,6 +129,29 @@ def validate_jobs(jobs: list[UploadJob]) -> None:
                 )
     if problems:
         raise ValidationError("\n".join(problems))
+
+
+def to_youtube_body(spec: UploadSpec) -> dict:
+    """Convert an UploadSpec to a videos.insert request body."""
+    snippet: dict[str, Any] = {
+        "title": spec.title,
+        "description": spec.description,
+        "categoryId": spec.category_id,
+        "tags": list(spec.tags),
+    }
+    if spec.default_language:
+        snippet["defaultLanguage"] = spec.default_language
+    if spec.default_audio_language:
+        snippet["defaultAudioLanguage"] = spec.default_audio_language
+
+    status: dict[str, Any] = {
+        "privacyStatus": spec.privacy.value,
+        "selfDeclaredMadeForKids": spec.made_for_kids,
+    }
+    if spec.publish_at is not None:
+        status["publishAt"] = spec.publish_at.isoformat()
+
+    return {"snippet": snippet, "status": status}
 
 
 def discover(path: Path) -> list[UploadJob]:
