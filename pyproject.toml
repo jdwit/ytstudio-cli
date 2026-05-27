@@ -26,6 +26,8 @@ dependencies = [
     "google-auth-oauthlib>=1.0.0",
     "google-api-python-client>=2.0.0",
     "packaging>=21.0",
+    "pydantic>=2.5",
+    "ruamel.yaml>=0.18",
 ]
 
 [dependency-groups]
