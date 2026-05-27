@@ -104,6 +104,32 @@ def _pair(video_path: Path) -> UploadJob:
     )
 
 
+MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024
+
+
+class ValidationError(Exception):
+    pass
+
+
+def validate_jobs(jobs: list[UploadJob]) -> None:
+    """Raise ValidationError if any job has a file-level problem.
+
+    Spec-level problems (bad YAML, missing fields) are already caught in
+    discover(). This catches things only knowable from the filesystem.
+    """
+    problems: list[str] = []
+    for job in jobs:
+        if job.thumbnail_path is not None:
+            size = job.thumbnail_path.stat().st_size
+            if size > MAX_THUMBNAIL_BYTES:
+                problems.append(
+                    f"{job.thumbnail_path.name}: thumbnail too large "
+                    f"({size} bytes > {MAX_THUMBNAIL_BYTES})"
+                )
+    if problems:
+        raise ValidationError("\n".join(problems))
+
+
 def discover(path: Path) -> list[UploadJob]:
     """Return one UploadJob per video file in `path`.
 

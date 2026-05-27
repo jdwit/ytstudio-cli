@@ -3,7 +3,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ytstudio.upload_pipeline import DiscoveryError, Privacy, UploadSpec, discover
+from ytstudio.upload_pipeline import (
+    DiscoveryError,
+    Privacy,
+    UploadSpec,
+    discover,
+    validate_jobs,
+)
+from ytstudio.upload_pipeline import (
+    ValidationError as JobValidationError,
+)
 
 
 def test_minimal_valid_spec():
@@ -141,3 +150,43 @@ def test_discover_no_recursion(tmp_path):
     jobs = discover(tmp_path)
 
     assert jobs == []
+
+
+def test_validate_jobs_thumbnail_too_large(tmp_path):
+    _write(tmp_path / "big.mp4")
+    _write(tmp_path / "big.yaml", SIDECAR_OK)
+    huge = tmp_path / "big.jpg"
+    huge.write_bytes(b"x" * (2 * 1024 * 1024 + 1))
+
+    jobs = discover(tmp_path)
+
+    with pytest.raises(JobValidationError, match=r"thumbnail.*too large"):
+        validate_jobs(jobs)
+
+
+def test_validate_jobs_ok_with_small_thumbnail(tmp_path):
+    _write(tmp_path / "ok.mp4")
+    _write(tmp_path / "ok.yaml", SIDECAR_OK)
+    (tmp_path / "ok.jpg").write_bytes(b"x" * 1024)
+
+    jobs = discover(tmp_path)
+    validate_jobs(jobs)  # no error
+
+
+def test_validate_jobs_collects_all_errors(tmp_path):
+    _write(tmp_path / "one.mp4")
+    _write(tmp_path / "one.yaml", SIDECAR_OK)
+    (tmp_path / "one.jpg").write_bytes(b"x" * (3 * 1024 * 1024))
+
+    _write(tmp_path / "two.mp4")
+    _write(tmp_path / "two.yaml", SIDECAR_OK)
+    (tmp_path / "two.png").write_bytes(b"x" * (3 * 1024 * 1024))
+
+    jobs = discover(tmp_path)
+
+    with pytest.raises(JobValidationError) as ei:
+        validate_jobs(jobs)
+
+    msg = str(ei.value)
+    assert "one.jpg" in msg
+    assert "two.png" in msg
