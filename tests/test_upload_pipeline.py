@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
@@ -8,7 +9,9 @@ from ytstudio.upload_pipeline import (
     Privacy,
     UploadSpec,
     discover,
+    set_thumbnail,
     to_youtube_body,
+    upload_video,
     validate_jobs,
     write_back,
 )
@@ -271,3 +274,43 @@ def test_write_back_overwrites_existing_video_id(tmp_path):
     text = sidecar.read_text()
     assert "OLD" not in text
     assert "NEW" in text
+
+
+def test_upload_video_calls_insert_and_returns_video_id(tmp_path):
+    _write(tmp_path / "v.mp4", "fake-bytes")
+    _write(tmp_path / "v.yaml", SIDECAR_OK)
+    jobs = discover(tmp_path)
+    job = jobs[0]
+
+    service = MagicMock()
+    insert_request = MagicMock()
+    # First call returns (None, None) = chunk in flight; second returns done.
+    insert_request.next_chunk.side_effect = [
+        (None, None),
+        (None, {"id": "vid123"}),
+    ]
+    service.videos.return_value.insert.return_value = insert_request
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        video_id = upload_video(service, job, on_progress=lambda done, total: None)
+
+    assert video_id == "vid123"
+    service.videos.return_value.insert.assert_called_once()
+    _args, kwargs = service.videos.return_value.insert.call_args
+    assert kwargs["part"] == "snippet,status"
+    assert kwargs["body"]["snippet"]["title"] == "Sample"
+
+
+def test_set_thumbnail_calls_thumbnails_set(tmp_path):
+    thumb = tmp_path / "v.jpg"
+    thumb.write_bytes(b"x" * 100)
+
+    service = MagicMock()
+    service.thumbnails.return_value.set.return_value.execute.return_value = {}
+
+    with patch("ytstudio.upload_pipeline.MediaFileUpload"):
+        set_thumbnail(service, video_id="vid123", thumbnail_path=thumb)
+
+    service.thumbnails.return_value.set.assert_called_once()
+    kwargs = service.thumbnails.return_value.set.call_args.kwargs
+    assert kwargs["videoId"] == "vid123"

@@ -1,10 +1,12 @@
 import io
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from googleapiclient.http import MediaFileUpload
 from pydantic import BaseModel, Field, field_validator, model_validator
 from ruamel.yaml import YAML
 
@@ -187,3 +189,39 @@ def discover(path: Path) -> list[UploadJob]:
         if child.is_file() and child.suffix.lower() in VIDEO_EXTENSIONS
     )
     return [_pair(v) for v in videos]
+
+
+ProgressCallback = Callable[[int, int], None]
+
+
+def upload_video(
+    service: Any,
+    job: UploadJob,
+    *,
+    on_progress: ProgressCallback,
+    chunk_size: int = 4 * 1024 * 1024,
+) -> str:
+    """Resumable upload of one video. Returns the YouTube video id."""
+    media = MediaFileUpload(
+        str(job.video_path),
+        chunksize=chunk_size,
+        resumable=True,
+        mimetype="video/*",
+    )
+    request = service.videos().insert(
+        part="snippet,status",
+        body=to_youtube_body(job.spec),
+        media_body=media,
+    )
+    response: dict | None = None
+    while response is None:
+        status, response = request.next_chunk()
+        if status is not None:
+            on_progress(status.resumable_progress, status.total_size)
+    on_progress(response.get("size", 0) or 0, response.get("size", 0) or 0)
+    return response["id"]
+
+
+def set_thumbnail(service: Any, *, video_id: str, thumbnail_path: Path) -> None:
+    media = MediaFileUpload(str(thumbnail_path), resumable=False)
+    service.thumbnails().set(videoId=video_id, media_body=media).execute()
