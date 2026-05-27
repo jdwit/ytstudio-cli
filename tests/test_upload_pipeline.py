@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
-from ytstudio.upload_pipeline import Privacy, UploadSpec
+from ytstudio.upload_pipeline import DiscoveryError, Privacy, UploadSpec, discover
 
 
 def test_minimal_valid_spec():
@@ -53,3 +55,89 @@ def test_unknown_field_rejected():
 def test_privacy_invalid_rejected():
     with pytest.raises(ValidationError):
         UploadSpec(title="x", description="x", privacy="hidden")
+
+
+def _write(p: Path, body: str = "") -> Path:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(body)
+    return p
+
+
+SIDECAR_OK = """\
+title: Sample
+description: |
+  Demo body
+"""
+
+
+def test_discover_single_pair(tmp_path):
+    video = _write(tmp_path / "holiday.mp4")
+    _write(tmp_path / "holiday.yaml", SIDECAR_OK)
+
+    jobs = discover(tmp_path)
+
+    assert len(jobs) == 1
+    assert jobs[0].video_path == video
+    assert jobs[0].thumbnail_path is None
+    assert jobs[0].spec.title == "Sample"
+    assert jobs[0].already_uploaded is False
+
+
+def test_discover_picks_up_jpg_thumbnail(tmp_path):
+    _write(tmp_path / "holiday.mp4")
+    _write(tmp_path / "holiday.yaml", SIDECAR_OK)
+    thumb = _write(tmp_path / "holiday.jpg", "fake")
+
+    jobs = discover(tmp_path)
+
+    assert jobs[0].thumbnail_path == thumb
+
+
+def test_discover_picks_up_png_thumbnail(tmp_path):
+    _write(tmp_path / "holiday.mp4")
+    _write(tmp_path / "holiday.yaml", SIDECAR_OK)
+    thumb = _write(tmp_path / "holiday.png", "fake")
+
+    jobs = discover(tmp_path)
+
+    assert jobs[0].thumbnail_path == thumb
+
+
+def test_discover_single_file_argument(tmp_path):
+    video = _write(tmp_path / "single.mov")
+    _write(tmp_path / "single.yaml", SIDECAR_OK)
+
+    jobs = discover(video)
+
+    assert len(jobs) == 1
+    assert jobs[0].video_path == video
+
+
+def test_discover_video_without_sidecar_errors(tmp_path):
+    _write(tmp_path / "orphan.mp4")
+
+    with pytest.raises(DiscoveryError, match="no sidecar"):
+        discover(tmp_path)
+
+
+def test_discover_already_uploaded_flagged(tmp_path):
+    _write(tmp_path / "done.mp4")
+    _write(
+        tmp_path / "done.yaml",
+        "title: Done\ndescription: ok\nvideo_id: abc123\n",
+    )
+
+    jobs = discover(tmp_path)
+
+    assert len(jobs) == 1
+    assert jobs[0].already_uploaded is True
+
+
+def test_discover_no_recursion(tmp_path):
+    nested = tmp_path / "sub"
+    _write(nested / "nested.mp4")
+    _write(nested / "nested.yaml", SIDECAR_OK)
+
+    jobs = discover(tmp_path)
+
+    assert jobs == []
