@@ -204,9 +204,7 @@ def discover(path: Path) -> list[UploadJob]:
     )
     if near_miss_thumbs:
         names = ", ".join(n.name for n in near_miss_thumbs)
-        raise DiscoveryError(
-            f"unsupported thumbnail format(s) (use .jpg or .png): {names}"
-        )
+        raise DiscoveryError(f"unsupported thumbnail format(s) (use .jpg or .png): {names}")
 
     return [_pair(v) for v in videos]
 
