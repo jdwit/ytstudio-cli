@@ -1,4 +1,4 @@
-# ytstudio
+# YT Studio CLI
 
 Manage and analyze your YouTube channel from the terminal. Designed for
 humans and AI agents.
