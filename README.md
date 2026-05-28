@@ -165,6 +165,18 @@ Show what's scheduled for the future:
 yts videos list --scheduled
 ```
 
+## Development
+
+Clone the repo, sync dev dependencies, and install the pre-commit hook so
+`ruff check` and `ruff format` run on every commit (same checks CI runs):
+
+```bash
+uv sync --group dev
+uv run pre-commit install
+```
+
+Run the suite manually with `uv run pytest` and `uv run pre-commit run --all-files`.
+
 ## API quota
 
 The YouTube Data API enforces a default quota of 10_000 units per project per day. Most read
