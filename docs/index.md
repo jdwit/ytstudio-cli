@@ -1,28 +1,22 @@
 # ytstudio
 
-Manage and analyze your YouTube channel from the terminal. Ideal for
+Manage and analyze your YouTube channel from the terminal. Designed for
 automation and AI workflows.
-
-[![CI](https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/ytstudio-cli)](https://pypi.org/project/ytstudio-cli/)
-[![Python](https://img.shields.io/pypi/pyversions/ytstudio-cli)](https://pypi.org/project/ytstudio-cli/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## What it is
 
 A small CLI on top of the official
 [YouTube Data API](https://developers.google.com/youtube/v3) and
 [YouTube Analytics API](https://developers.google.com/youtube/analytics) that
-covers what YouTube Studio cannot, or only at painful speed: bulk video
-updates, scripted analytics queries, comment moderation, live broadcast
-control, and multiple channels from one install.
+allows for bulk video updates and uploads, scripted analytics queries,
+comment moderation, and live broadcast control.
 
 ## Why it exists
 
-YouTube Studio does not let you bulk-rename 300 videos. ytstudio does. It
-also gives you a scriptable surface for the rest of the channel: analytics
-you can pipe through `jq`, comment moderation you can run in CI, live
-broadcasts you can schedule from a one-liner.
+Managing a YouTube channel at scale feels like click-ops: the web UI has no
+advanced features for bulk updates, and things become tedious very fast.
+ytstudio gives you a programmable surface to automate administration tasks
+and plug your channel into AI agent workflows.
 
 ## Highlights
 

@@ -30,11 +30,38 @@
   --md-default-fg-color--light: rgba(255, 255, 255, 0.85);
   --md-default-fg-color--lighter: rgba(255, 255, 255, 0.55);
   --md-default-fg-color--lightest: rgba(255, 255, 255, 0.12);
-  --md-primary-fg-color: var(--yt-black);
+  --md-primary-fg-color: var(--yt-red);
+  --md-primary-fg-color--light: var(--yt-red);
+  --md-primary-fg-color--dark: var(--yt-red-hover);
   --md-primary-bg-color: var(--yt-white);
   --md-accent-fg-color: var(--yt-red);
   --md-accent-fg-color--transparent: rgba(255, 0, 51, 0.15);
   --md-typeset-a-color: var(--yt-red);
   --md-code-bg-color: #2A2A2A;
   --md-code-fg-color: var(--yt-white);
+}
+
+/* Force YouTube-red header/tabs in dark mode (Material's slate scheme overrides
+   the variable-driven default with a more specific rule). */
+[data-md-color-scheme="slate"] .md-header,
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: var(--yt-red);
+  color: var(--yt-white);
+}
+
+/* Footer: YouTube near-black in both schemes. */
+.md-footer,
+.md-footer-meta {
+  background-color: var(--yt-black);
+  color: var(--yt-white);
+}
+.md-footer a,
+.md-footer-meta a {
+  color: var(--yt-white);
+}
+.md-footer a:focus,
+.md-footer a:hover,
+.md-footer-meta a:focus,
+.md-footer-meta a:hover {
+  color: rgba(255, 255, 255, 0.7);
 }
