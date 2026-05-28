@@ -14,13 +14,13 @@ title: Dry Run Sample
 description: |
   Hello
 privacy: private
-tags: [demo]
+tags: [sample]
 """
 
 
 def _stage(tmp_path: Path) -> Path:
-    (tmp_path / "demo.mp4").write_bytes(b"fake-video")
-    (tmp_path / "demo.yaml").write_text(SIDECAR)
+    (tmp_path / "sample.mp4").write_bytes(b"fake-video")
+    (tmp_path / "sample.yaml").write_text(SIDECAR)
     return tmp_path
 
 
@@ -31,7 +31,7 @@ def test_upload_dry_run_lists_jobs_and_does_not_call_api(tmp_path, mock_auth):
 
     assert result.exit_code == 0
     assert "Dry Run Sample" in result.stdout
-    assert "demo.mp4" in result.stdout
+    assert "sample.mp4" in result.stdout
     assert "private" in result.stdout
     mock_auth.videos.return_value.insert.assert_not_called()
 
@@ -61,14 +61,14 @@ def test_upload_execute_uploads_and_writes_back(tmp_path, mock_auth):
     assert result.exit_code == 0
     mock_auth.videos.return_value.insert.assert_called_once()
 
-    sidecar_text = (tmp_path / "demo.yaml").read_text()
+    sidecar_text = (tmp_path / "sample.yaml").read_text()
     assert "video_id: vid1" in sidecar_text
     assert "uploaded_at:" in sidecar_text
 
 
 def test_upload_execute_skips_already_uploaded(tmp_path, mock_auth):
     _stage(tmp_path)
-    (tmp_path / "demo.yaml").write_text(SIDECAR + "\nvideo_id: already-there\n")
+    (tmp_path / "sample.yaml").write_text(SIDECAR + "\nvideo_id: already-there\n")
 
     with patch("ytstudio.upload_pipeline.MediaFileUpload"):
         result = runner.invoke(app, ["videos", "upload", str(tmp_path), "--execute"])
@@ -123,7 +123,7 @@ def test_upload_execute_stops_on_quota_exceeded(tmp_path, mock_auth):
 
     assert "quota" in result.stdout.lower() or "quota" in result.stderr.lower()
     # First sidecar should be patched, second not.
-    assert "video_id: v-ok" in (tmp_path / "demo.yaml").read_text()
+    assert "video_id: v-ok" in (tmp_path / "sample.yaml").read_text()
     assert "video_id:" not in (tmp_path / "second.yaml").read_text()
     # Final summary must still print after quota stop (clean-stop behavior).
     assert "Done: 1/2 uploaded" in result.stdout

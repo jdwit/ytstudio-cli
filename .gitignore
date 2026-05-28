@@ -12,7 +12,6 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
-demo/
 
 # Docs build artefacts and generated content
 site/

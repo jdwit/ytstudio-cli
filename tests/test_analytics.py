@@ -38,10 +38,64 @@ class TestFormatNumber:
 
 
 class TestAnalyticsCommands:
-    def test_overview(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
+    def _mock_overview_services(self):
+        data_service = MagicMock()
+        analytics_service = MagicMock()
+        data_service.channels.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "UC_test"}]
+        }
+        analytics_service.reports.return_value.query.return_value.execute.return_value = {
+            "columnHeaders": [
+                {"name": "views"},
+                {"name": "estimatedMinutesWatched"},
+                {"name": "averageViewDuration"},
+                {"name": "subscribersGained"},
+                {"name": "subscribersLost"},
+                {"name": "likes"},
+                {"name": "comments"},
+            ],
+            "rows": [[12345, 6000, 180, 42, 3, 789, 25]],
+        }
+        return data_service, analytics_service
+
+    def test_overview_table(self):
+        data_svc, analytics_svc = self._mock_overview_services()
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
             result = runner.invoke(app, ["analytics", "overview"])
             assert result.exit_code == 0
+            assert "Channel Analytics" in result.output
+            assert "12.3K" in result.output or "12345" in result.output
+            assert "100 hours" in result.output
+
+    def test_overview_json(self):
+        data_svc, analytics_svc = self._mock_overview_services()
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "-o", "json"])
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            assert payload["days"] == 28
+            assert payload["analytics"]["views"] == 12345
+            assert payload["analytics"]["likes"] == 789
+
+    def test_overview_no_data(self):
+        data_svc, analytics_svc = self._mock_overview_services()
+        analytics_svc.reports.return_value.query.return_value.execute.return_value = {
+            "columnHeaders": [{"name": "views"}],
+            "rows": [],
+        }
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview"])
+            assert result.exit_code == 0
+            assert "No analytics data" in result.output
 
     def test_video_not_found(self, mock_auth):
         mock_auth.videos.return_value.list.return_value.execute.return_value = {"items": []}
@@ -176,39 +230,6 @@ class TestQueryCommand:
             )
             assert result.exit_code == 1
             assert "Invalid filter" in result.output
-
-
-class TestQueryDemoMode:
-    def test_query_demo_table(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes", "-d", "day", "--days", "7"],
-            )
-            assert result.exit_code == 0
-            assert "views" in result.output
-            assert "likes" in result.output
-
-    def test_query_demo_json(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes", "-d", "country", "-o", "json"],
-            )
-            assert result.exit_code == 0
-            data = json.loads(result.output)
-            assert len(data) > 0
-            assert "views" in data[0]
-            assert "country" in data[0]
-
-    def test_query_demo_no_dimensions(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes"],
-            )
-            assert result.exit_code == 0
-            assert "views" in result.output
 
 
 class TestMetricsCommand:
