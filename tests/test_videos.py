@@ -107,11 +107,17 @@ class TestVideosCommands:
         playlist_items.execute.return_value = {
             "items": [
                 {
-                    "snippet": {"title": "x", "publishedAt": "2026-01-01T00:00:00Z"},
+                    "snippet": {
+                        "title": "Scheduled Drop",
+                        "publishedAt": "2026-01-01T00:00:00Z",
+                    },
                     "contentDetails": {"videoId": "scheduled_vid"},
                 },
                 {
-                    "snippet": {"title": "y", "publishedAt": "2025-01-01T00:00:00Z"},
+                    "snippet": {
+                        "title": "Public Already",
+                        "publishedAt": "2025-01-01T00:00:00Z",
+                    },
                     "contentDetails": {"videoId": "public_vid"},
                 },
             ],

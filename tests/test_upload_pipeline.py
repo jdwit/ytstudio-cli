@@ -138,6 +138,29 @@ def test_discover_video_without_sidecar_errors(tmp_path):
         discover(tmp_path)
 
 
+def test_discover_orphan_sidecar_errors(tmp_path):
+    # A .yaml with no matching video is almost always a typo (e.g. renamed video
+    # but forgot to rename the sidecar). Fail fast so the user notices.
+    _write(tmp_path / "good.mp4")
+    _write(tmp_path / "good.yaml", SIDECAR_OK)
+    _write(tmp_path / "leftover.yaml", SIDECAR_OK)
+
+    with pytest.raises(DiscoveryError, match="orphan sidecar"):
+        discover(tmp_path)
+
+
+def test_discover_rejects_near_miss_thumbnail_extension(tmp_path):
+    # .jpeg, .gif, .webp etc. next to a video almost always means the user
+    # expected it to be picked up as a thumbnail. Fail fast instead of silently
+    # uploading without it.
+    _write(tmp_path / "vid.mp4")
+    _write(tmp_path / "vid.yaml", SIDECAR_OK)
+    (tmp_path / "vid.jpeg").write_bytes(b"x")
+
+    with pytest.raises(DiscoveryError, match=r"unsupported thumbnail"):
+        discover(tmp_path)
+
+
 def test_discover_already_uploaded_flagged(tmp_path):
     _write(tmp_path / "done.mp4")
     _write(
@@ -312,6 +335,9 @@ def test_upload_video_calls_insert_and_returns_video_id(tmp_path):
     _args, kwargs = service.videos.return_value.insert.call_args
     assert kwargs["part"] == "snippet,status"
     assert kwargs["body"]["snippet"]["title"] == "Sample"
+    # Resumable uploads must request retries to absorb transient errors.
+    for call in insert_request.next_chunk.call_args_list:
+        assert call.kwargs.get("num_retries", 0) >= 1
 
 
 def test_set_thumbnail_calls_thumbnails_set(tmp_path):

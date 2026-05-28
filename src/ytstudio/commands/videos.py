@@ -153,9 +153,9 @@ def fetch_videos(
 
             video = Video(
                 id=video_id,
-                title=snippet.get("title") or item["snippet"]["title"],
-                description=snippet.get("description") or item["snippet"].get("description", ""),
-                published_at=snippet.get("publishedAt") or item["snippet"]["publishedAt"],
+                title=item["snippet"]["title"],
+                description=item["snippet"].get("description", ""),
+                published_at=item["snippet"]["publishedAt"],
                 views=int(stats.get("viewCount", 0)),
                 likes=int(stats.get("likeCount", 0)),
                 comments=int(stats.get("commentCount", 0)),

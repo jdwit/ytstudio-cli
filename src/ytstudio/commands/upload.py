@@ -5,7 +5,6 @@ import typer
 from googleapiclient.errors import HttpError
 from rich.progress import BarColumn, Progress, TextColumn, TimeRemainingColumn
 
-from ytstudio.api import handle_api_error
 from ytstudio.services import get_data_service
 from ytstudio.ui import console, create_table, dim
 from ytstudio.upload_pipeline import (
@@ -57,12 +56,22 @@ def _upload_one(service, job: UploadJob) -> str:
         except HttpError as e:
             console.print(f"[yellow]thumbnail for {job.video_path.name} failed: {e}[/yellow]")
 
-    write_back(
-        job.sidecar_path,
-        video_id=video_id,
-        uploaded_at_iso=datetime.now(UTC).isoformat(),
-    )
+    # Print success first so the video_id is visible even if write-back fails.
     console.print(f"[green]ok[/green] {job.video_path.name} -> https://youtu.be/{video_id}")
+
+    try:
+        write_back(
+            job.sidecar_path,
+            video_id=video_id,
+            uploaded_at_iso=datetime.now(UTC).isoformat(),
+        )
+    except Exception as e:
+        console.print(
+            f"[red]write-back failed[/red] for {job.sidecar_path.name}: {e}\n"
+            f"[yellow]Sidecar not patched. Add manually to avoid duplicate upload:[/yellow]\n"
+            f"  video_id: {video_id}"
+        )
+
     return video_id
 
 
@@ -124,14 +133,16 @@ def upload(
     console.print(dim(f"\nGoing to upload {len(pending)} videos (~{estimated} quota units)."))
 
     succeeded = 0
+    quota_hit = False
     for job in pending:
         try:
             _upload_one(service, job)
-        except _QuotaExceeded as e:
+        except _QuotaExceeded:
             console.print(
-                f"\n[red]Quota exceeded after {succeeded} upload(s).[/red] Try again tomorrow."
+                f"\n[red]Quota exceeded after {succeeded} upload(s).[/red] "
+                "Daily YouTube API quota exhausted; resets at midnight Pacific Time (PT)."
             )
-            handle_api_error(e.cause)
+            quota_hit = True
             break
         except HttpError as e:
             console.print(f"[red]X {job.video_path.name}: {e}[/red]")
@@ -140,3 +151,5 @@ def upload(
         succeeded += 1
 
     console.print(f"\n[bold]Done:[/bold] {succeeded}/{len(pending)} uploaded.")
+    if quota_hit:
+        raise typer.Exit(1)

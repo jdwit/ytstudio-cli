@@ -55,6 +55,9 @@ class UploadSpec(BaseModel):
 
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm"}
 THUMBNAIL_EXTENSIONS = (".jpg", ".png")
+# Common image extensions that look like an attempted thumbnail but YouTube
+# does not accept here; flag instead of silently dropping.
+NEAR_MISS_THUMBNAIL_EXTENSIONS = {".jpeg", ".gif", ".webp", ".bmp"}
 
 
 class DiscoveryError(Exception):
@@ -183,11 +186,28 @@ def discover(path: Path) -> list[UploadJob]:
     if not path.is_dir():
         raise DiscoveryError(f"{path}: not a file or directory")
 
-    videos = sorted(
-        child
-        for child in path.iterdir()
-        if child.is_file() and child.suffix.lower() in VIDEO_EXTENSIONS
+    children = [c for c in path.iterdir() if c.is_file()]
+    videos = sorted(c for c in children if c.suffix.lower() in VIDEO_EXTENSIONS)
+    video_stems = {v.stem for v in videos}
+
+    orphan_sidecars = sorted(
+        c for c in children if c.suffix.lower() == ".yaml" and c.stem not in video_stems
     )
+    if orphan_sidecars:
+        names = ", ".join(o.name for o in orphan_sidecars)
+        raise DiscoveryError(f"orphan sidecar(s) with no matching video: {names}")
+
+    near_miss_thumbs = sorted(
+        c
+        for c in children
+        if c.suffix.lower() in NEAR_MISS_THUMBNAIL_EXTENSIONS and c.stem in video_stems
+    )
+    if near_miss_thumbs:
+        names = ", ".join(n.name for n in near_miss_thumbs)
+        raise DiscoveryError(
+            f"unsupported thumbnail format(s) (use .jpg or .png): {names}"
+        )
+
     return [_pair(v) for v in videos]
 
 
@@ -215,7 +235,7 @@ def upload_video(
     )
     response: dict | None = None
     while response is None:
-        status, response = request.next_chunk()
+        status, response = request.next_chunk(num_retries=3)
         if status is not None:
             on_progress(status.resumable_progress, status.total_size)
     on_progress(response.get("size", 0) or 0, response.get("size", 0) or 0)
