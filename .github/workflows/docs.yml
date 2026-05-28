@@ -16,13 +16,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
-# Serialize deploys against the gh-pages branch; PR builds run in parallel
-# because they only build and never push.
+# Only one Pages deploy at a time; never cancel a running deploy.
 concurrency:
-  group: docs-${{ github.event_name == 'pull_request' && github.head_ref || 'deploy' }}
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -34,7 +35,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8
 
       - name: Set up Python
         run: uv python install 3.12
@@ -45,8 +46,20 @@ jobs:
       - name: Build (strict)
         run: uv run mkdocs build --strict
 
-      - name: Deploy to gh-pages
-        if: |
-          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-          && github.ref == 'refs/heads/main'
-        run: uv run mkdocs gh-deploy --force --no-history
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
