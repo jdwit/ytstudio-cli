@@ -17,7 +17,9 @@ ytstudio comments list --video <video-id> --status held --sort time
 
 `--status` accepts `published`, `held`, or `spam` (mapped internally to
 YouTube's `published`, `heldForReview`, and `likelySpam` values). `--sort`
-accepts `time` or `relevance`. Omit `--video` to list across the channel.
+accepts `time` or `relevance`; the YouTube API only honours `relevance` for
+a single video, so `--sort relevance` requires `--video <id>`. Omit
+`--video` to list across the channel (time-sorted only).
 
 ## Approve held comments
 

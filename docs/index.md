@@ -29,7 +29,8 @@ broadcasts you can schedule from a one-liner.
 - :material-account-multiple: **Multiple channels** in a single install, with
   per-profile credential storage. See [Multi-channel profiles](profiles.md).
 - :material-video-outline: **Bulk video updates** with search-and-replace on
-  titles, descriptions, and tags. See [Bulk video updates](videos.md).
+  titles or descriptions, plus per-video title/description/tag edits. See
+  [Bulk video updates](videos.md).
 - :material-cloud-upload-outline: **Batch upload** from a directory of YAML
   sidecars with resumable, quota-aware behaviour. See
   [Upload a batch from sidecars](videos.md#upload-a-batch-from-sidecars).

@@ -9,6 +9,7 @@ on:
       - docs/**
       - mkdocs.yml
       - scripts/build_docs_reference.py
+      - src/ytstudio/**  # CLI surface feeds the auto-generated reference
       - pyproject.toml
       - uv.lock
       - .github/workflows/docs.yml
