@@ -61,12 +61,15 @@ The command prints a Google OAuth URL. Open it in any browser, approve
 access, and copy the failed `127.0.0.1` redirect URL back into the terminal.
 ytstudio finishes the exchange locally.
 
-## Status and logout
+## Status
 
 ```bash
 ytstudio status      # show the authenticated channel for the active profile
-ytstudio logout      # clear credentials for the active profile
 ```
+
+To remove credentials for a channel, use `ytstudio profile remove <name>` (see
+[Multi-channel profiles](profiles.md)). On a fresh single-channel install the
+active profile is `default`.
 
 If you run more than one channel, head to
 [Multi-channel profiles](profiles.md) next.

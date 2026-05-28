@@ -30,11 +30,16 @@ broadcasts you can schedule from a one-liner.
   per-profile credential storage. See [Multi-channel profiles](profiles.md).
 - :material-video-outline: **Bulk video updates** with search-and-replace on
   titles, descriptions, and tags. See [Bulk video updates](videos.md).
+- :material-cloud-upload-outline: **Batch upload** from a directory of YAML
+  sidecars with resumable, quota-aware behaviour. See
+  [Upload a batch from sidecars](videos.md#upload-a-batch-from-sidecars).
 - :material-chart-line: **Scripted analytics** with table or JSON output.
   See [Analytics](analytics.md).
 - :material-broadcast: **Live broadcast control** for the full lifecycle:
   schedule, start (testing or live), update, stop, with stream-key handling.
   See [Live broadcasts](livestreams.md).
+- :material-comment-check-outline: **Comment moderation** at the CLI:
+  approve, reject, or ban in bulk. See [Comments](comments.md).
 - :material-shield-lock-outline: **OAuth credentials live owner-only
   (`0600`)** under `~/.config/ytstudio-cli/`. The `init` step is one-shot.
 

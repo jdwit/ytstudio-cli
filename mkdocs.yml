@@ -28,20 +28,23 @@ theme:
     - content.tabs.link
     - toc.follow
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/weather-sunny
-        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: black
+      accent: red
       toggle:
         icon: material/weather-night
         name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: red
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -69,7 +72,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.keys
-  - pymdownx.smartsymbols
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -85,7 +87,7 @@ nav:
   - Guides:
       - Multi-channel profiles: profiles.md
       - Live broadcasts: livestreams.md
-      - Bulk video updates: videos.md
+      - Videos (bulk update, upload): videos.md
       - Analytics: analytics.md
       - Comments: comments.md
   - Reference:

@@ -12,12 +12,12 @@ ytstudio comments list --video <video-id>
 ytstudio comments list --video <video-id> -o json | jq
 
 # Held queue, ordered chronologically
-ytstudio comments list --video <video-id> --moderation-status held --order time
+ytstudio comments list --video <video-id> --status held --sort time
 ```
 
-`--moderation-status` accepts `published`, `held`, or `spam` (mapped
-internally to YouTube's `published`, `heldForReview`, and `likelySpam`
-values).
+`--status` accepts `published`, `held`, or `spam` (mapped internally to
+YouTube's `published`, `heldForReview`, and `likelySpam` values). `--sort`
+accepts `time` or `relevance`. Omit `--video` to list across the channel.
 
 ## Approve held comments
 

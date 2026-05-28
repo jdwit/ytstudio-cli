@@ -27,6 +27,12 @@ not eat into the table below.
 | `liveBroadcasts.insert`             | 50 units           |
 | `liveBroadcasts.update`             | 50 units           |
 | `liveBroadcasts.transition`         | 50 units           |
+| `videos.insert` (upload)            | ~1600 units        |
+| `thumbnails.set`                    | 50 units           |
+
+At ~1600 units per upload, the default 10 000-unit daily budget covers about
+six new videos per day. Use `ytstudio videos upload --max N` to cap a run
+and avoid burning the budget you need for the rest of the day.
 
 ## Increasing the quota
 
