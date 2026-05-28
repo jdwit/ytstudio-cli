@@ -38,11 +38,6 @@ class TestFormatNumber:
 
 
 class TestAnalyticsCommands:
-    def test_overview(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(app, ["analytics", "overview"])
-            assert result.exit_code == 0
-
     def test_video_not_found(self, mock_auth):
         mock_auth.videos.return_value.list.return_value.execute.return_value = {"items": []}
         with (
@@ -176,39 +171,6 @@ class TestQueryCommand:
             )
             assert result.exit_code == 1
             assert "Invalid filter" in result.output
-
-
-class TestQueryDemoMode:
-    def test_query_demo_table(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes", "-d", "day", "--days", "7"],
-            )
-            assert result.exit_code == 0
-            assert "views" in result.output
-            assert "likes" in result.output
-
-    def test_query_demo_json(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes", "-d", "country", "-o", "json"],
-            )
-            assert result.exit_code == 0
-            data = json.loads(result.output)
-            assert len(data) > 0
-            assert "views" in data[0]
-            assert "country" in data[0]
-
-    def test_query_demo_no_dimensions(self):
-        with patch("ytstudio.services.is_demo_mode", return_value=True):
-            result = runner.invoke(
-                app,
-                ["analytics", "query", "-m", "views,likes"],
-            )
-            assert result.exit_code == 0
-            assert "views" in result.output
 
 
 class TestMetricsCommand:

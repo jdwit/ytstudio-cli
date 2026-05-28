@@ -85,12 +85,3 @@ ytstudio livestreams update <id> --latency low --auto-start --execute
 `update` does not expose the made-for-kids flag, because
 `liveBroadcasts.update` only accepts `privacyStatus` under `status`. Set the
 COPPA flag at schedule time.
-
-## Demo mode
-
-For a quick offline tour without touching the API:
-
-```bash
-YTSTUDIO_DEMO=1 ytstudio livestreams list --status all
-YTSTUDIO_DEMO=1 ytstudio livestreams show demo-broadcast-upcoming-1 --ingest
-```

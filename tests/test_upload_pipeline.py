@@ -84,7 +84,7 @@ def _write(p: Path, body: str = "") -> Path:
 SIDECAR_OK = """\
 title: Sample
 description: |
-  Demo body
+  Sample body
 """
 
 
@@ -271,7 +271,7 @@ SIDECAR_WITH_COMMENT = """\
 # Master comment
 title: Sample           # inline comment
 description: |
-  Demo
+  Sample
 tags: [a, b]
 """
 

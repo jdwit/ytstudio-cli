@@ -45,7 +45,7 @@ def _broadcast_item(
         "id": broadcast_id,
         "snippet": {
             "title": title,
-            "description": "Demo",
+            "description": "Sample",
             "scheduledStartTime": scheduled_start,
             "scheduledEndTime": scheduled_end,
         },

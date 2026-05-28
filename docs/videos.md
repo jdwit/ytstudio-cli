@@ -125,14 +125,3 @@ budget you can upload ~6 videos per day. Use `--max` to cap a run
 explicitly. If the API returns `quotaExceeded` mid-run, the pipeline stops
 cleanly, prints how many videos succeeded, and exits non-zero. See
 [API quota](api-quota.md).
-
-## Demo mode
-
-Run any video command without authenticating by setting `YTSTUDIO_DEMO=1`:
-
-```bash
-YTSTUDIO_DEMO=1 ytstudio videos list
-```
-
-Demo mode uses bundled fixtures and never reaches the real API. The upload
-command is the one exception: it always talks to YouTube.

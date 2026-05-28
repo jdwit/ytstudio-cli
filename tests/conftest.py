@@ -27,7 +27,7 @@ MOCK_VIDEO = {
         "title": "Test Video Title",
         "description": "This is a test video description that is long enough.",
         "publishedAt": "2026-01-15T10:00:00Z",
-        "tags": ["test", "video", "youtube", "cli", "demo"],
+        "tags": ["test", "video", "youtube", "cli"],
         "categoryId": "22",
     },
     "statistics": {
