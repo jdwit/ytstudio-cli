@@ -1,11 +1,13 @@
 import json
 import re
 from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 
 import typer
 from googleapiclient.errors import HttpError
 
 from ytstudio.api import api, handle_api_error
+from ytstudio.commands.upload import upload as _upload_cmd
 from ytstudio.services import get_data_service
 from ytstudio.ui import (
     console,
@@ -37,6 +39,7 @@ class Video:
     default_language: str | None = None
     default_audio_language: str | None = None
     localizations: dict = field(default_factory=dict)
+    scheduled_publish_at: str | None = None
 
 
 def format_duration(iso_duration: str) -> str:
@@ -95,6 +98,7 @@ def fetch_video(data_service, video_id: str) -> Video | None:
         default_language=snippet.get("defaultLanguage"),
         default_audio_language=snippet.get("defaultAudioLanguage"),
         localizations=item.get("localizations", {}),
+        scheduled_publish_at=item.get("status", {}).get("publishAt"),
     )
 
 
@@ -163,6 +167,7 @@ def fetch_videos(
                 localizations=data.get("localizations", {}),
                 default_language=snippet.get("defaultLanguage"),
                 default_audio_language=snippet.get("defaultAudioLanguage"),
+                scheduled_publish_at=data.get("status", {}).get("publishAt"),
             )
 
             all_videos.append(video)
@@ -194,11 +199,25 @@ def list_videos(
     has_localization: str = typer.Option(
         None, "--has-localization", help="Filter by available translation (e.g., en, nl)"
     ),
+    scheduled: bool = typer.Option(
+        False, "--scheduled", help="Only show videos scheduled for future publish"
+    ),
 ):
     """List your YouTube videos"""
     service = get_data_service()
     result = fetch_videos(service, limit, page_token)
     videos: list[Video] = result["videos"]
+
+    if scheduled:
+        now = datetime.now(UTC)
+
+        def _is_future(v: Video) -> bool:
+            ts = v.scheduled_publish_at
+            if not ts:
+                return False
+            return datetime.fromisoformat(ts.replace("Z", "+00:00")) > now
+
+        videos = [v for v in videos if v.privacy == "private" and _is_future(v)]
 
     if audio_lang:
         videos = [v for v in videos if v.default_audio_language == audio_lang]
@@ -471,3 +490,6 @@ def search_replace(
             failed += 1
 
     console.print(f"\n[bold]Done:[/bold] {success} updated, {failed} failed")
+
+
+app.command("upload")(_upload_cmd)

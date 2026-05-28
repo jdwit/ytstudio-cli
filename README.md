@@ -117,6 +117,66 @@ Notes:
 - `liveBroadcasts.insert`/`update` are write operations (~50 quota units each);
   see [API quota](#api-quota) below.
 
+## Uploading videos
+
+Bulk-upload videos from a directory. Each video file needs a YAML sidecar with
+the same basename describing its metadata.
+
+```bash
+yts videos upload ./outbox                    # dry-run preview
+yts videos upload ./outbox --execute          # actually upload
+yts videos upload ./outbox --execute --max 3  # cap to N uploads (quota budget)
+```
+
+Directory layout:
+
+```
+outbox/
+  holiday.mp4
+  holiday.yaml    # required
+  holiday.jpg     # optional thumbnail (or .png), max 2 MB
+```
+
+Sidecar (`holiday.yaml`):
+
+```yaml
+title: Holiday recap 2026
+description: |
+  Multi-line description.
+privacy: private              # private | unlisted | public
+publish_at: 2026-06-01T10:00:00+02:00   # optional; forces privacy=private
+tags: [travel, vlog]
+category_id: "22"             # YouTube category id; default 22 (People & Blogs)
+default_language: nl
+default_audio_language: nl
+made_for_kids: false
+```
+
+After a successful upload the tool patches the sidecar with the resulting
+`video_id` and `uploaded_at`, so re-running on the same directory is safe; only
+sidecars without a `video_id` get uploaded.
+
+Quota: `videos.insert` costs ~1600 quota units, so on the default 10k/day
+quota you can upload ~6 videos per day. Use `--max` to cap a run explicitly.
+
+Show what's scheduled for the future:
+
+```bash
+yts videos list --scheduled
+```
+
+## Development
+
+Clone the repo, sync dev dependencies, and install the pre-commit hook so
+`ruff check` and `ruff format` run on every commit (same checks CI runs):
+
+```bash
+uv sync --group dev
+uv run pre-commit install
+```
+
+Run the suite manually with `uv run pytest` and `uv run pre-commit run --all-files`.
+
 ## API quota
 
 The YouTube Data API enforces a default quota of 10_000 units per project per day. Most read
