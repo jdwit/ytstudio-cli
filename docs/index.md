@@ -1,7 +1,7 @@
 # ytstudio
 
 Manage and analyze your YouTube channel from the terminal. Designed for
-automation and AI workflows.
+humans and AI agents.
 
 ## What it is
 
@@ -20,22 +20,22 @@ and plug your channel into AI agent workflows.
 
 ## Highlights
 
-- :material-account-multiple: **Multiple channels** in a single install, with
+- **Multiple channels** in a single install, with
   per-profile credential storage. See [Multi-channel profiles](profiles.md).
-- :material-video-outline: **Bulk video updates** with search-and-replace on
+- **Bulk video updates** with search-and-replace on
   titles or descriptions, plus per-video title/description/tag edits. See
   [Bulk video updates](videos.md).
-- :material-cloud-upload-outline: **Batch upload** from a directory of YAML
+- **Batch upload** from a directory of YAML
   sidecars with resumable, quota-aware behaviour. See
   [Upload a batch from sidecars](videos.md#upload-a-batch-from-sidecars).
-- :material-chart-line: **Scripted analytics** with table or JSON output.
+- **Scripted analytics** with table or JSON output.
   See [Analytics](analytics.md).
-- :material-broadcast: **Live broadcast control** for the full lifecycle:
+- **Live broadcast control** for the full lifecycle:
   schedule, start (testing or live), update, stop, with stream-key handling.
   See [Live broadcasts](livestreams.md).
-- :material-comment-check-outline: **Comment moderation** at the CLI:
+- **Comment moderation** at the CLI:
   approve, reject, or ban in bulk. See [Comments](comments.md).
-- :material-shield-lock-outline: **OAuth credentials live owner-only
+- **OAuth credentials live owner-only
   (`0600`)** under `~/.config/ytstudio-cli/`. The `init` step is one-shot.
 
 ## Quick start
@@ -55,6 +55,8 @@ Continue with [Installation](installation.md) for the full setup or the
 
 ## Disclaimer
 
-This project is not affiliated with or endorsed by Google. YouTube and
-YouTube Studio are trademarks of Google. All channel data is accessed
-exclusively through the official YouTube Data and Analytics APIs.
+!!! warning
+    This is **not** an officially supported Google or YouTube product.
+
+YouTube and YouTube Studio are trademarks of Google. All channel data is
+accessed exclusively through the official YouTube Data and Analytics APIs.

@@ -11,8 +11,11 @@
 </p>
 
 <p align="center">
-  Manage and analyze your YouTube channel from the terminal. Ideal for automation and AI workflows.
+  Manage and analyze your YouTube channel from the terminal. Designed for humans and AI agents.
 </p>
+
+> [!NOTE]
+> This is **not** an official Google product, see [disclaimer](#disclaimer).
 
 ## Motivation
 
@@ -34,8 +37,7 @@ command line.
 
 ## Documentation
 
-Full documentation, including installation, OAuth setup, and per-command reference, lives at
-[jdwit.github.io/ytstudio-cli](https://jdwit.github.io/ytstudio-cli/).
+See the [full documentation](https://jdwit.github.io/ytstudio-cli/) for installation, OAuth setup, and the command reference.
 
 ## Development
 
@@ -70,7 +72,7 @@ full details.
 
 ## Disclaimer
 
-This project is not affiliated with or endorsed by Google. YouTube and YouTube Studio are trademarks
-of Google. All channel data is accessed exclusively through the official
+This is not an officially supported Google or YouTube product. YouTube and YouTube Studio are
+trademarks of Google. All channel data is accessed exclusively through the official
 [YouTube Data API](https://developers.google.com/youtube/v3) and
 [YouTube Analytics API](https://developers.google.com/youtube/analytics).

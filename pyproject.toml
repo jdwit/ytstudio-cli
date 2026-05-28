@@ -1,7 +1,7 @@
 [project]
 name = "ytstudio-cli"
 version = "0.2.0"
-description = "CLI tool to manage and analyze your YouTube channel from the terminal"
+description = "Manage and analyze your YouTube channel from the terminal. Designed for humans and AI agents."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
