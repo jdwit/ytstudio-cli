@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.exceptions import Exit
 from googleapiclient.errors import HttpError
+from typer import Exit
 from typer.testing import CliRunner
 
 from ytstudio import api as api_module
