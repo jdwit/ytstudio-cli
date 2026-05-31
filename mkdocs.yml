@@ -66,7 +66,15 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      # Mermaid.js fence handler. Material for MkDocs bundles
+      # Mermaid automatically when a `mermaid` custom-fence is
+      # declared; no separate plugin install is needed. See
+      # https://squidfunk.github.io/mkdocs-material/reference/diagrams/
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:
