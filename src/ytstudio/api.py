@@ -63,6 +63,10 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/youtube.force-ssl",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
+    # Required to read revenue/earnings metrics (estimatedRevenue, cpm, ...).
+    # Without it the Analytics API returns 401 "Insufficient permission" for
+    # the monetary metrics that the registry already exposes.
+    "https://www.googleapis.com/auth/yt-analytics-monetary.readonly",
 ]
 
 HEADLESS_REDIRECT_URI = "http://127.0.0.1:9876/"
