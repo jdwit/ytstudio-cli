@@ -20,6 +20,13 @@ def make_http_error(status: int, reason: str = ""):
     return error
 
 
+class TestScopes:
+    def test_includes_monetary_analytics_scope(self):
+        # Revenue/earnings metrics (estimatedRevenue, cpm, ...) require this
+        # scope; without it the Analytics API returns 401 for monetary reports.
+        assert "https://www.googleapis.com/auth/yt-analytics-monetary.readonly" in api_module.SCOPES
+
+
 class TestHandleApiError:
     def test_quota_exceeded_exits(self):
         error = make_http_error(403, "quotaExceeded")
