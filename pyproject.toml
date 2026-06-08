@@ -1,6 +1,6 @@
 [project]
 name = "ytstudio-cli"
-version = "0.3.0"
+version = "0.3.1"
 description = "Manage and analyze your YouTube channel from the terminal. Designed for humans and AI agents."
 readme = "README.md"
 license = { text = "MIT" }
