@@ -21,7 +21,7 @@ from ytstudio.upload_pipeline import (
 
 
 def test_minimal_valid_spec():
-    spec = UploadSpec(title="Hello", description="World")
+    spec = UploadSpec(title="Hello", description="World", category_id="22")
     assert spec.title == "Hello"
     assert spec.description == "World"
     assert spec.privacy == "private"
@@ -32,10 +32,21 @@ def test_minimal_valid_spec():
     assert spec.uploaded_at is None
 
 
+def test_category_id_required():
+    with pytest.raises(ValidationError, match="category_id"):
+        UploadSpec(title="x", description="x")
+
+
+def test_category_id_empty_rejected():
+    with pytest.raises(ValidationError, match="category_id"):
+        UploadSpec(title="x", description="x", category_id="")
+
+
 def test_publish_at_forces_privacy_to_private():
     spec = UploadSpec(
         title="x",
         description="x",
+        category_id="22",
         privacy="public",
         publish_at="2099-01-01T10:00:00+02:00",
     )
@@ -47,6 +58,7 @@ def test_publish_at_must_be_future():
         UploadSpec(
             title="x",
             description="x",
+            category_id="22",
             publish_at="2000-01-01T10:00:00+02:00",
         )
 
@@ -56,6 +68,7 @@ def test_publish_at_requires_timezone():
         UploadSpec(
             title="x",
             description="x",
+            category_id="22",
             publish_at="2099-01-01T10:00:00",  # naive
         )
 
@@ -85,6 +98,7 @@ SIDECAR_OK = """\
 title: Sample
 description: |
   Sample body
+category_id: "22"
 """
 
 
@@ -165,7 +179,7 @@ def test_discover_already_uploaded_flagged(tmp_path):
     _write(tmp_path / "done.mp4")
     _write(
         tmp_path / "done.yaml",
-        "title: Done\ndescription: ok\nvideo_id: abc123\n",
+        'title: Done\ndescription: ok\ncategory_id: "22"\nvideo_id: abc123\n',
     )
 
     jobs = discover(tmp_path)
@@ -225,7 +239,7 @@ def test_validate_jobs_collects_all_errors(tmp_path):
 
 
 def test_body_minimal():
-    spec = UploadSpec(title="Hi", description="Body")
+    spec = UploadSpec(title="Hi", description="Body", category_id="22")
     body = to_youtube_body(spec)
 
     assert body["snippet"]["title"] == "Hi"
@@ -241,6 +255,7 @@ def test_body_with_publish_at_uses_iso():
     spec = UploadSpec(
         title="Scheduled",
         description="x",
+        category_id="22",
         publish_at="2099-06-01T19:00:00+02:00",
     )
     body = to_youtube_body(spec)
@@ -256,6 +271,7 @@ def test_body_includes_languages_and_tags():
     spec = UploadSpec(
         title="Localised",
         description="x",
+        category_id="22",
         tags=["a", "b"],
         default_language="nl",
         default_audio_language="nl",

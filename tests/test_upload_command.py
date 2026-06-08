@@ -15,6 +15,7 @@ description: |
   Hello
 privacy: private
 tags: [sample]
+category_id: "22"
 """
 
 

@@ -492,4 +492,34 @@ def search_replace(
     console.print(f"\n[bold]Done:[/bold] {success} updated, {failed} failed")
 
 
+@app.command()
+def categories(
+    region: str = typer.Option("US", "--region", "-r", help="Region code (ISO 3166-1 alpha-2)"),
+    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+):
+    """List YouTube video categories assignable to uploads"""
+    service = get_data_service()
+    response = api(service.videoCategories().list(part="snippet", regionCode=region.upper()))
+
+    items = [
+        {"id": item["id"], "title": item["snippet"]["title"]}
+        for item in response.get("items", [])
+        if item["snippet"].get("assignable", False)
+    ]
+    items.sort(key=lambda c: int(c["id"]))
+
+    if output == "json":
+        print(json.dumps(items, indent=2))
+        return
+
+    table = create_table()
+    table.add_column("ID", style="yellow", justify="right")
+    table.add_column("Title", style="cyan")
+
+    for c in items:
+        table.add_row(c["id"], c["title"])
+
+    console.print(table)
+
+
 app.command("upload")(_upload_cmd)
