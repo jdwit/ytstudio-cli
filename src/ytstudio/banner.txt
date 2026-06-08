@@ -1,0 +1,37 @@
+                          ffffffff
+                      fffffffffffffff
+                   ffffffffffffffffffffff
+                ffffffffffffffffffffffffffff
+             ffffffffffffffffffffffffffffffffff
+          ffffffffffffffffffffffffffffffffffffffff
+       ffffffffffffffffffffffvvffffffffffffffffffffff
+   ffffffffffffffffffffffvddWddWWCCfffffffffffffffffffff
+ fffffffffffffffffffffvdWWdvffffCCWWCCfffffffffffffffffffff
+ffffffffffffffffffvvdWddvffffffffffvCWWCCfffffffffffffffffff
+fffffffffffffffvvdWddvffffffffffffffffvCWWdCvfffffffffffffff
+ffffffffffffvddWdvvfffffffffffffffffffffffCdWWCfffffffffffff
+fffffffffffCWdvvfffffffffffffffffffffffffffffCWWCfffffffffff
+fffffffffffWdffffffffffCCCfffffffffffffffffffffdWfffffffffff
+ffffffffffvWdffffffffffCWWWCCffffffffffffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWCCfffffffffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWWWWCCffffffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWWWWWWWdCfffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWWWWWWWWWWCvffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWWWWWWWdvvffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWWWWdvvfffffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWWWWdvfffffffffffffffdWvffffffffff
+ffffffffffvWdffffffffffCWWWdvffffffffffffffffffdWvffffffffff
+fffffffffffWdffffffffffvdvfffffffffffffffffffffdWfffffffffff
+fffffffffffCWWCfffffffffffffffffffffffffffffvvdWCfffffffffff
+fffffffffffffCdWdCfffffffffffffffffffffffvvdWddvffffffffffff
+ffffffffffffffffCdWWCvffffffffffffffffvddWdvvfffffffffffffff
+fffffffffffffffffffCCWWCvffffffffffvddWdvvffffffffffffffffff
+ fffffffffffffffffffffCCWWCCffffvdWWdvfffffffffffffffffffff
+    fffffffffffffffffffffCCWWddWddvffffffffffffffffffffff
+       fffffffffffffffffffffvvvvfffffffffffffffffffff
+          ffffffffffffffffffffffffffffffffffffffff
+             ffffffffffffffffffffffffffffffffff
+                ffffffffffffffffffffffffffff
+                   ffffffffffffffffffffff
+                       fffffffffffffff
+                          ffffffff
