@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock, patch
 
 import typer
@@ -131,6 +132,72 @@ class TestVideosCommands:
         assert result.exit_code == 0
         assert "Scheduled Drop" in result.stdout
         assert "Public Already" not in result.stdout
+
+
+class TestCategories:
+    def _setup(self, mock_auth, items):
+        categories_list = MagicMock()
+        categories_list.execute.return_value = {"items": items}
+        mock_auth.videoCategories.return_value.list.return_value = categories_list
+        return categories_list
+
+    def _cat(self, cat_id, title, assignable=True):
+        return {"id": cat_id, "snippet": {"title": title, "assignable": assignable}}
+
+    def test_lists_assignable_categories(self, mock_auth):
+        self._setup(
+            mock_auth,
+            [
+                self._cat("22", "People & Blogs"),
+                self._cat("10", "Music"),
+                self._cat("18", "Short Movies", assignable=False),
+            ],
+        )
+
+        result = runner.invoke(app, ["videos", "categories"])
+
+        assert result.exit_code == 0
+        assert "People & Blogs" in result.stdout
+        assert "Music" in result.stdout
+        assert "Short Movies" not in result.stdout
+
+    def test_defaults_to_us_region(self, mock_auth):
+        self._setup(mock_auth, [self._cat("22", "People & Blogs")])
+
+        runner.invoke(app, ["videos", "categories"])
+
+        mock_auth.videoCategories.return_value.list.assert_called_with(
+            part="snippet", regionCode="US"
+        )
+
+    def test_region_flag_uppercased(self, mock_auth):
+        self._setup(mock_auth, [self._cat("22", "People & Blogs")])
+
+        result = runner.invoke(app, ["videos", "categories", "--region", "nl"])
+
+        assert result.exit_code == 0
+        mock_auth.videoCategories.return_value.list.assert_called_with(
+            part="snippet", regionCode="NL"
+        )
+
+    def test_json_output(self, mock_auth):
+        self._setup(
+            mock_auth,
+            [
+                self._cat("22", "People & Blogs"),
+                self._cat("10", "Music"),
+            ],
+        )
+
+        result = runner.invoke(app, ["videos", "categories", "-o", "json"])
+
+        assert result.exit_code == 0
+
+        payload = json.loads(result.stdout)
+        assert payload == [
+            {"id": "10", "title": "Music"},
+            {"id": "22", "title": "People & Blogs"},
+        ]
 
 
 class TestSearchReplace:
