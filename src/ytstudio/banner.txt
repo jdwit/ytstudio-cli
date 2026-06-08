@@ -1,37 +1,25 @@
-                          ffffffff
-                      fffffffffffffff
-                   ffffffffffffffffffffff
-                ffffffffffffffffffffffffffff
-             ffffffffffffffffffffffffffffffffff
-          ffffffffffffffffffffffffffffffffffffffff
-       ffffffffffffffffffffffvvffffffffffffffffffffff
-   ffffffffffffffffffffffvddWddWWCCfffffffffffffffffffff
- fffffffffffffffffffffvdWWdvffffCCWWCCfffffffffffffffffffff
-ffffffffffffffffffvvdWddvffffffffffvCWWCCfffffffffffffffffff
-fffffffffffffffvvdWddvffffffffffffffffvCWWdCvfffffffffffffff
-ffffffffffffvddWdvvfffffffffffffffffffffffCdWWCfffffffffffff
-fffffffffffCWdvvfffffffffffffffffffffffffffffCWWCfffffffffff
-fffffffffffWdffffffffffCCCfffffffffffffffffffffdWfffffffffff
-ffffffffffvWdffffffffffCWWWCCffffffffffffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWCCfffffffffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWWWWCCffffffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWWWWWWWdCfffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWWWWWWWWWWCvffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWWWWWWWdvvffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWWWWdvvfffffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWWWWdvfffffffffffffffdWvffffffffff
-ffffffffffvWdffffffffffCWWWdvffffffffffffffffffdWvffffffffff
-fffffffffffWdffffffffffvdvfffffffffffffffffffffdWfffffffffff
-fffffffffffCWWCfffffffffffffffffffffffffffffvvdWCfffffffffff
-fffffffffffffCdWdCfffffffffffffffffffffffvvdWddvffffffffffff
-ffffffffffffffffCdWWCvffffffffffffffffvddWdvvfffffffffffffff
-fffffffffffffffffffCCWWCvffffffffffvddWdvvffffffffffffffffff
- fffffffffffffffffffffCCWWCCffffvdWWdvfffffffffffffffffffff
-    fffffffffffffffffffffCCWWddWddvffffffffffffffffffffff
-       fffffffffffffffffffffvvvvfffffffffffffffffffff
-          ffffffffffffffffffffffffffffffffffffffff
-             ffffffffffffffffffffffffffffffffff
-                ffffffffffffffffffffffffffff
-                   ffffffffffffffffffffff
-                       fffffffffffffff
-                          ffffffff
+                ffffffff
+             ffffffffffffff
+          ffffffffffffffffffff
+       ffffffffffffffffffffffffff
+   fffffffffffffffrXYxfffffffffffffff
+ ffffffffffffffrkMLjjLMkrffffffffffffff
+ffffffffffffchMQFffffffFLMacffffffffffff
+fffffffffvoWXFffffffffffffFXWocfffffffff
+fffffffYMUffffffffffffffffffffJMXfffffff
+fffffffoYffffffXMdFffffffffffffYofffffff
+fffffffoYffffffXWWWWpnfffffffffYofffffff
+fffffffoYffffffXWWWWWWWajffffffYofffffff
+fffffffoYffffffXWWWWWWWWWWqffffYofffffff
+fffffffoYffffffXWWWWWWWkFffffffYofffffff
+fffffffoYffffffXWWWWqxfffffffffYofffffff
+fffffffoYffffffXMqFffffffffffffYMfffffff
+fffffffzMCffffffffffffffffffffCMzfffffff
+fffffffffxaWUFffffffffffffFJWaxfffffffff
+ffffffffffffnbMmjffffffjmMbuffffffffffff
+ ffffffffffffffjdMwrrwMbjffffffffffffff
+   fffffffffffffffrXzjfffffffffffffff
+       ffffffffffffffffffffffffff
+          ffffffffffffffffffff
+             ffffffffffffff
+                ffffffff
