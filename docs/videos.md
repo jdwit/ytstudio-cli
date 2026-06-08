@@ -97,7 +97,7 @@ description: |
 privacy: private              # private | unlisted | public
 publish_at: 2026-06-01T10:00:00+02:00   # optional; forces privacy=private
 tags: [travel, vlog]
-category_id: "22"             # YouTube category id; default 22 (People & Blogs). Run `ytstudio videos categories` for the full list.
+category_id: "22"             # YouTube category id; required. Run `ytstudio videos categories` for the full list.
 default_language: nl
 default_audio_language: nl
 made_for_kids: false

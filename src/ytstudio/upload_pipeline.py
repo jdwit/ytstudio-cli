@@ -25,7 +25,7 @@ class UploadSpec(BaseModel):
     privacy: Privacy = Privacy.private
     publish_at: datetime | None = None
     tags: list[str] = Field(default_factory=list)
-    category_id: str = "22"  # YouTube category 22 = People & Blogs
+    category_id: str = Field(min_length=1)
     default_language: str | None = None
     default_audio_language: str | None = None
     made_for_kids: bool = False
