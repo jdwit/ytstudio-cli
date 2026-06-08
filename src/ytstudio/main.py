@@ -4,6 +4,7 @@ import typer
 from rich.console import Console
 
 from ytstudio.api import authenticate, get_status
+from ytstudio.banner import render_version_banner
 from ytstudio.commands import analytics, comments, livestreams, profile, videos
 from ytstudio.config import migrate_legacy_credentials, setup_credentials
 from ytstudio.version import get_current_version, is_update_available
@@ -76,7 +77,7 @@ def main(
 ):
     """ytstudio - Manage your YouTube channel from the terminal"""
     if show_version:
-        console.print(f"ytstudio v{get_current_version()}")
+        console.print(render_version_banner(get_current_version()))
         raise typer.Exit()
 
     migrate_legacy_credentials()

@@ -1,0 +1,25 @@
+                ffffffff
+             ffffffffffffff
+          ffffffffffffffffffff
+       ffffffffffffffffffffffffff
+   fffffffffffffffrXYxfffffffffffffff
+ ffffffffffffffrkMLjjLMkrffffffffffffff
+ffffffffffffchMQFffffffFLMacffffffffffff
+fffffffffvoWXFffffffffffffFXWocfffffffff
+fffffffYMUffffffffffffffffffffJMXfffffff
+fffffffoYffffffXMdFffffffffffffYofffffff
+fffffffoYffffffXWWWWpnfffffffffYofffffff
+fffffffoYffffffXWWWWWWWajffffffYofffffff
+fffffffoYffffffXWWWWWWWWWWqffffYofffffff
+fffffffoYffffffXWWWWWWWkFffffffYofffffff
+fffffffoYffffffXWWWWqxfffffffffYofffffff
+fffffffoYffffffXMqFffffffffffffYMfffffff
+fffffffzMCffffffffffffffffffffCMzfffffff
+fffffffffxaWUFffffffffffffFJWaxfffffffff
+ffffffffffffnbMmjffffffjmMbuffffffffffff
+ ffffffffffffffjdMwrrwMbjffffffffffffff
+   fffffffffffffffrXzjfffffffffffffff
+       ffffffffffffffffffffffffff
+          ffffffffffffffffffff
+             ffffffffffffff
+                ffffffff
