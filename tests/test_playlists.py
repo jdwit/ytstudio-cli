@@ -1,6 +1,9 @@
+import csv
+import io
 import json
 from unittest.mock import MagicMock, patch
 
+from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
@@ -544,3 +547,159 @@ class TestPlaylistsReorder:
         )
         assert result.exit_code == 1
         assert "Manual sort" in result.stdout or "Manual" in result.stdout
+
+
+class TestPlaylistsReviewFixes:
+    """Regression tests for the fixes applied after PR review."""
+
+    def test_add_position_increments_per_insert(self, mock_auth):
+        result = runner.invoke(
+            app,
+            [
+                "playlists",
+                "add",
+                "PL_test_123",
+                "-v",
+                "vid_a",
+                "-v",
+                "vid_b",
+                "-v",
+                "vid_c",
+                "--position",
+                "5",
+                "--execute",
+            ],
+        )
+        assert result.exit_code == 0
+        calls = mock_auth.playlistItems.return_value.insert.call_args_list
+        positions = [c.kwargs["body"]["snippet"]["position"] for c in calls]
+        assert positions == [5, 6, 7]
+
+    def test_add_combines_video_and_search_respects_limit(self, mock_auth):
+        _set_search_list(
+            mock_auth,
+            [{"id": {"videoId": f"hit_{i}"}, "snippet": {"title": f"Hit {i}"}} for i in range(5)],
+        )
+        result = runner.invoke(
+            app,
+            [
+                "playlists",
+                "add",
+                "PL_test_123",
+                "-v",
+                "vid_a",
+                "-v",
+                "vid_b",
+                "--from-search",
+                "topic",
+                "-n",
+                "3",
+                "--execute",
+            ],
+        )
+        assert result.exit_code == 0
+        calls = mock_auth.playlistItems.return_value.insert.call_args_list
+        # 2 explicit videos + 1 search hit = 3, capped by --limit/-n
+        assert len(calls) == 3
+
+    def test_uploads_check_refuses_canonical_channel_uploads_id(self, mock_auth):
+        result = runner.invoke(
+            app,
+            [
+                "playlists",
+                "add",
+                "UU_test_uploads_playlist",
+                "-v",
+                "vid_a",
+                "--execute",
+            ],
+        )
+        assert result.exit_code == 1
+        assert "uploads playlist" in result.stdout
+        mock_auth.playlistItems.return_value.insert.assert_not_called()
+
+    def test_uploads_check_allows_non_uploads_uu_prefix(self, mock_auth):
+        result = runner.invoke(
+            app,
+            [
+                "playlists",
+                "add",
+                "UU_unrelated_id_starting_with_UU",
+                "-v",
+                "vid_a",
+                "--execute",
+            ],
+        )
+        # Canonical check resolves uploads to "UU_test_uploads_playlist"; a
+        # different UU-prefixed id is not refused.
+        assert result.exit_code == 0
+        mock_auth.playlistItems.return_value.insert.assert_called()
+
+    def test_reorder_skips_writes_that_become_no_ops_after_prior_moves(self, mock_auth):
+        # Full reverse on 4 items: targets become [0, 1, 2, 3] for the new order
+        # [d, c, b, a]. Applied in target-ascending order, the last write would
+        # land on the position the item already occupies after prior shifts.
+        items = [
+            _make_item("PLPLI_a", "vid_a", 0),
+            _make_item("PLPLI_b", "vid_b", 1),
+            _make_item("PLPLI_c", "vid_c", 2),
+            _make_item("PLPLI_d", "vid_d", 3),
+        ]
+        _set_playlist_items_list(
+            mock_auth,
+            {"items": items, "nextPageToken": None, "pageInfo": {"totalResults": 4}},
+        )
+        _set_videos_list(
+            mock_auth,
+            {
+                "items": [
+                    _make_video_stats("vid_a", 1),
+                    _make_video_stats("vid_b", 2),
+                    _make_video_stats("vid_c", 3),
+                    _make_video_stats("vid_d", 4),
+                ]
+            },
+        )
+        result = runner.invoke(
+            app,
+            ["playlists", "reorder", "PL_test_123", "--by", "views", "--execute"],
+        )
+        assert result.exit_code == 0
+        # 4 logical moves planned, but the last one is a no-op after prior shifts.
+        calls = mock_auth.playlistItems.return_value.update.call_args_list
+        assert len(calls) == 3
+        assert "already in place" in result.stdout
+
+    def test_list_csv_quotes_titles_with_special_chars(self, mock_auth):
+        nasty = {
+            **MOCK_PLAYLIST,
+            "id": "PL_nasty",
+            "snippet": {
+                **MOCK_PLAYLIST["snippet"],
+                "title": 'has, a comma and a "quote" and a\nnewline',
+            },
+        }
+        _set_playlists_list(
+            mock_auth,
+            {"items": [nasty], "nextPageToken": None, "pageInfo": {"totalResults": 1}},
+        )
+        result = runner.invoke(app, ["playlists", "list", "-o", "csv"])
+        assert result.exit_code == 0
+        rows = list(csv.reader(io.StringIO(result.stdout)))
+        # Header + one data row, even with embedded comma/newline in the title.
+        assert rows[0] == ["id", "title", "items", "privacy", "published_at"]
+        assert rows[1][0] == "PL_nasty"
+        assert rows[1][1] == 'has, a comma and a "quote" and a\nnewline'
+
+    def test_add_session_expired_exits_friendly(self, mock_auth):
+        insert_mock = MagicMock()
+        insert_mock.execute.side_effect = RefreshError("revoked")
+        mock_auth.playlistItems.return_value.insert.return_value = insert_mock
+
+        result = runner.invoke(
+            app,
+            ["playlists", "add", "PL_test_123", "-v", "vid_a", "--execute"],
+        )
+        assert result.exit_code == 1
+        assert "Session expired" in result.stdout
+        assert "ytstudio login" in result.stdout

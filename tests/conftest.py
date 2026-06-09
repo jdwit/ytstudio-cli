@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from ytstudio.commands import playlists as _playlists_module
+
 MOCK_CHANNEL = {
     "id": "UC_test_channel_id",
     "snippet": {
@@ -194,6 +196,13 @@ def create_mock_service():
 @pytest.fixture
 def mock_service():
     return create_mock_service()
+
+
+@pytest.fixture(autouse=True)
+def _clear_playlists_caches():
+    _playlists_module._uploads_id_cache.clear()
+    yield
+    _playlists_module._uploads_id_cache.clear()
 
 
 @pytest.fixture

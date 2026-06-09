@@ -1,7 +1,10 @@
+import csv
 import json
+import sys
 from dataclasses import asdict, dataclass, field
 
 import typer
+from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 from rich.prompt import Confirm
 
@@ -43,18 +46,42 @@ class PlaylistItem:
 
 
 # Uploads playlists are channel-owned and cannot be mutated through the
-# playlists or playlistItems APIs.
-def _is_uploads_playlist(playlist_id: str) -> bool:
-    return playlist_id.startswith("UU")
+# playlists or playlistItems APIs. Resolve the canonical id once per service.
+_uploads_id_cache: dict[int, str | None] = {}
 
 
-def _refuse_uploads_playlist(playlist_id: str) -> None:
-    if _is_uploads_playlist(playlist_id):
+def _resolve_uploads_id(service) -> str | None:
+    sid = id(service)
+    if sid not in _uploads_id_cache:
+        response = api(service.channels().list(part="contentDetails", mine=True)) or {}
+        items = response.get("items") or []
+        uploads = ""
+        if items:
+            related = (items[0].get("contentDetails") or {}).get("relatedPlaylists") or {}
+            uploads = related.get("uploads") or ""
+        _uploads_id_cache[sid] = uploads or None
+    return _uploads_id_cache[sid]
+
+
+def _refuse_uploads_playlist(service, playlist_id: str) -> None:
+    if playlist_id == _resolve_uploads_id(service):
         console.print(
             "[red]Cannot modify the channel uploads playlist. "
             "Manage video privacy or delete videos instead.[/red]"
         )
         raise typer.Exit(1)
+
+
+def _execute_or_session_exit(request):
+    """Run the request and translate a revoked OAuth token into a friendly exit."""
+    try:
+        return request.execute()
+    except RefreshError:
+        console.print(
+            "\n[red]Session expired or revoked.[/red] "
+            "Run [bold]ytstudio login[/bold] to re-authenticate."
+        )
+        raise typer.Exit(1) from None
 
 
 def _http_reason(error: HttpError) -> str:
@@ -238,10 +265,10 @@ def list_playlists(
         return
 
     if output == "csv":
-        print("id,title,items,privacy,published_at")
+        writer = csv.writer(sys.stdout, lineterminator="\n")
+        writer.writerow(["id", "title", "items", "privacy", "published_at"])
         for p in all_playlists:
-            title_escaped = p.title.replace('"', '""')
-            print(f'{p.id},"{title_escaped}",{p.item_count},{p.privacy},{p.published_at}')
+            writer.writerow([p.id, p.title, p.item_count, p.privacy, p.published_at])
         return
 
     _print_playlists_table(all_playlists)
@@ -360,8 +387,6 @@ def update(
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
     """Update a playlist's metadata."""
-    _refuse_uploads_playlist(playlist_id)
-
     if all(v is None for v in (title, description, privacy, language)):
         console.print(
             "[yellow]Nothing to update. Provide --title, --description, --privacy, "
@@ -374,6 +399,7 @@ def update(
         raise typer.Exit(2)
 
     service = get_data_service()
+    _refuse_uploads_playlist(service, playlist_id)
     current = _fetch_playlist(service, playlist_id)
     if not current:
         console.print(f"[red]Playlist not found: {playlist_id}[/red]")
@@ -424,9 +450,8 @@ def delete(
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ):
     """Delete a playlist."""
-    _refuse_uploads_playlist(playlist_id)
-
     service = get_data_service()
+    _refuse_uploads_playlist(service, playlist_id)
     current = _fetch_playlist(service, playlist_id)
     if not current:
         console.print(f"[red]Playlist not found: {playlist_id}[/red]")
@@ -487,10 +512,10 @@ def items(
         return
 
     if output == "csv":
-        print("item_id,video_id,position,title,added_at")
+        writer = csv.writer(sys.stdout, lineterminator="\n")
+        writer.writerow(["item_id", "video_id", "position", "title", "added_at"])
         for it in all_items:
-            title_escaped = it.title.replace('"', '""')
-            print(f'{it.id},{it.video_id},{it.position},"{title_escaped}",{it.added_at}')
+            writer.writerow([it.id, it.video_id, it.position, it.title, it.added_at])
         return
 
     if not all_items:
@@ -575,32 +600,35 @@ def add(
     search().list(forMine=True, type=video, q=...) and adds up to --limit hits.
     Quota is 50 units per inserted video; a running counter is printed.
     """
-    _refuse_uploads_playlist(playlist_id)
-
     if not video and not from_search:
         console.print("[red]Pass at least one --video or --from-search[/red]")
         raise typer.Exit(2)
 
     service = get_data_service()
+    _refuse_uploads_playlist(service, playlist_id)
 
     candidates: list[tuple[str, str]] = []
     if video:
         candidates.extend((vid, "") for vid in video)
     if from_search:
-        found = _resolve_search_video_ids(service, from_search, limit)
-        if not found:
+        # Reserve any limit headroom not already taken by explicit --video entries
+        # so the combined batch stays under --limit.
+        headroom = max(0, limit - len(candidates))
+        found = _resolve_search_video_ids(service, from_search, headroom) if headroom else []
+        if not found and not video:
             console.print("[yellow]No videos matched search[/yellow]")
             raise typer.Exit(0)
         candidates.extend(found)
 
-    candidates = candidates[:limit] if from_search and not video else candidates
+    candidates = candidates[:limit]
 
     table = create_table()
     table.add_column("Video ID", style="yellow")
     table.add_column("Title", style="cyan")
     table.add_column("Position", justify="right")
-    for vid, title in candidates:
-        table.add_row(vid, truncate(title) if title else "-", str(position) if position else "-")
+    for i, (vid, title) in enumerate(candidates):
+        pos_str = str(position + i) if position is not None else "-"
+        table.add_row(vid, truncate(title) if title else "-", pos_str)
 
     if not execute:
         console.print(dim(f"Pending {len(candidates)} adds\n"))
@@ -614,21 +642,26 @@ def add(
 
     added = 0
     failed = 0
+    current_position = position
     for idx, (vid, _title) in enumerate(candidates, start=1):
         snippet: dict = {
             "playlistId": playlist_id,
             "resourceId": {"kind": "youtube#video", "videoId": vid},
         }
-        if position is not None:
-            snippet["position"] = position
+        if current_position is not None:
+            snippet["position"] = current_position
         body: dict = {"snippet": snippet}
         if note is not None:
             body["contentDetails"] = {"note": note}
 
         try:
-            service.playlistItems().insert(part="snippet,contentDetails", body=body).execute()
+            _execute_or_session_exit(
+                service.playlistItems().insert(part="snippet,contentDetails", body=body)
+            )
             console.print(f"[green]Added[/green] {idx}/{len(candidates)} {vid}")
             added += 1
+            if current_position is not None:
+                current_position += 1
         except HttpError as e:
             reason = _http_reason(e)
             if reason == "quotaExceeded":
@@ -693,13 +726,12 @@ def remove(
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
     """Remove items from a playlist by item id or video id."""
-    _refuse_uploads_playlist(playlist_id)
-
     if not item and not video:
         console.print("[red]Pass at least one --item or --video[/red]")
         raise typer.Exit(2)
 
     service = get_data_service()
+    _refuse_uploads_playlist(service, playlist_id)
 
     targets: list[str] = list(item) if item else []
     if video:
@@ -733,7 +765,7 @@ def remove(
     failed = 0
     for idx, item_id in enumerate(targets, start=1):
         try:
-            service.playlistItems().delete(id=item_id).execute()
+            _execute_or_session_exit(service.playlistItems().delete(id=item_id))
             console.print(f"[green]Removed[/green] {idx}/{len(targets)} {item_id}")
             removed += 1
         except HttpError as e:
@@ -794,8 +826,6 @@ def reorder(
     execute: bool = typer.Option(False, "--execute", help="Apply changes (default is dry-run)"),
 ):
     """Reorder a playlist by one of views, likes, published, title."""
-    _refuse_uploads_playlist(playlist_id)
-
     if by not in {"views", "likes", "published", "title"}:
         console.print("[red]Invalid --by. Use: views, likes, published, title[/red]")
         raise typer.Exit(2)
@@ -804,6 +834,7 @@ def reorder(
         raise typer.Exit(2)
 
     service = get_data_service()
+    _refuse_uploads_playlist(service, playlist_id)
 
     items = _fetch_all_items(service, playlist_id)
     if not items:
@@ -844,9 +875,16 @@ def reorder(
     console.print(table)
     console.print()
 
+    # Track the playlist order locally so we can skip writes that would be no-ops
+    # after prior moves shift positions. Each successful update is mirrored here.
+    live = [it.id for it in items]
     updated = 0
+    skipped = 0
     failed = 0
     for idx, (it, _cur, tgt) in enumerate(moves, start=1):
+        if live.index(it.id) == tgt:
+            skipped += 1
+            continue
         body = {
             "id": it.id,
             "snippet": {
@@ -856,9 +894,11 @@ def reorder(
             },
         }
         try:
-            service.playlistItems().update(part="snippet", body=body).execute()
+            _execute_or_session_exit(service.playlistItems().update(part="snippet", body=body))
             console.print(f"[green]Moved[/green] {idx}/{len(moves)} {it.id} -> {tgt}")
             updated += 1
+            live.remove(it.id)
+            live.insert(tgt, it.id)
         except HttpError as e:
             reason = _http_reason(e)
             if reason == "manualSortRequired":
@@ -873,4 +913,7 @@ def reorder(
             console.print(f"[red]Failed[/red] {it.id}: {e}")
             failed += 1
 
-    console.print(f"\n[bold]Done:[/bold] {updated} moved, {failed} failed")
+    summary = f"\n[bold]Done:[/bold] {updated} moved, {failed} failed"
+    if skipped:
+        summary += f", {skipped} already in place"
+    console.print(summary)
