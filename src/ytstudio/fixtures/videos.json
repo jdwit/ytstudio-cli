@@ -1,0 +1,215 @@
+{
+  "items": [
+    {
+      "id": "demo_vid_001",
+      "snippet": {
+        "title": "Building a Cabin Off-Grid",
+        "description": "Year one in the woods: foundations, framing, and the wood stove install.",
+        "publishedAt": "2026-03-12T14:00:00Z",
+        "tags": ["off-grid", "cabin", "diy", "homestead"],
+        "categoryId": "26",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "184230",
+        "likeCount": "9120",
+        "commentCount": "612"
+      },
+      "contentDetails": {
+        "duration": "PT18M42S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {
+        "nl": {
+          "title": "Een Hut Off-Grid Bouwen",
+          "description": "Jaar een in het bos."
+        }
+      }
+    },
+    {
+      "id": "demo_vid_002",
+      "snippet": {
+        "title": "Solar Sizing for a Tiny House",
+        "description": "How I sized a 2 kW PV array for full-time tiny-house living.",
+        "publishedAt": "2026-04-02T11:30:00Z",
+        "tags": ["solar", "tiny-house", "energy"],
+        "categoryId": "28",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "92410",
+        "likeCount": "4880",
+        "commentCount": "318"
+      },
+      "contentDetails": {
+        "duration": "PT12M05S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_003",
+      "snippet": {
+        "title": "Why I Quit My Day Job",
+        "description": "Three numbers that made the math work, and one that almost killed it.",
+        "publishedAt": "2026-04-19T09:00:00Z",
+        "tags": ["story", "career", "freelance"],
+        "categoryId": "22",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "412980",
+        "likeCount": "22140",
+        "commentCount": "1840"
+      },
+      "contentDetails": {
+        "duration": "PT9M47S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_004",
+      "snippet": {
+        "title": "Rainwater Harvesting on a Budget",
+        "description": "1500 liters of storage for under 400 dollars in parts.",
+        "publishedAt": "2026-04-28T15:15:00Z",
+        "tags": ["water", "homestead", "budget"],
+        "categoryId": "26"
+      },
+      "statistics": {
+        "viewCount": "68240",
+        "likeCount": "3210",
+        "commentCount": "204"
+      },
+      "contentDetails": {
+        "duration": "PT7M22S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_005",
+      "snippet": {
+        "title": "The Greenhouse Tour",
+        "description": "Walkthrough of the geodome with planting plan for the season.",
+        "publishedAt": "2026-05-07T13:00:00Z",
+        "tags": ["greenhouse", "garden", "tour"],
+        "categoryId": "26"
+      },
+      "statistics": {
+        "viewCount": "54100",
+        "likeCount": "2980",
+        "commentCount": "176"
+      },
+      "contentDetails": {
+        "duration": "PT11M58S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_006",
+      "snippet": {
+        "title": "First Frost: What I Should Have Done",
+        "description": "Five mistakes from last winter and how I am prepping this year.",
+        "publishedAt": "2026-05-14T08:00:00Z",
+        "tags": ["winter", "lessons", "homestead"],
+        "categoryId": "26",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "29840",
+        "likeCount": "1620",
+        "commentCount": "143"
+      },
+      "contentDetails": {
+        "duration": "PT8M14S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      },
+      "localizations": {
+        "nl": {
+          "title": "Eerste Vorst: Wat Ik Had Moeten Doen",
+          "description": "Vijf lessen van vorige winter."
+        }
+      }
+    },
+    {
+      "id": "demo_vid_007",
+      "snippet": {
+        "title": "Workshop: Sharpening an Axe Properly",
+        "description": "From rusted thrift-store find to working tool in 20 minutes.",
+        "publishedAt": "2026-05-21T17:45:00Z",
+        "tags": ["tools", "workshop", "sharpening"],
+        "categoryId": "26"
+      },
+      "statistics": {
+        "viewCount": "17320",
+        "likeCount": "1140",
+        "commentCount": "92"
+      },
+      "contentDetails": {
+        "duration": "PT6M03S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_008",
+      "snippet": {
+        "title": "How I Edit These Videos",
+        "description": "Camera, mics, and the editing workflow that keeps shipping weekly.",
+        "publishedAt": "2026-06-01T12:00:00Z",
+        "tags": ["editing", "workflow", "meta"],
+        "categoryId": "27",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en"
+      },
+      "statistics": {
+        "viewCount": "11280",
+        "likeCount": "910",
+        "commentCount": "74"
+      },
+      "contentDetails": {
+        "duration": "PT14M11S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    },
+    {
+      "id": "demo_vid_009",
+      "snippet": {
+        "title": "Channel Update: What is Coming Next",
+        "description": "Three series I am planning, plus a Q and A at the end.",
+        "publishedAt": "2026-06-06T19:00:00Z",
+        "tags": ["update", "channel", "qna"],
+        "categoryId": "22"
+      },
+      "statistics": {
+        "viewCount": "4820",
+        "likeCount": "412",
+        "commentCount": "38"
+      },
+      "contentDetails": {
+        "duration": "PT4M52S"
+      },
+      "status": {
+        "privacyStatus": "public"
+      }
+    }
+  ]
+}

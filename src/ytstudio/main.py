@@ -3,8 +3,9 @@ import atexit
 import typer
 from rich.console import Console
 
+from ytstudio import demo_service
 from ytstudio.api import authenticate, get_status
-from ytstudio.commands import analytics, comments, livestreams, profile, videos
+from ytstudio.commands import analytics, comments, demo, livestreams, profile, videos
 from ytstudio.config import migrate_legacy_credentials, setup_credentials
 from ytstudio.version import get_current_version, is_update_available
 
@@ -13,6 +14,7 @@ app = typer.Typer(
     help="Manage your YouTube channel from the terminal",
     no_args_is_help=True,
     rich_markup_mode="markdown",
+    epilog="Tip: run [bold]ytstudio demo tour[/bold] to try the CLI without an account.",
 )
 
 console = Console()
@@ -22,6 +24,7 @@ app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")
 app.add_typer(livestreams.app, name="livestreams")
 app.add_typer(profile.app, name="profile")
+app.add_typer(demo.app, name="demo")
 
 
 @app.command()
@@ -63,7 +66,7 @@ def _show_update_notification():
         available, latest = is_update_available()
         if available:
             console.print(
-                f"\n[cyan]Update available: {get_current_version()} → {latest}[/cyan]\n"
+                f"\n[cyan]Update available: {get_current_version()} -> {latest}[/cyan]\n"
                 f"Run: [bold]uv tool upgrade ytstudio-cli[/bold]"
             )
     except Exception:
@@ -72,6 +75,7 @@ def _show_update_notification():
 
 @app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     show_version: bool = typer.Option(False, "--version", "-v", help="Show version"),
 ):
     """ytstudio - Manage your YouTube channel from the terminal"""
@@ -80,6 +84,11 @@ def main(
         raise typer.Exit()
 
     migrate_legacy_credentials()
+
+    # Only print the demo banner when an actual subcommand is being invoked,
+    # not for bare `ytstudio` or `ytstudio --version`.
+    if ctx.invoked_subcommand is not None and demo_service.is_demo_mode():
+        demo_service.print_demo_banner_once()
 
     if not _update_state["registered"]:
         atexit.register(_show_update_notification)

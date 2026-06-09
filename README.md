@@ -35,6 +35,17 @@ command line.
 - Comments moderation: list, reply, and moderate from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 
+## Try in 10 seconds
+
+No account, no OAuth, no API setup. Runs against a built-in fake channel:
+
+```bash
+pipx install ytstudio-cli
+ytstudio demo tour
+```
+
+Use `ytstudio init && ytstudio login` to connect your real channel.
+
 ## Documentation
 
 See the [full documentation](https://jdwit.github.io/ytstudio-cli/) for installation, OAuth setup, and the command reference.

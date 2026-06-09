@@ -1,0 +1,14 @@
+{
+  "columnHeaders": [
+    {"name": "views"},
+    {"name": "estimatedMinutesWatched"},
+    {"name": "averageViewDuration"},
+    {"name": "subscribersGained"},
+    {"name": "subscribersLost"},
+    {"name": "likes"},
+    {"name": "comments"}
+  ],
+  "rows": [
+    [123456, 78900, 245, 1200, 30, 4500, 380]
+  ]
+}

@@ -236,6 +236,20 @@ def get_authenticated_service(
 
 
 def get_status(profile: str | None = None) -> None:
+    # Local import avoids importing demo fixtures in the hot real-auth path.
+    from ytstudio.demo_service import _load_fixture, is_demo_mode  # noqa: PLC0415
+
+    if is_demo_mode():
+        channel = _load_fixture("channel.json")["items"][0]
+        snippet = channel["snippet"]
+        stats = channel["statistics"]
+        success_message("Authenticated (demo mode)")
+        console.print("  mode: demo")
+        console.print(f"  Channel: [bold]{snippet['title']}[/bold]")
+        console.print(f"  Subscribers: {stats.get('subscriberCount', 'N/A')}")
+        console.print(f"  Videos: {stats.get('videoCount', 'N/A')}")
+        return
+
     creds_data = load_credentials(profile)
 
     if not creds_data:

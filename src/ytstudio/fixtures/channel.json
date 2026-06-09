@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": "UC_demo_channel",
+      "snippet": {
+        "title": "Demo Creator Channel",
+        "description": "A built-in fake channel used by ytstudio demo mode. No network calls, no OAuth required.",
+        "customUrl": "@democreator"
+      },
+      "statistics": {
+        "subscriberCount": "48230",
+        "viewCount": "2840000",
+        "videoCount": "42"
+      },
+      "contentDetails": {
+        "relatedPlaylists": {
+          "uploads": "UU_demo_uploads"
+        }
+      }
+    }
+  ]
+}

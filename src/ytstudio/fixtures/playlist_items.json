@@ -1,0 +1,89 @@
+{
+  "items": [
+    {
+      "snippet": {
+        "title": "Building a Cabin Off-Grid",
+        "publishedAt": "2026-03-12T14:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_001"
+      }
+    },
+    {
+      "snippet": {
+        "title": "Solar Sizing for a Tiny House",
+        "publishedAt": "2026-04-02T11:30:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_002"
+      }
+    },
+    {
+      "snippet": {
+        "title": "Why I Quit My Day Job",
+        "publishedAt": "2026-04-19T09:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_003"
+      }
+    },
+    {
+      "snippet": {
+        "title": "Rainwater Harvesting on a Budget",
+        "publishedAt": "2026-04-28T15:15:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_004"
+      }
+    },
+    {
+      "snippet": {
+        "title": "The Greenhouse Tour",
+        "publishedAt": "2026-05-07T13:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_005"
+      }
+    },
+    {
+      "snippet": {
+        "title": "First Frost: What I Should Have Done",
+        "publishedAt": "2026-05-14T08:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_006"
+      }
+    },
+    {
+      "snippet": {
+        "title": "Workshop: Sharpening an Axe Properly",
+        "publishedAt": "2026-05-21T17:45:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_007"
+      }
+    },
+    {
+      "snippet": {
+        "title": "How I Edit These Videos",
+        "publishedAt": "2026-06-01T12:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_008"
+      }
+    },
+    {
+      "snippet": {
+        "title": "Channel Update: What is Coming Next",
+        "publishedAt": "2026-06-06T19:00:00Z"
+      },
+      "contentDetails": {
+        "videoId": "demo_vid_009"
+      }
+    }
+  ],
+  "pageInfo": {
+    "totalResults": 9
+  },
+  "nextPageToken": null
+}
