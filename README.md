@@ -34,6 +34,17 @@ command line.
 - Multi-channel profiles: manage several channels from one machine and switch per command.
 - Comments moderation: list, reply, and moderate from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
+- Playlists: bulk-add by search and reorder by views with one command.
+
+## Power-user moves
+
+```bash
+# Bulk-add to a playlist from a search query (dry-run by default)
+ytstudio playlists add PL... --from-search "shorts compilation" -n 20 --execute
+
+# Reorder a playlist by view count, descending
+ytstudio playlists reorder PL... --by views --execute
+```
 
 ## Documentation
 

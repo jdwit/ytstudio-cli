@@ -96,6 +96,29 @@ MOCK_NEGATIVE_COMMENT = {
     },
 }
 
+MOCK_PLAYLIST = {
+    "id": "PL_test_123",
+    "snippet": {
+        "title": "Test Playlist",
+        "description": "desc",
+        "publishedAt": "2026-01-01T00:00:00Z",
+        "defaultLanguage": "en",
+    },
+    "contentDetails": {"itemCount": 3},
+    "status": {"privacyStatus": "private"},
+}
+
+MOCK_PLAYLIST_ITEM_FULL = {
+    "id": "PLPLI_test_item_1",
+    "snippet": {
+        "title": "Item title",
+        "publishedAt": "2026-01-02T00:00:00Z",
+        "position": 0,
+        "resourceId": {"kind": "youtube#video", "videoId": "test_video_123"},
+    },
+    "contentDetails": {"videoId": "test_video_123", "note": ""},
+}
+
 
 def create_mock_service():
     service = MagicMock()
@@ -132,6 +155,38 @@ def create_mock_service():
         "items": [{"id": {"videoId": MOCK_VIDEO["id"]}}],
     }
     service.search.return_value.list.return_value = search_list
+
+    playlists_list = MagicMock()
+    playlists_list.execute.return_value = {
+        "items": [MOCK_PLAYLIST],
+        "nextPageToken": None,
+        "pageInfo": {"totalResults": 1},
+    }
+    service.playlists.return_value.list.return_value = playlists_list
+
+    playlists_insert = MagicMock()
+    playlists_insert.execute.return_value = MOCK_PLAYLIST
+    service.playlists.return_value.insert.return_value = playlists_insert
+
+    playlists_update = MagicMock()
+    playlists_update.execute.return_value = MOCK_PLAYLIST
+    service.playlists.return_value.update.return_value = playlists_update
+
+    playlists_delete = MagicMock()
+    playlists_delete.execute.return_value = ""
+    service.playlists.return_value.delete.return_value = playlists_delete
+
+    playlist_items_insert = MagicMock()
+    playlist_items_insert.execute.return_value = MOCK_PLAYLIST_ITEM_FULL
+    service.playlistItems.return_value.insert.return_value = playlist_items_insert
+
+    playlist_items_update = MagicMock()
+    playlist_items_update.execute.return_value = MOCK_PLAYLIST_ITEM_FULL
+    service.playlistItems.return_value.update.return_value = playlist_items_update
+
+    playlist_items_delete = MagicMock()
+    playlist_items_delete.execute.return_value = ""
+    service.playlistItems.return_value.delete.return_value = playlist_items_delete
 
     return service
 
