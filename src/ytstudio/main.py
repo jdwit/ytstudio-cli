@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from ytstudio.api import authenticate, get_status
-from ytstudio.commands import analytics, comments, livestreams, profile, videos
+from ytstudio.commands import analytics, comments, livestreams, mcp_cmd, profile, videos
 from ytstudio.config import migrate_legacy_credentials, setup_credentials
 from ytstudio.version import get_current_version, is_update_available
 
@@ -22,6 +22,7 @@ app.add_typer(analytics.app, name="analytics")
 app.add_typer(comments.app, name="comments")
 app.add_typer(livestreams.app, name="livestreams")
 app.add_typer(profile.app, name="profile")
+app.add_typer(mcp_cmd.app, name="mcp")
 
 
 @app.command()

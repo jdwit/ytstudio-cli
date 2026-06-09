@@ -35,6 +35,61 @@ command line.
 - Comments moderation: list, reply, and moderate from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 
+## MCP server mode (for AI agents)
+
+`ytstudio` ships an optional Model Context Protocol server so AI agents
+(Claude Desktop, Cursor, custom clients) can manage your channel through the
+same surface you use from the terminal.
+
+Install the optional extra:
+
+```bash
+uv tool install "ytstudio-cli[mcp]"
+```
+
+Generate a ready-to-paste config block for Claude Desktop:
+
+```bash
+ytstudio mcp print-config --client claude-desktop
+```
+
+That produces something like:
+
+```json
+{
+  "mcpServers": {
+    "ytstudio": {
+      "command": "/usr/local/bin/ytstudio",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+Read tools are always on. Write tools are gated behind either
+`--allow-write` or `YTSTUDIO_MCP_ALLOW_WRITE=1`; `--read-only` forces a
+read-only server even if the env var is set.
+
+Read-only tools:
+
+- `whoami`, `list_videos`, `get_video`, `list_categories`
+- `analytics_overview`, `analytics_query`
+- `list_comments`
+- `list_broadcasts`, `get_broadcast` (stream key always redacted)
+- `list_playlists`, `get_playlist`, `list_playlist_items`
+- `list_captions`
+
+Write-gated tools (require `--allow-write` or `YTSTUDIO_MCP_ALLOW_WRITE=1`):
+
+- `update_video`
+- `publish_comments`, `reject_comments`
+- `schedule_broadcast`, `transition_broadcast`, `update_broadcast`
+- `create_playlist`, `update_playlist`, `delete_playlist`
+- `add_to_playlist`, `remove_from_playlist`
+
+See [docs/mcp.md](docs/mcp.md) for the full surface, env vars, and security
+model.
+
 ## Documentation
 
 See the [full documentation](https://jdwit.github.io/ytstudio-cli/) for installation, OAuth setup, and the command reference.

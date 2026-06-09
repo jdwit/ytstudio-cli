@@ -98,6 +98,7 @@ nav:
       - Videos (bulk update, upload): videos.md
       - Analytics: analytics.md
       - Comments: comments.md
+      - MCP server mode: mcp.md
   - Reference:
       - Commands: reference.md
       - API quota: api-quota.md
