@@ -20,7 +20,7 @@ from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 from pydantic import Field
 
-from ytstudio.api import get_credentials
+from ytstudio import api as _api_module
 from ytstudio.commands.comments import (
     Comment,
     ModerationStatus,
@@ -135,7 +135,7 @@ def build_server(
 ) -> FastMCP:
     """Construct and return a FastMCP server bound to the given profile."""
 
-    credentials = get_credentials(profile)
+    credentials = _api_module.get_credentials(profile)
     if credentials is None:
         print(
             "ytstudio MCP: no credentials found for the active profile. "
