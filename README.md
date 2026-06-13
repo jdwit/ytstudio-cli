@@ -66,6 +66,16 @@ operations (listing videos, comments, channel info) cost 1 unit, while write ope
 updating video metadata or moderating comments cost 50 units each. Bulk updates can consume quota
 quickly. When exceeded, the API returns a 403 error; quota resets at midnight Pacific Time.
 
+| Action | Examples | Approx. cost |
+|--------|----------|--------------|
+| Read | list videos, comments, playlists; analytics queries | 1 unit |
+| Write | update a video, moderate a comment, add or reorder playlist items, schedule a broadcast | 50 units |
+| Search | `search.list`, used by `playlists add --from-search` | 100 units |
+| Upload | `videos.insert` | ~1600 units |
+
+A full per-operation breakdown lives in the
+[API quota docs](https://jdwit.github.io/ytstudio-cli/api-quota/).
+
 You can request a quota increase via **IAM & Admin** → **Quotas** in the
 [Google Cloud Console](https://console.cloud.google.com/). See the
 [official quota documentation](https://developers.google.com/youtube/v3/getting-started#quota) for
