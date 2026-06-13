@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jdwit/ytstudio/actions/workflows/ci.yml"><img src="https://github.com/jdwit/ytstudio/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml"><img src="https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://pypi.org/project/ytstudio-cli/"><img src="https://img.shields.io/pypi/v/ytstudio-cli" alt="PyPI"></a>
   <a href="https://pypi.org/project/ytstudio-cli/"><img src="https://img.shields.io/pypi/pyversions/ytstudio-cli" alt="Python"></a>
 </p>
@@ -32,19 +32,9 @@ command line.
 - Upload videos from a directory using YAML sidecars for metadata and thumbnails.
 - Schedule, start, stop, and update YouTube livestream broadcasts, including RTMP ingest details.
 - Multi-channel profiles: manage several channels from one machine and switch per command.
-- Comments moderation: list, reply, and moderate from the CLI.
+- Comments moderation: list, approve, reject, and ban from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 - Playlists: bulk-add by search and reorder by views with one command.
-
-## Power-user moves
-
-```bash
-# Bulk-add to a playlist from a search query (dry-run by default)
-ytstudio playlists add PL... --from-search "shorts compilation" -n 20 --execute
-
-# Reorder a playlist by view count, descending
-ytstudio playlists reorder PL... --by views --execute
-```
 
 ## Documentation
 

@@ -96,15 +96,15 @@ All read commands take `--output table|json|csv`. CSV uses Python's
 `csv.writer`, so titles with commas, newlines, or quotes survive round-trips
 through Excel and `pandas.read_csv`.
 
-## Power moves
+## Recipes
 
 ```bash
-# Curate a "watch later" from a search
-ytstudio playlists add PL_watchlater --from-search "rust async" -n 30 --execute
+# Build a themed playlist from a search
+ytstudio playlists add PL_rust --from-search "rust async" -n 30 --execute
 
 # Move the all-time top by views to the front
 ytstudio playlists reorder PL_pinned --by views --execute
 
 # Promote a single video to the top of an existing playlist
-ytstudio playlists add PL_pinned -v <new-banger> --position 0 --execute
+ytstudio playlists add PL_pinned -v <video-id> --position 0 --execute
 ```

@@ -60,6 +60,7 @@ Run `ytstudio analytics --help` (or open the
 
 ## Quota
 
-Analytics reads are cheap (1 unit per call against the Data API quota); you
-can hit them often without worrying. See [API quota](api-quota.md) for the
-full picture.
+The YouTube Analytics API is a separate API from the YouTube Data API, with
+its own query-cost based quota that is far more generous in practice, so
+analytics reads do not consume your Data API budget. See
+[API quota](api-quota.md) for the full picture.
