@@ -9,7 +9,7 @@ A small CLI on top of the official
 [YouTube Data API](https://developers.google.com/youtube/v3) and
 [YouTube Analytics API](https://developers.google.com/youtube/analytics) that
 allows for bulk video updates and uploads, scripted analytics queries,
-comment moderation, and live broadcast control.
+comment moderation, live broadcast control, and bulk playlist operations.
 
 ## Why it exists
 
@@ -35,6 +35,9 @@ and plug your channel into AI agent workflows.
   See [Live broadcasts](livestreams.md).
 - **Comment moderation** at the CLI:
   approve, reject, or ban in bulk. See [Comments](comments.md).
+- **Bulk playlist operations** including adding a search
+  query's worth of videos at once and reordering by views. See
+  [Playlists](playlists.md).
 - **OAuth credentials live owner-only
   (`0600`)** under `~/.config/ytstudio-cli/`. The `init` step is one-shot.
 

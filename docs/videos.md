@@ -12,6 +12,7 @@ ytstudio videos list                       # most recent uploads
 ytstudio videos list -n 100 -o json        # 100 items, JSON
 ytstudio videos list --scheduled           # only videos scheduled for future publish
 ytstudio videos show <video-id>            # full metadata for one video
+ytstudio videos categories                 # category ids you can assign to uploads
 ```
 
 `--scheduled` filters to private videos with a future `publishAt`, which is
