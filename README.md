@@ -32,7 +32,7 @@ command line.
 - Upload videos from a directory using YAML sidecars for metadata and thumbnails.
 - Schedule, start, stop, and update YouTube livestream broadcasts, including RTMP ingest details.
 - Multi-channel profiles: manage several channels from one machine and switch per command.
-- Comments moderation: list, approve, reject, and ban from the CLI.
+- Comments moderation: list, reply, approve, reject, and ban from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 - Playlists: bulk-add by search and reorder by views with one command.
 
