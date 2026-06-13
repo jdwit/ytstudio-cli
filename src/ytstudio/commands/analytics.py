@@ -154,18 +154,20 @@ def overview(
 
     metrics = dict(zip(headers, rows[0], strict=False))
 
-    # Previous equal-length window [today-2*days, today-days] for growth deltas.
+    # Previous equal-length window ending the day before the current one starts,
+    # so the two windows do not share a boundary day.
     previous = None
     pct_change = None
     if compare:
-        prev_start = (datetime.now() - timedelta(days=days * 2)).strftime("%Y-%m-%d")
+        prev_end = (datetime.now() - timedelta(days=days + 1)).strftime("%Y-%m-%d")
+        prev_start = (datetime.now() - timedelta(days=days * 2 + 1)).strftime("%Y-%m-%d")
         prev_response = fetch_query(
             data_service,
             analytics_service,
             metric_names=metric_names,
             dimension_names=[],
             start_date=prev_start,
-            end_date=start_date,
+            end_date=prev_end,
             days=days,
         )
         prev_rows = prev_response.get("rows", [])

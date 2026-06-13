@@ -156,6 +156,24 @@ class TestAnalyticsCommands:
             assert payload["pct_change"]["averageViewDuration"] == -10.0
             assert payload["pct_change"]["likes"] == 10.0
 
+    def test_overview_compare_windows_do_not_overlap(self):
+        # the previous window must end before the current window starts
+        data_svc, analytics_svc = self._two_window_services(
+            [12000, 6000, 180, 42, 3, 770, 25],
+            [10000, 6000, 200, 42, 3, 700, 25],
+        )
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "--days", "7"])
+            assert result.exit_code == 0
+
+        calls = analytics_svc.reports.return_value.query.call_args_list
+        current_start = calls[0].kwargs["startDate"]
+        previous_end = calls[1].kwargs["endDate"]
+        assert previous_end < current_start
+
     def test_overview_no_compare(self):
         data_svc, analytics_svc = self._mock_overview_services()
         with (
