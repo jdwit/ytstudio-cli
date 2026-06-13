@@ -152,6 +152,13 @@ def create_mock_service():
     }
     service.commentThreads.return_value.list.return_value = comments_list
 
+    comments_insert = MagicMock()
+    comments_insert.execute.return_value = {
+        "id": "UgwReply789",
+        "snippet": {"parentId": MOCK_COMMENT["id"], "textOriginal": "Thanks for watching!"},
+    }
+    service.comments.return_value.insert.return_value = comments_insert
+
     search_list = MagicMock()
     search_list.execute.return_value = {
         "items": [{"id": {"videoId": MOCK_VIDEO["id"]}}],

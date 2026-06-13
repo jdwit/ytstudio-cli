@@ -174,3 +174,34 @@ def reject(
     """Reject comments (hide from public display)"""
     count = _set_moderation_status(comment_ids, "rejected", ban_author=ban)
     console.print(f"{count} comment(s) rejected")
+
+
+@app.command()
+def reply(
+    comment_id: str = typer.Argument(
+        help="Top-level comment ID to reply to (from 'comments list')"
+    ),
+    text: str = typer.Option(..., "--text", "-t", help="Reply text"),
+):
+    """Reply to a top-level comment.
+
+    Replies are flat on YouTube: COMMENT_ID must be a top-level comment id
+    (the id shown by 'comments list'), not the id of another reply.
+    """
+    service = get_data_service()
+    try:
+        response = api(
+            service.comments().insert(
+                part="snippet",
+                body={"snippet": {"parentId": comment_id, "textOriginal": text}},
+            )
+        )
+    except HttpError as e:
+        if e.resp.status in (400, 404):
+            console.print(
+                f"[red]Could not reply to '{comment_id}'.[/red] Pass a top-level "
+                "comment id from 'comments list' (not a reply id)."
+            )
+            raise typer.Exit(1) from None
+        handle_api_error(e)
+    console.print(f"Reply posted: {response['id']}")

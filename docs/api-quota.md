@@ -28,6 +28,7 @@ not eat into the table below.
 | `search.list`                                | 100 units          |
 | `videos.update`                              | 50 units           |
 | `comments.setModerationStatus`               | 50 units           |
+| `comments.insert` (reply)                    | 50 units           |
 | `playlists.insert` / `update` / `delete`     | 50 units           |
 | `playlistItems.insert` / `update` / `delete` | 50 units           |
 | `liveBroadcasts.insert`                      | 50 units           |

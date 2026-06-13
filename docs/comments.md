@@ -40,7 +40,20 @@ ytstudio comments reject <comment-id> --ban     # also ban the author
 `reject` hides the comment from public view. Pass `--ban` to also ban the
 author from the channel.
 
+## Reply
+
+```bash
+ytstudio comments reply <comment-id> --text "Thanks for watching!"
+```
+
+`reply` posts a public reply to a comment and prints the new reply id.
+Replies are flat on YouTube: `<comment-id>` must be a **top-level** comment
+id (the `id` shown by `comments list`), not the id of another reply. Passing
+a reply id (or an otherwise invalid id) returns a clear error. Like
+`publish` and `reject`, `reply` executes immediately.
+
 !!! note "Quota"
 
-    `comments.setModerationStatus` costs about 50 quota units per call. For
-    larger moderation runs, see [API quota](api-quota.md).
+    `comments.setModerationStatus` and `comments.insert` (reply) each cost
+    about 50 quota units per call. For larger moderation runs, see
+    [API quota](api-quota.md).

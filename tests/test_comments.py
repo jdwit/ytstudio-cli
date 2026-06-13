@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock
 
+from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
 from ytstudio.main import app
@@ -47,3 +49,28 @@ class TestCommentsCommands:
         )
         result = runner.invoke(app, ["comments", "list", "--video", "test_video_123"])
         assert result.exit_code == 1
+
+    def test_reply(self, mock_auth):
+        result = runner.invoke(
+            app, ["comments", "reply", "UgwComment123", "--text", "Thanks for watching!"]
+        )
+        assert result.exit_code == 0
+        assert "UgwReply789" in result.stdout
+        insert = mock_auth.comments.return_value.insert
+        body = insert.call_args.kwargs["body"]
+        assert body["snippet"]["parentId"] == "UgwComment123"
+        assert body["snippet"]["textOriginal"] == "Thanks for watching!"
+
+    def test_reply_requires_text(self, mock_auth):
+        result = runner.invoke(app, ["comments", "reply", "UgwComment123"])
+        assert result.exit_code != 0
+
+    def test_reply_invalid_parent(self, mock_auth):
+        resp = MagicMock()
+        resp.status = 400
+        mock_auth.comments.return_value.insert.return_value.execute.side_effect = HttpError(
+            resp, b'{"error": {"message": "invalid"}}'
+        )
+        result = runner.invoke(app, ["comments", "reply", "not_a_top_level_id", "--text", "hi"])
+        assert result.exit_code == 1
+        assert "top-level comment id" in result.stdout
