@@ -10,9 +10,16 @@ scripting.
 ```bash
 ytstudio analytics overview                          # channel summary for the last 28 days
 ytstudio analytics overview --days 7                 # rolling 7-day window
+ytstudio analytics overview --no-compare             # totals only, no growth deltas
 ytstudio analytics video <video-id>                  # one video's recent performance
 ytstudio analytics video <video-id> --days 90        # longer window for one video
 ```
+
+By default `overview` also compares each metric to the previous equal-length
+window and shows the percent change (green up, red down). Pass `--no-compare`
+for plain totals. In JSON output the comparison is exposed as `previous`
+(the prior window's metrics) and `pct_change` (percent change per metric,
+`null` when there is no prior-window baseline).
 
 ## Custom queries
 
@@ -55,7 +62,7 @@ Run `ytstudio analytics --help` (or open the
 === "JSON"
 
     ```bash
-    ytstudio analytics overview -o json | jq '.rows[0]'
+    ytstudio analytics overview -o json | jq '.pct_change'
     ```
 
 ## Quota

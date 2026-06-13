@@ -97,6 +97,112 @@ class TestAnalyticsCommands:
             assert result.exit_code == 0
             assert "No analytics data" in result.output
 
+    @staticmethod
+    def _overview_response(row):
+        return {
+            "columnHeaders": [
+                {"name": "views"},
+                {"name": "estimatedMinutesWatched"},
+                {"name": "averageViewDuration"},
+                {"name": "subscribersGained"},
+                {"name": "subscribersLost"},
+                {"name": "likes"},
+                {"name": "comments"},
+            ],
+            "rows": [row],
+        }
+
+    def _two_window_services(self, current_row, previous_row):
+        data_service = MagicMock()
+        analytics_service = MagicMock()
+        data_service.channels.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "UC_test"}]
+        }
+        analytics_service.reports.return_value.query.return_value.execute.side_effect = [
+            self._overview_response(current_row),
+            self._overview_response(previous_row),
+        ]
+        return data_service, analytics_service
+
+    def test_overview_compare_deltas_table(self):
+        # views 12000 vs 10000 -> +20%, avg duration 180 vs 200 -> -10%
+        data_svc, analytics_svc = self._two_window_services(
+            [12000, 6000, 180, 42, 3, 770, 25],
+            [10000, 6000, 200, 42, 3, 700, 25],
+        )
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview"])
+            assert result.exit_code == 0
+            assert "+20%" in result.output
+            assert "-10%" in result.output
+
+    def test_overview_compare_json(self):
+        data_svc, analytics_svc = self._two_window_services(
+            [12000, 6000, 180, 42, 3, 770, 25],
+            [10000, 6000, 200, 42, 3, 700, 25],
+        )
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "-o", "json"])
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            assert payload["previous"]["views"] == 10000
+            assert payload["pct_change"]["views"] == 20.0
+            assert payload["pct_change"]["averageViewDuration"] == -10.0
+            assert payload["pct_change"]["likes"] == 10.0
+
+    def test_overview_compare_windows_do_not_overlap(self):
+        # the previous window must end before the current window starts
+        data_svc, analytics_svc = self._two_window_services(
+            [12000, 6000, 180, 42, 3, 770, 25],
+            [10000, 6000, 200, 42, 3, 700, 25],
+        )
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "--days", "7"])
+            assert result.exit_code == 0
+
+        calls = analytics_svc.reports.return_value.query.call_args_list
+        current_start = calls[0].kwargs["startDate"]
+        previous_end = calls[1].kwargs["endDate"]
+        assert previous_end < current_start
+
+    def test_overview_no_compare(self):
+        data_svc, analytics_svc = self._mock_overview_services()
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "--no-compare", "-o", "json"])
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            assert payload["previous"] is None
+            assert payload["pct_change"] is None
+            # only the current window is queried
+            assert analytics_svc.reports.return_value.query.return_value.execute.call_count == 1
+
+    def test_overview_compare_zero_previous(self):
+        # previous window has no data -> guard against divide-by-zero
+        data_svc, analytics_svc = self._two_window_services(
+            [500, 6000, 180, 42, 3, 789, 25],
+            [0, 0, 0, 0, 0, 0, 0],
+        )
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(app, ["analytics", "overview", "-o", "json"])
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            assert payload["pct_change"]["views"] is None
+
     def test_video_not_found(self, mock_auth):
         mock_auth.videos.return_value.list.return_value.execute.return_value = {"items": []}
         with (

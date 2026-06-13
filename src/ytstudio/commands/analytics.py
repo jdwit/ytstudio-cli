@@ -79,9 +79,44 @@ def fetch_query(
     return api(analytics_service.reports().query(**query_params))
 
 
+# Metrics shown with a period-over-period delta in the overview.
+OVERVIEW_COMPARE_METRICS = (
+    "views",
+    "estimatedMinutesWatched",
+    "averageViewDuration",
+    "likes",
+    "comments",
+)
+
+
+def _pct_change(current: float, previous: float) -> float | None:
+    """Percent change vs the previous window, or None when there is no baseline."""
+    if previous == 0:
+        return None
+    return round((current - previous) / previous * 100, 1)
+
+
+def _delta_suffix(metrics: dict, previous: dict | None, metric: str) -> str:
+    """Coloured ' (+N%)' suffix comparing a metric to the previous window."""
+    if previous is None:
+        return ""
+    current = float(metrics.get(metric, 0))
+    pct = _pct_change(current, float(previous.get(metric, 0)))
+    if pct is None:
+        return dim(" (new)") if current else ""
+    colour = "green" if pct >= 0 else "red"
+    sign = "+" if pct >= 0 else ""
+    return f" [{colour}]({sign}{pct:.0f}%)[/{colour}]"
+
+
 @app.command()
 def overview(
     days: int = typer.Option(28, "--days", "-d", help="Number of days to analyze"),
+    compare: bool = typer.Option(
+        True,
+        "--compare/--no-compare",
+        help="Compare each metric to the previous equal-length window",
+    ),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
 ):
     """Get channel overview analytics"""
@@ -119,8 +154,43 @@ def overview(
 
     metrics = dict(zip(headers, rows[0], strict=False))
 
+    # Previous equal-length window ending the day before the current one starts,
+    # so the two windows do not share a boundary day.
+    previous = None
+    pct_change = None
+    if compare:
+        prev_end = (datetime.now() - timedelta(days=days + 1)).strftime("%Y-%m-%d")
+        prev_start = (datetime.now() - timedelta(days=days * 2 + 1)).strftime("%Y-%m-%d")
+        prev_response = fetch_query(
+            data_service,
+            analytics_service,
+            metric_names=metric_names,
+            dimension_names=[],
+            start_date=prev_start,
+            end_date=prev_end,
+            days=days,
+        )
+        prev_rows = prev_response.get("rows", [])
+        if prev_rows:
+            prev_headers = [h["name"] for h in prev_response.get("columnHeaders", [])]
+            previous = dict(zip(prev_headers, prev_rows[0], strict=False))
+            pct_change = {
+                m: _pct_change(float(metrics.get(m, 0)), float(previous.get(m, 0)))
+                for m in OVERVIEW_COMPARE_METRICS
+            }
+
     if output == "json":
-        print(json.dumps({"analytics": metrics, "days": days}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "analytics": metrics,
+                    "days": days,
+                    "previous": previous,
+                    "pct_change": pct_change,
+                },
+                indent=2,
+            )
+        )
         return
 
     views = int(metrics.get("views", 0))
@@ -131,16 +201,23 @@ def overview(
     likes = int(metrics.get("likes", 0))
     comments = int(metrics.get("comments", 0))
 
-    console.print(f"\n[bold]Channel Analytics[/bold] {dim(f'(last {days} days)')}\n")
+    subtitle = f"(last {days} days"
+    subtitle += f" vs previous {days})" if previous is not None else ")"
+    console.print(f"\n[bold]Channel Analytics[/bold] {dim(subtitle)}\n")
     table = create_kv_table()
 
-    table.add_row(dim("views"), format_number(views))
-    table.add_row(dim("watch time"), f"{watch_hours} hours")
-    table.add_row(dim("avg duration"), f"{avg_secs // 60}:{avg_secs % 60:02d}")
+    def d(metric: str) -> str:
+        return _delta_suffix(metrics, previous, metric)
+
+    table.add_row(dim("views"), format_number(views) + d("views"))
+    table.add_row(dim("watch time"), f"{watch_hours} hours" + d("estimatedMinutesWatched"))
+    table.add_row(
+        dim("avg duration"), f"{avg_secs // 60}:{avg_secs % 60:02d}" + d("averageViewDuration")
+    )
     table.add_row(dim("subscribers gained"), f"[green]+{subs_gained}[/green]")
     table.add_row(dim("subscribers lost"), f"[red]-{subs_lost}[/red]")
-    table.add_row(dim("likes"), format_number(likes))
-    table.add_row(dim("comments"), format_number(comments))
+    table.add_row(dim("likes"), format_number(likes) + d("likes"))
+    table.add_row(dim("comments"), format_number(comments) + d("comments"))
 
     console.print(table)
 
