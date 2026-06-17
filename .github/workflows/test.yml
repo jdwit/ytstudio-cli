@@ -1,0 +1,76 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        description: "Report and upload coverage (3.12 only)"
+        type: boolean
+        default: false
+    secrets:
+      codecov_token:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Lint with ruff
+        run: |
+          uv run ruff check src tests scripts
+          uv run ruff format --check src tests scripts
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Write coverage summary
+        if: inputs.coverage && matrix.python-version == '3.12'
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            echo '```text'
+            uv run coverage report
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate HTML coverage report
+        if: inputs.coverage && matrix.python-version == '3.12'
+        run: uv run coverage html
+
+      - name: Upload coverage artifacts
+        if: inputs.coverage && matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+
+      - name: Upload coverage to Codecov
+        if: inputs.coverage && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.codecov_token }}
