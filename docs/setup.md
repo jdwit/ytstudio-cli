@@ -68,8 +68,7 @@ ytstudio status      # show the authenticated channel for the active profile
 ```
 
 To remove credentials for a channel, use `ytstudio profile remove <name>` (see
-[Multi-channel profiles](profiles.md)). On a fresh single-channel install the
-active profile is `default`.
+[Multi-channel profiles](profiles.md)).
 
 If you run more than one channel, head to
 [Multi-channel profiles](profiles.md) next.

@@ -42,13 +42,3 @@ YTSTUDIO_PROFILE=work ytstudio videos list
 Profile directories are `0700`; credential files are `0600`. State writes go
 through an atomic temp + rename and are serialized under an `fcntl` lock, so
 concurrent CLI invocations cannot leave the file partially written.
-
-## Migration from older installs
-
-If you upgraded from a single-channel install, the existing
-`~/.config/ytstudio-cli/credentials.json` is moved into the `default`
-profile on the next CLI invocation. The migration is one-shot, locked
-against concurrent first-run commands, and a no-op once profiles exist.
-
-A plain `ytstudio login` (no `profile add`) authenticates the active
-profile, which is `default` on a fresh setup.
