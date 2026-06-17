@@ -102,6 +102,7 @@ nav:
   - Reference:
       - Commands: reference.md
       - API quota: api-quota.md
+      - Agent skill: agent-skill.md
 
 extra:
   social:
