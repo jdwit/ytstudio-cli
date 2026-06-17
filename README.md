@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml"><img src="https://github.com/jdwit/ytstudio-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/jdwit/ytstudio-cli"><img src="https://codecov.io/gh/jdwit/ytstudio-cli/branch/main/graph/badge.svg" alt="Coverage"></a>
   <a href="https://pypi.org/project/ytstudio-cli/"><img src="https://img.shields.io/pypi/v/ytstudio-cli" alt="PyPI"></a>
   <a href="https://pypi.org/project/ytstudio-cli/"><img src="https://img.shields.io/pypi/pyversions/ytstudio-cli" alt="Python"></a>
 </p>
