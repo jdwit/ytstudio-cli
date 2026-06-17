@@ -26,11 +26,16 @@ mistakes:
    `-o json` (alias for `--output json`) to get parseable output. Some commands
    also support `-o csv`. The auth/setup commands (`init`, `login`, `status`)
    have no JSON mode.
-2. **Mutations are dry-run by default.** Every command that changes the channel
-   (`update`, `search-replace`, `upload`, comment moderation, livestream and
-   playlist writes) previews what it *would* do and changes nothing until you
+2. **Most mutations are dry-run by default.** Commands with `--execute`
+   (`videos update/search-replace/upload`, `livestreams schedule/update`, and
+   playlist writes) preview what they *would* do and change nothing until you
    re-run the exact command with `--execute`. Always preview first, show the
    user the preview when consequential, then re-run with `--execute`.
+
+Some writes execute immediately because they have no `--execute`: comment
+moderation/replies (`comments publish`, `comments reject`, `comments reply`) and
+livestream transitions (`livestreams start`, `livestreams stop`). Treat these as
+high-risk: confirm intent before running them.
 
 Treat write operations as costly and irreversible-ish: they consume API quota
 (see [Quota](#quota-awareness)) and act on a real, public channel.
@@ -155,12 +160,15 @@ metric or dimension exists, list them first with `analytics metrics` /
 ```bash
 ytstudio comments list --status held -o json          # the moderation queue
 ytstudio comments list -v <video-id> -n 50 -o json
-ytstudio comments publish <comment-id> [<comment-id> ...]   # approve held
-ytstudio comments reject <comment-id> --ban                 # reject (+ optional ban)
+ytstudio comments publish <comment-id> [<comment-id> ...]   # approve held; executes immediately
+ytstudio comments reject <comment-id> --ban                 # reject (+ optional ban); executes immediately
+ytstudio comments reply <comment-id> -t "Thanks!"           # executes immediately
 ```
 
-`publish`/`reject` take one or more comment ids. `--ban` on `reject` also bans
-the author - only use it when the user explicitly asks to ban.
+`publish`/`reject` take one or more comment ids and execute immediately (no
+`--execute` dry-run). `reply` also posts immediately. Confirm the exact comment
+ids/text first. `--ban` on `reject` also bans the author - only use it when the
+user explicitly asks to ban.
 
 ### livestreams - broadcast lifecycle
 
@@ -168,15 +176,16 @@ the author - only use it when the user explicitly asks to ban.
 ytstudio livestreams list -s upcoming -o json
 ytstudio livestreams show <broadcast-id> --ingest -o json   # ingest URL; key redacted
 ytstudio livestreams schedule -t "Title" --scheduled-start 2026-07-01T19:00:00+02:00 --execute
-ytstudio livestreams start <broadcast-id> --to testing      # or --to live
-ytstudio livestreams stop <broadcast-id>
+ytstudio livestreams start <broadcast-id> --to testing      # executes immediately; or --to live
+ytstudio livestreams stop <broadcast-id>                    # executes immediately
 ytstudio livestreams update <broadcast-id> --privacy unlisted --execute
 ```
 
-`schedule`/`update` are dry-run until `--execute`. `livestreams show --show-key`
-reveals the stream key - treat any such output as a secret and never echo it
-into logs or chat. `start --to live` publishes to viewers; prefer `--to testing`
-unless the user wants to go live immediately.
+`schedule`/`update` are dry-run until `--execute`, but `start`/`stop` execute
+immediately. `livestreams show --show-key` reveals the stream key - treat any
+such output as a secret and never echo it into logs or chat. `start --to live`
+publishes to viewers; prefer `--to testing` unless the user wants to go live
+immediately.
 
 ### playlists - bulk operations
 

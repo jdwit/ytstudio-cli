@@ -25,10 +25,11 @@ as [skills.sh](https://skills.sh)) at the `skills/ytstudio/` subpath; monorepo
 skills in a subfolder are supported by the spec.
 
 The skill itself is vendor-neutral: every instruction is a shell command, with
-no MCP server and nothing tied to a specific agent platform. It stresses the two
-rules that matter most when an agent drives the CLI: pass `-o json` for parseable
-output, and that mutating commands are dry-run by default until re-run with
-`--execute`.
+no MCP server and nothing tied to a specific agent platform. It stresses the
+rules that matter most when an agent drives the CLI: pass `-o json` for
+parseable output, preview mutations that support `--execute`, and explicitly
+confirm before immediate writes such as comment moderation/replies and
+livestream start/stop.
 
 ## Keeping the reference in sync
 
