@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Verify version consistency
+        run: |
+          uv run python - <<'PY'
+          import os
+          import tomllib
+
+          with open("pyproject.toml", "rb") as f:
+              pyproject_version = tomllib.load(f)["project"]["version"]
+
+          with open("uv.lock", "rb") as f:
+              lock = tomllib.load(f)
+          lock_version = next(
+              package["version"]
+              for package in lock["package"]
+              if package["name"] == "ytstudio-cli"
+          )
+
+          tag = os.environ["GITHUB_REF"]
+          expected_tag = f"refs/tags/v{pyproject_version}"
+          if lock_version != pyproject_version:
+              raise SystemExit(
+                  f"uv.lock version {lock_version} does not match "
+                  f"pyproject.toml version {pyproject_version}"
+              )
+          if tag != expected_tag:
+              raise SystemExit(f"tag {tag} does not match package version {expected_tag}")
+          PY
+
+      - name: Build package
+        run: uv build
+
+      - name: Smoke test wheel
+        run: |
+          uv venv /tmp/ytstudio-smoke
+          uv pip install --python /tmp/ytstudio-smoke/bin/python dist/*.whl
+          /tmp/ytstudio-smoke/bin/ytstudio --version
+          /tmp/ytstudio-smoke/bin/yts --version
+          /tmp/ytstudio-smoke/bin/ytstudio --help
+          /tmp/ytstudio-smoke/bin/ytstudio videos --help
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

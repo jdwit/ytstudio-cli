@@ -43,6 +43,31 @@ class TestCommentsCommands:
         assert result.exit_code == 0
         assert "Likely Spam" in result.stdout
 
+    def test_list_json_output(self, mock_auth):
+        result = runner.invoke(app, ["comments", "list", "-o", "json"])
+        assert result.exit_code == 0
+        assert '"id": "UgwComment123"' in result.stdout
+        assert '"author": "Test User"' in result.stdout
+
+    def test_publish_comments(self, mock_auth):
+        result = runner.invoke(app, ["comments", "publish", "UgwComment123", "UgwComment456"])
+        assert result.exit_code == 0
+        assert "2 comment(s) published" in result.stdout
+        mock_auth.comments.return_value.setModerationStatus.assert_called_once_with(
+            id="UgwComment123,UgwComment456",
+            moderationStatus="published",
+        )
+
+    def test_reject_comments_with_ban(self, mock_auth):
+        result = runner.invoke(app, ["comments", "reject", "UgwComment123", "--ban"])
+        assert result.exit_code == 0
+        assert "1 comment(s) rejected" in result.stdout
+        mock_auth.comments.return_value.setModerationStatus.assert_called_once_with(
+            id="UgwComment123",
+            moderationStatus="rejected",
+            banAuthor=True,
+        )
+
     def test_list_comments_disabled(self, mock_auth):
         mock_auth.commentThreads.return_value.list.return_value.execute.side_effect = Exception(
             "Comments disabled"

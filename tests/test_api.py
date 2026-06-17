@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 from typer import Exit
 from typer.testing import CliRunner
@@ -34,6 +35,12 @@ class TestHandleApiError:
         with pytest.raises(SystemExit):
             handle_api_error(error)
 
+    def test_forbidden_exits(self):
+        error = make_http_error(403, "forbidden")
+
+        with pytest.raises(SystemExit):
+            handle_api_error(error)
+
     def test_other_errors_reraise(self):
         error = make_http_error(404)
 
@@ -47,6 +54,57 @@ class TestApi:
         request.execute.return_value = {"items": []}
 
         assert api(request) == {"items": []}
+
+    def test_refresh_error_exits(self):
+        request = MagicMock()
+        request.execute.side_effect = RefreshError("revoked")
+
+        with pytest.raises(SystemExit):
+            api(request)
+
+
+class TestGetCredentials:
+    def test_returns_none_when_profile_has_no_credentials(self):
+        with patch("ytstudio.api.load_credentials", return_value=None):
+            assert api_module.get_credentials("missing") is None
+
+    def test_refreshes_expired_credentials_and_saves_new_token(self):
+        creds_data = {
+            "token": "old-token",
+            "refresh_token": "refresh-token",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "client_id": "client-id",
+            "client_secret": "client-secret",
+            "scopes": api_module.SCOPES,
+        }
+        credentials = MagicMock()
+        credentials.expired = True
+        credentials.refresh_token = "refresh-token"
+        credentials.token = "new-token"
+
+        with (
+            patch("ytstudio.api.load_credentials", return_value=creds_data),
+            patch("ytstudio.api.Credentials", return_value=credentials),
+            patch("ytstudio.api.Request", return_value="request"),
+            patch("ytstudio.api.save_credentials") as save_credentials,
+        ):
+            assert api_module.get_credentials("work") is credentials
+
+        credentials.refresh.assert_called_once_with("request")
+        save_credentials.assert_called_once_with({**creds_data, "token": "new-token"}, "work")
+
+    def test_refresh_error_exits(self):
+        credentials = MagicMock()
+        credentials.expired = True
+        credentials.refresh_token = "refresh-token"
+        credentials.refresh.side_effect = RefreshError("revoked")
+
+        with (
+            patch("ytstudio.api.load_credentials", return_value={"token": "old"}),
+            patch("ytstudio.api.Credentials", return_value=credentials),
+            pytest.raises(SystemExit),
+        ):
+            api_module.get_credentials("work")
 
 
 class TestGetAuthenticatedService:
@@ -64,6 +122,40 @@ class TestGetAuthenticatedService:
 
         get_creds.assert_called_once_with("work")
         build.assert_called_once_with("youtube", "v3", credentials=credentials)
+
+
+class TestStatus:
+    def test_get_status_reports_expired_credentials(self):
+        credentials = MagicMock()
+        credentials.valid = False
+        with (
+            patch("ytstudio.api.load_credentials", return_value={"token": "old"}),
+            patch("ytstudio.api.get_credentials", return_value=credentials),
+        ):
+            api_module.get_status("work")
+
+    def test_get_status_prints_channel_details(self):
+        credentials = MagicMock()
+        credentials.valid = True
+        service = MagicMock()
+        service.channels.return_value.list.return_value.execute.return_value = {
+            "items": [
+                {
+                    "snippet": {"title": "Channel"},
+                    "statistics": {"subscriberCount": "10", "videoCount": "2"},
+                }
+            ]
+        }
+        with (
+            patch("ytstudio.api.load_credentials", return_value={"token": "ok"}),
+            patch("ytstudio.api.get_credentials", return_value=credentials),
+            patch("ytstudio.api.build", return_value=service),
+        ):
+            api_module.get_status("work")
+
+        service.channels.return_value.list.assert_called_once_with(
+            part="snippet,statistics", mine=True
+        )
 
 
 class TestCommands:
@@ -84,6 +176,79 @@ class TestCommands:
         with patch("ytstudio.api.load_credentials", return_value=None):
             result = runner.invoke(app, ["status"])
             assert "Not authenticated" in result.stdout
+
+
+class TestHelpers:
+    def test_create_flow_uses_client_secrets_and_scopes(self):
+        with patch("ytstudio.api.InstalledAppFlow.from_client_secrets_file") as factory:
+            assert api_module._create_flow() is factory.return_value
+
+        factory.assert_called_once_with(
+            str(api_module.CLIENT_SECRETS_FILE), scopes=api_module.SCOPES
+        )
+
+    def test_save_credentials_serializes_oauth_fields(self):
+        credentials = MagicMock(
+            token="token",
+            refresh_token="refresh",
+            token_uri="token-uri",
+            client_id="client-id",
+            client_secret="client-secret",
+            scopes=["scope"],
+        )
+
+        with patch("ytstudio.api.save_credentials") as save_credentials:
+            api_module._save_credentials(credentials, "work")
+
+        save_credentials.assert_called_once_with(
+            {
+                "token": "token",
+                "refresh_token": "refresh",
+                "token_uri": "token-uri",
+                "client_id": "client-id",
+                "client_secret": "client-secret",
+                "scopes": ["scope"],
+            },
+            "work",
+        )
+
+    def test_fetch_channel_info_returns_channel_metadata(self):
+        service = MagicMock()
+        service.channels.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "UC123", "snippet": {"title": "Channel", "customUrl": "@c"}}]
+        }
+
+        with patch("ytstudio.api.build", return_value=service):
+            assert api_module._fetch_channel_info(MagicMock()) == {
+                "id": "UC123",
+                "title": "Channel",
+                "custom_url": "@c",
+            }
+
+    def test_fetch_channel_info_returns_none_when_empty_or_error(self):
+        service = MagicMock()
+        service.channels.return_value.list.return_value.execute.return_value = {"items": []}
+        with patch("ytstudio.api.build", return_value=service):
+            assert api_module._fetch_channel_info(MagicMock()) is None
+
+        with patch("ytstudio.api.build", side_effect=RuntimeError("offline")):
+            assert api_module._fetch_channel_info(MagicMock()) is None
+
+    def test_show_login_success_saves_profile_meta_when_channel_known(self):
+        info = {"id": "UC123", "title": "Channel", "custom_url": "@c"}
+        with (
+            patch("ytstudio.api._fetch_channel_info", return_value=info),
+            patch("ytstudio.api.save_profile_meta") as save_profile_meta,
+        ):
+            api_module._show_login_success(MagicMock(), "work")
+
+        save_profile_meta.assert_called_once_with("work", info)
+
+    def test_logout_clears_credentials(self):
+        with patch("ytstudio.api.clear_credentials") as clear_credentials:
+            api_module.logout()
+
+        clear_credentials.assert_called_once()
 
 
 class TestAuthenticate:
