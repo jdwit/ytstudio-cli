@@ -40,6 +40,17 @@ command line.
 
 See the [full documentation](https://jdwit.github.io/ytstudio-cli/) for installation, OAuth setup, and the command reference.
 
+## Agent skill
+
+ytstudio ships a harness-agnostic [agent skill](skills/ytstudio/SKILL.md) that
+teaches any skill-aware AI agent to operate a channel through this CLI, following
+the open [SKILL standard](https://agentskills.io). A public repo with a
+`SKILL.md` is already a published skill, so point your agent runtime (or a
+registry like [skills.sh](https://skills.sh)) at the `skills/ytstudio/` subpath.
+The bundled command reference is generated from the CLI; see
+[Agent skill](https://jdwit.github.io/ytstudio-cli/agent-skill/) for how to keep
+it in sync.
+
 ## Development
 
 Clone the repo, sync dev dependencies, and install the pre-commit hook so

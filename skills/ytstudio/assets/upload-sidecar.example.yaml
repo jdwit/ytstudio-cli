@@ -1,0 +1,30 @@
+# Example upload sidecar for `ytstudio videos upload`.
+#
+# Place this next to a video file with the SAME basename, e.g.
+#   outbox/holiday.mp4
+#   outbox/holiday.yaml   <- this file
+#   outbox/holiday.jpg    <- optional thumbnail (.jpg/.png, max 2 MB), same basename
+#
+# Then preview, then upload:
+#   ytstudio videos upload ./outbox             # dry-run
+#   ytstudio videos upload ./outbox --execute   # actually upload
+
+title: Holiday recap 2026
+description: |
+  Multi-line description.
+  Blank lines and Markdown-ish text are fine.
+privacy: private          # private | unlisted | public
+tags: [travel, vlog]
+category_id: "22"         # Required. Run `ytstudio videos categories` for the list.
+default_language: en
+default_audio_language: en
+made_for_kids: false
+
+# Optional. Must be timezone-aware and in the future; setting it forces
+# privacy=private, the only state YouTube accepts for scheduled releases.
+# publish_at: 2026-07-01T10:00:00+02:00
+
+# After a successful upload the CLI patches these back into the sidecar so a
+# re-run skips already-uploaded videos. Leave them out for a fresh upload.
+# video_id: dQw4w9WgXcQ
+# uploaded_at: 2026-07-01T08:00:05+00:00
