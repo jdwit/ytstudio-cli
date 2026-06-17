@@ -5,6 +5,11 @@ license: MIT
 metadata:
   project: ytstudio-cli
   repository: https://github.com/jdwit/ytstudio-cli
+  keywords:
+    - youtube
+    - youtube-studio
+    - youtube-channel
+    - youtube-analytics
 ---
 
 # ytstudio
