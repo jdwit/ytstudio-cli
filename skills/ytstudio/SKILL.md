@@ -75,6 +75,16 @@ ytstudio status                   # confirms the authenticated channel
 On a headless box, use `ytstudio login --headless`: it prints a URL to open in
 any browser, then you paste the failed `127.0.0.1` redirect URL back in.
 
+If `ytstudio login` fails with `access_denied`:
+
+- Sign in with the Google account that owns the channel.
+- If the OAuth app is still in "Testing", add that account under Google Cloud
+  Console -> APIs & Services -> OAuth consent screen -> Test users.
+- Click through the "Google hasn't verified this app" warning via Advanced ->
+  Continue.
+- Approve all requested (read-only) scopes; do not close the tab until it
+  reports success.
+
 Credentials live owner-only under `~/.config/ytstudio-cli/`. This step is
 one-shot per channel; do not re-run it unless auth is actually broken.
 
@@ -159,6 +169,16 @@ ytstudio analytics query -m views -d insightTrafficSourceType -f video==<id> -o 
 and date range (`--days` or `-s/-e` start/end) are optional. When unsure which
 metric or dimension exists, list them first with `analytics metrics` /
 `analytics dimensions` instead of guessing names.
+
+For `-d month` (and `-d week`), the CLI snaps `-s`/`-e` down to the boundary the
+YouTube Analytics API requires (first of the month), so `--days` and arbitrary
+dates just work. The range is inclusive on both ends, so the end month is the
+last month you want, not the month after.
+
+```bash
+# 12 months, Jun 2025 through May 2026:
+ytstudio analytics query -m views -d month -s 2025-06-01 -e 2026-05-01
+```
 
 ### comments - moderation
 
