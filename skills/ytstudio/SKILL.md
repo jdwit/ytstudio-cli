@@ -115,6 +115,8 @@ rather than guessing - or run `ytstudio <group> <command> --help`.
 
 ```bash
 ytstudio videos list -n 100 -o json          # recent uploads, parseable
+ytstudio videos list --sort views -n 100 -o json  # fetched videos sorted by lifetime views
+ytstudio videos list --sort likes -n 100 -o json  # fetched videos sorted by lifetime likes
 ytstudio videos list --scheduled             # only future-dated publishes
 ytstudio videos show <video-id> -o json      # full metadata for one video
 ytstudio videos categories                   # category ids assignable on upload
@@ -127,6 +129,13 @@ ytstudio videos update <video-id> --tags one,two,three --execute
 ytstudio videos search-replace -s "2024" -r "2025" -f title
 ytstudio videos search-replace -s 'season \d' -r 'season X' -f title --regex --execute
 ```
+
+`videos list --sort views|likes` sorts the fetched uploads by lifetime Data API
+statistics, so raise `-n` when you need broader channel coverage; use
+`analytics query -d video` for exact period-specific rankings. `videos show -o
+json` returns a flat object with fields such as `title`, `published_at`,
+`views`, `likes`, `comments`, `privacy`, `tags`, `localizations`, and
+`scheduled_publish_at`.
 
 `search-replace` requires `-s/--search`, `-r/--replace`, and `-f/--field`
 (`title` or `description`); `--limit` caps how many matches it acts on (default
@@ -161,13 +170,16 @@ ytstudio analytics dimensions                  # discoverable dimension names
 # Custom query straight against the Analytics API reports.query endpoint:
 ytstudio analytics query -m views,likes -d day --days 7 -o json
 ytstudio analytics query -m views -d country --sort -views -n 10 -o json
+ytstudio analytics query -m views -d video --days 180 --sort -views -n 10 --resolve -o json
 ytstudio analytics query -m views -d insightTrafficSourceType -f video==<id> -o json
 ```
 
 `analytics query` needs `-m/--metrics`; `-d/--dimensions`, `-f/--filter`
 (`key==value`, repeatable), `--sort` (prefix `-` for descending), `-n/--limit`,
-and date range (`--days` or `-s/-e` start/end) are optional. When unsure which
-metric or dimension exists, list them first with `analytics metrics` /
+and date range (`--days` or `-s/-e` start/end) are optional. `-d video` and
+`-d playlist` return IDs; add `--resolve` to include `videoTitle` /
+`playlistTitle` columns in table, JSON, or CSV output. When unsure which metric
+or dimension exists, list them first with `analytics metrics` /
 `analytics dimensions` instead of guessing names.
 
 For `-d month` (and `-d week`), the CLI snaps `-s`/`-e` down to the boundary the
@@ -183,17 +195,23 @@ ytstudio analytics query -m views -d month -s 2025-06-01 -e 2026-05-01
 ### comments - moderation
 
 ```bash
+ytstudio comments list -o json                        # recent comments across the channel
 ytstudio comments list --status held -o json          # the moderation queue
-ytstudio comments list -v <video-id> -n 50 -o json
+ytstudio comments list --status spam -o json          # likely spam comments
+ytstudio comments list --sort time -o json            # channel-wide newest first
+ytstudio comments list -v <video-id> --sort relevance -n 50 -o json
 ytstudio comments publish <comment-id> [<comment-id> ...]   # approve held; executes immediately
 ytstudio comments reject <comment-id> --ban                 # reject (+ optional ban); executes immediately
 ytstudio comments reply <comment-id> -t "Thanks!"           # executes immediately
 ```
 
-`publish`/`reject` take one or more comment ids and execute immediately (no
-`--execute` dry-run). `reply` also posts immediately. Confirm the exact comment
-ids/text first. `--ban` on `reject` also bans the author - only use it when the
-user explicitly asks to ban.
+`comments list` without `-v/--video` is channel-wide. Use `--status spam` for
+spam review. Channel-wide listing supports `--sort time`; `--sort relevance`
+requires `-v/--video` because of a YouTube API limitation. `publish`/`reject`
+take one or more comment ids and execute immediately (no `--execute` dry-run).
+`reply` also posts immediately. Confirm the exact comment ids/text first.
+`--ban` on `reject` also bans the author - only use it when the user explicitly
+asks to ban.
 
 ### livestreams - broadcast lifecycle
 
