@@ -1,6 +1,8 @@
 import atexit
 
 import typer
+from googleapiclient.errors import HttpError
+from oauthlib.oauth2 import OAuth2Error
 from rich.console import Console
 
 from ytstudio.api import authenticate, get_status
@@ -87,5 +89,20 @@ def main(
         _update_state["registered"] = True
 
 
+def cli():
+    # Error boundary: turn expected API/OAuth failures into one clean line.
+    # Unexpected exceptions keep their traceback.
+    try:
+        app()
+    except HttpError as error:
+        message = error.reason or f"YouTube API request failed (HTTP {error.resp.status})."
+        console.print(f"[red]{message}[/red]")
+        raise SystemExit(1) from None
+    except OAuth2Error as error:
+        message = getattr(error, "description", "") or str(error)
+        console.print(f"[red]Authorization failed: {message}[/red]")
+        raise SystemExit(1) from None
+
+
 if __name__ == "__main__":
-    app()
+    cli()

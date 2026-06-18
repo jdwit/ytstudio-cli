@@ -3,12 +3,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
+from oauthlib.oauth2 import AccessDeniedError, OAuth2Error
 from typer import Exit
 from typer.testing import CliRunner
 
 from ytstudio import api as api_module
 from ytstudio.api import api, get_authenticated_service, handle_api_error
-from ytstudio.main import app
+from ytstudio.main import app, cli
 
 runner = CliRunner()
 
@@ -42,6 +43,7 @@ class TestHandleApiError:
             handle_api_error(error)
 
     def test_other_errors_reraise(self):
+        # Unknown errors re-raise so command handlers / the CLI boundary handle them.
         error = make_http_error(404)
 
         with pytest.raises(HttpError):
@@ -178,6 +180,33 @@ class TestCommands:
             assert "Not authenticated" in result.stdout
 
 
+class TestAuthenticateLocalServer:
+    def test_access_denied_exits_cleanly(self, capsys):
+        flow = MagicMock()
+        flow.run_local_server.side_effect = AccessDeniedError()
+
+        with (
+            patch("ytstudio.api._create_flow", return_value=flow),
+            pytest.raises(SystemExit),
+        ):
+            api_module._authenticate_local_server()
+
+        assert "Authorization denied" in capsys.readouterr().out
+
+    def test_other_oauth_error_exits_cleanly(self, capsys):
+        flow = MagicMock()
+        flow.run_local_server.side_effect = OAuth2Error(description="boom")
+
+        with (
+            patch("ytstudio.api._create_flow", return_value=flow),
+            pytest.raises(SystemExit),
+        ):
+            api_module._authenticate_local_server()
+
+        out = capsys.readouterr().out
+        assert "Authorization failed" in out and "boom" in out
+
+
 class TestHelpers:
     def test_create_flow_uses_client_secrets_and_scopes(self):
         with patch("ytstudio.api.InstalledAppFlow.from_client_secrets_file") as factory:
@@ -249,6 +278,28 @@ class TestHelpers:
             api_module.logout()
 
         clear_credentials.assert_called_once()
+
+
+class TestCliBoundary:
+    def test_unhandled_http_error_prints_clean_message(self, capsys):
+        resp = MagicMock()
+        resp.status = 400
+        error = HttpError(resp, b'{"error": {"message": "Date range does not align."}}')
+        with patch("ytstudio.main.app", side_effect=error), pytest.raises(SystemExit):
+            cli()
+
+        out = capsys.readouterr().out
+        assert "Date range does not align." in out
+        assert "Traceback" not in out
+
+    def test_unhandled_oauth_error_prints_clean_message(self, capsys):
+        with (
+            patch("ytstudio.main.app", side_effect=OAuth2Error(description="boom")),
+            pytest.raises(SystemExit),
+        ):
+            cli()
+
+        assert "Authorization failed" in capsys.readouterr().out
 
 
 class TestAuthenticate:
