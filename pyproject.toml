@@ -58,11 +58,12 @@ exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+    "if __name__ == .__main__.:",
 ]
 
 [project.scripts]
-ytstudio = "ytstudio.main:app"
-yts = "ytstudio.main:app"
+ytstudio = "ytstudio.main:cli"
+yts = "ytstudio.main:cli"
 
 [project.urls]
 Homepage = "https://github.com/jdwit/ytstudio-cli"
