@@ -170,9 +170,10 @@ and date range (`--days` or `-s/-e` start/end) are optional. When unsure which
 metric or dimension exists, list them first with `analytics metrics` /
 `analytics dimensions` instead of guessing names.
 
-For `-d month` or `-d week`, both `-s` and `-e` must be the first day of a month;
-the API rejects any other day and does not snap to one. The range is inclusive on
-both ends, so the end month is the last month you want, not the month after.
+For `-d month` (and `-d week`), the CLI snaps `-s`/`-e` down to the boundary the
+YouTube Analytics API requires (first of the month), so `--days` and arbitrary
+dates just work. The range is inclusive on both ends, so the end month is the
+last month you want, not the month after.
 
 ```bash
 # 12 months, Jun 2025 through May 2026:
