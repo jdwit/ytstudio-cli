@@ -289,7 +289,7 @@ Examples:
     ytstudio analytics query -m views,shares -d country --sort -views -n 10
 
     ytstudio analytics query -m views,estimatedMinutesWatched -d video \
-        --sort -views -n 5 -o json
+        --sort -views -n 5 --resolve -o json
 
     ytstudio analytics query -m videoThumbnailImpressions,videoThumbnailImpressionsClickRate \
         -d video --sort -videoThumbnailImpressions -n 10
@@ -316,6 +316,7 @@ $ ytstudio analytics query [OPTIONS]
 * `--currency TEXT`: Currency code for revenue (e.g. EUR)
 * `-o, --output TEXT`: Output format: table, json, csv  [default: table]
 * `--raw`: Show raw numbers instead of human-readable
+* `--resolve`: Resolve video/playlist dimension IDs to title columns
 * `--help`: Show this message and exit.
 
 ### `ytstudio analytics metrics`
