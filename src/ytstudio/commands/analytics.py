@@ -2,7 +2,7 @@ import csv
 import io
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import typer
 
@@ -318,6 +318,35 @@ def _parse_comma_list(value: str) -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
+def _align_date_range(
+    dimension_names: list[str], start_date: str, end_date: str
+) -> tuple[str, str]:
+    """Snap dates to the boundaries the YouTube Analytics API requires.
+
+    month: both ends must be the first of a month. The API rejects other days,
+    it does not snap. So snap both ends DOWN to the first of their month.
+    week: API weeks begin on Sunday. Snap both ends back to their Sunday.
+    See https://developers.google.com/youtube/analytics/dimensions (time periods).
+    Other dimensions (day, country, ...) are returned unchanged.
+    """
+    if DimensionName.MONTH in dimension_names:
+        return _snap_to_month_start(start_date), _snap_to_month_start(end_date)
+    if "week" in dimension_names:
+        return _snap_to_week_start(start_date), _snap_to_week_start(end_date)
+    return start_date, end_date
+
+
+def _snap_to_month_start(value: str) -> str:
+    d = date.fromisoformat(value)
+    return d.replace(day=1).isoformat()
+
+
+def _snap_to_week_start(value: str) -> str:
+    # weekday(): Mon=0 .. Sun=6; days back to the preceding Sunday.
+    d = date.fromisoformat(value)
+    return (d - timedelta(days=(d.weekday() + 1) % 7)).isoformat()
+
+
 def _format_query_response(response: dict, output: str) -> None:
     headers = [h["name"] for h in response.get("columnHeaders", [])]
     rows = response.get("rows", [])
@@ -449,9 +478,10 @@ def query(
                 raise typer.Exit(1)
         filters_str = ";".join(filter_list)
 
-    # Build dates
+    # Build dates, then snap to dimension-required boundaries (month, week).
     end_date = end or datetime.now().strftime("%Y-%m-%d")
     start_date = start or (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+    start_date, end_date = _align_date_range(dimension_names, start_date, end_date)
 
     # The video dimension requires sort + maxResults per YouTube API docs
     if DimensionName.VIDEO in dimension_names and (not sort or not limit):

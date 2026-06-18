@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import typer
 from typer.testing import CliRunner
 
+from ytstudio.commands.analytics import _align_date_range
 from ytstudio.main import app
 from ytstudio.ui import format_number, set_raw_output
 
@@ -392,3 +393,62 @@ class TestDimensionsCommand:
         data = json.loads(result.output)
         assert isinstance(data, list)
         assert any(d["name"] == "country" for d in data)
+
+
+class TestAlignDateRange:
+    def test_month_snaps_start_down(self):
+        assert _align_date_range(["month"], "2026-04-17", "2026-06-01") == (
+            "2026-04-01",
+            "2026-06-01",
+        )
+
+    def test_month_snaps_end_down(self):
+        assert _align_date_range(["month"], "2026-04-01", "2026-06-23") == (
+            "2026-04-01",
+            "2026-06-01",
+        )
+
+    def test_month_days_derived_non_aligned(self):
+        # --days 365 from a mid-month "today" yields two arbitrary days.
+        assert _align_date_range(["month"], "2025-06-18", "2026-06-18") == (
+            "2025-06-01",
+            "2026-06-01",
+        )
+
+    def test_month_already_aligned_unchanged(self):
+        assert _align_date_range(["month"], "2026-04-01", "2026-06-01") == (
+            "2026-04-01",
+            "2026-06-01",
+        )
+
+    def test_month_same_month_range(self):
+        assert _align_date_range(["month"], "2026-04-10", "2026-04-25") == (
+            "2026-04-01",
+            "2026-04-01",
+        )
+
+    def test_day_untouched(self):
+        assert _align_date_range(["day"], "2026-04-17", "2026-06-23") == (
+            "2026-04-17",
+            "2026-06-23",
+        )
+
+    def test_no_dimension_untouched(self):
+        assert _align_date_range([], "2026-04-17", "2026-06-23") == (
+            "2026-04-17",
+            "2026-06-23",
+        )
+
+    def test_week_snaps_back_to_sunday(self):
+        # 2026-06-18 is a Thursday; preceding Sunday is 2026-06-14.
+        assert _align_date_range(["week"], "2026-06-18", "2026-06-18") == (
+            "2026-06-14",
+            "2026-06-14",
+        )
+
+    def test_week_sunday_unchanged(self):
+        # 2026-06-14 is a Sunday; stays put.
+        assert _align_date_range(["week"], "2026-06-14", "2026-06-21") == (
+            "2026-06-14",
+            "2026-06-21",
+        )
