@@ -61,8 +61,8 @@ exclude_lines = [
 ]
 
 [project.scripts]
-ytstudio = "ytstudio.main:app"
-yts = "ytstudio.main:app"
+ytstudio = "ytstudio.main:cli"
+yts = "ytstudio.main:cli"
 
 [project.urls]
 Homepage = "https://github.com/jdwit/ytstudio-cli"

@@ -7,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from oauthlib.oauth2 import AccessDeniedError, OAuth2Error
 from rich.prompt import Prompt
 
 from ytstudio.config import (
@@ -37,7 +38,7 @@ def handle_api_error(error: HttpError) -> None:
             console.print("[red]Access denied. You may not have permission for this action.[/red]")
             raise SystemExit(1) from None
 
-    # Re-raise for other errors
+    # Re-raise: command handlers or the CLI boundary (main.cli) clean it up.
     raise error
 
 
@@ -168,6 +169,22 @@ def _authenticate_headless() -> Credentials:
     return flow.credentials
 
 
+def _authenticate_local_server() -> Credentials:
+    flow = _create_flow()
+    try:
+        return flow.run_local_server(port=9876, prompt="consent", open_browser=True)
+    except AccessDeniedError:
+        console.print(
+            "[red]Authorization denied.[/red] "
+            "Approve the requested (read-only) scopes and try again."
+        )
+        raise SystemExit(1) from None
+    except OAuth2Error as error:
+        message = getattr(error, "description", "") or str(error)
+        console.print(f"[red]Authorization failed: {message}[/red]")
+        raise SystemExit(1) from None
+
+
 def authenticate(headless: bool = False, profile: str | None = None) -> None:
     if not CLIENT_SECRETS_FILE.exists():
         console.print("[red]No client secrets found. Run 'ytstudio init' first.[/red]")
@@ -179,15 +196,7 @@ def authenticate(headless: bool = False, profile: str | None = None) -> None:
 
     console.print("[bold]Authenticating with YouTube...[/bold]\n")
 
-    if headless:
-        credentials = _authenticate_headless()
-    else:
-        flow = _create_flow()
-        credentials = flow.run_local_server(
-            port=9876,
-            prompt="consent",
-            open_browser=True,
-        )
+    credentials = _authenticate_headless() if headless else _authenticate_local_server()
 
     _save_credentials(credentials, profile)
     _show_login_success(credentials, profile)
