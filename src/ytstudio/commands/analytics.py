@@ -347,6 +347,67 @@ def _snap_to_week_start(value: str) -> str:
     return (d - timedelta(days=(d.weekday() + 1) % 7)).isoformat()
 
 
+def _chunks(values: list[str], size: int) -> list[list[str]]:
+    return [values[i : i + size] for i in range(0, len(values), size)]
+
+
+def _fetch_snippet_titles(data_service, resource: str, ids: list[str]) -> dict[str, str]:
+    """Fetch snippet titles for YouTube Data API resources by id."""
+    if not ids:
+        return {}
+
+    titles: dict[str, str] = {}
+    for batch in _chunks(ids, 50):
+        if resource == "video":
+            response = api(data_service.videos().list(part="snippet", id=",".join(batch)))
+        elif resource == "playlist":
+            response = api(data_service.playlists().list(part="snippet", id=",".join(batch)))
+        else:
+            raise ValueError(f"Unsupported resource for title resolution: {resource}")
+
+        for item in response.get("items", []):
+            item_id = item.get("id")
+            title = item.get("snippet", {}).get("title")
+            if item_id and title is not None:
+                titles[item_id] = title
+    return titles
+
+
+def _resolve_query_dimension_titles(data_service, response: dict) -> dict:
+    """Add title columns for video/playlist dimensions in an analytics query response."""
+    headers = list(response.get("columnHeaders", []))
+    rows = [list(row) for row in response.get("rows", [])]
+    header_names = [h.get("name") for h in headers]
+
+    resolvable = sorted(
+        (name for name in (DimensionName.VIDEO, DimensionName.PLAYLIST) if name in header_names),
+        key=header_names.index,
+    )
+    if not resolvable or not rows:
+        return response
+
+    title_maps: dict[str, dict[str, str]] = {}
+    for name in resolvable:
+        idx = header_names.index(name)
+        ids = list(dict.fromkeys(str(row[idx]) for row in rows if idx < len(row) and row[idx]))
+        title_maps[name] = _fetch_snippet_titles(data_service, name, ids)
+
+    # Insert title columns immediately after each resolved dimension. Iterate in
+    # reverse so earlier indices remain valid while mutating rows/headers.
+    for name in reversed(resolvable):
+        idx = header_names.index(name)
+        title_header = f"{name}Title"
+        headers.insert(
+            idx + 1,
+            {"name": title_header, "columnType": "DIMENSION", "dataType": "STRING"},
+        )
+        for row in rows:
+            resource_id = str(row[idx]) if idx < len(row) and row[idx] is not None else ""
+            row.insert(idx + 1, title_maps[name].get(resource_id))
+
+    return {**response, "columnHeaders": headers, "rows": rows}
+
+
 def _format_query_response(response: dict, output: str) -> None:
     headers = [h["name"] for h in response.get("columnHeaders", [])]
     rows = response.get("rows", [])
@@ -422,6 +483,11 @@ def query(
     currency: str = typer.Option(None, "--currency", help="Currency code for revenue (e.g. EUR)"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, csv"),
     raw: bool = typer.Option(False, "--raw", help="Show raw numbers instead of human-readable"),
+    resolve: bool = typer.Option(
+        False,
+        "--resolve",
+        help="Resolve video/playlist dimension IDs to title columns",
+    ),
 ):
     """Run a custom analytics query with any metrics and dimensions.
 
@@ -435,7 +501,7 @@ def query(
         ytstudio analytics query -m views,shares -d country --sort -views -n 10
 
         ytstudio analytics query -m views,estimatedMinutesWatched -d video \\
-            --sort -views -n 5 -o json
+            --sort -views -n 5 --resolve -o json
 
         ytstudio analytics query -m videoThumbnailImpressions,videoThumbnailImpressionsClickRate \\
             -d video --sort -videoThumbnailImpressions -n 10
@@ -506,6 +572,9 @@ def query(
         max_results=limit,
         currency=currency,
     )
+
+    if resolve:
+        response = _resolve_query_dimension_titles(data_service, response)
 
     _format_query_response(response, output)
 

@@ -1,10 +1,15 @@
 import json
 from unittest.mock import MagicMock, patch
 
+import pytest
 import typer
 from typer.testing import CliRunner
 
-from ytstudio.commands.analytics import _align_date_range
+from ytstudio.commands.analytics import (
+    _align_date_range,
+    _fetch_snippet_titles,
+    _resolve_query_dimension_titles,
+)
 from ytstudio.main import app
 from ytstudio.ui import format_number, set_raw_output
 
@@ -282,6 +287,176 @@ class TestQueryCommand:
             lines = result.output.strip().split("\n")
             assert lines[0] == "day,views,likes"
             assert "2026-01-01" in lines[1]
+
+    def test_query_resolve_video_titles_json(self):
+        data_svc, analytics_svc = self._mock_services()
+        analytics_svc.reports.return_value.query.return_value.execute.return_value = {
+            "columnHeaders": [
+                {"name": "video", "columnType": "DIMENSION", "dataType": "STRING"},
+                {"name": "views", "columnType": "METRIC", "dataType": "INTEGER"},
+            ],
+            "rows": [["vid1", 100], ["vid2", 50]],
+        }
+        data_svc.videos.return_value.list.return_value.execute.return_value = {
+            "items": [
+                {"id": "vid1", "snippet": {"title": "First video"}},
+                {"id": "vid2", "snippet": {"title": "Second video"}},
+            ]
+        }
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(
+                app,
+                [
+                    "analytics",
+                    "query",
+                    "-m",
+                    "views",
+                    "-d",
+                    "video",
+                    "--sort",
+                    "-views",
+                    "-n",
+                    "2",
+                    "--resolve",
+                    "-o",
+                    "json",
+                ],
+            )
+            assert result.exit_code == 0
+            data = json.loads(result.output)
+            assert data[0] == {"video": "vid1", "videoTitle": "First video", "views": 100}
+            data_svc.videos.return_value.list.assert_called_once()
+            assert data_svc.videos.return_value.list.call_args.kwargs["id"] == "vid1,vid2"
+
+    def test_query_resolve_playlist_titles_csv(self):
+        data_svc, analytics_svc = self._mock_services()
+        analytics_svc.reports.return_value.query.return_value.execute.return_value = {
+            "columnHeaders": [
+                {"name": "playlist", "columnType": "DIMENSION", "dataType": "STRING"},
+                {"name": "views", "columnType": "METRIC", "dataType": "INTEGER"},
+            ],
+            "rows": [["pl1", 100]],
+        }
+        data_svc.playlists.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "pl1", "snippet": {"title": "My playlist"}}]
+        }
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(
+                app,
+                ["analytics", "query", "-m", "views", "-d", "playlist", "--resolve", "-o", "csv"],
+            )
+            assert result.exit_code == 0
+            assert result.output.strip().split("\n") == [
+                "playlist,playlistTitle,views",
+                "pl1,My playlist,100",
+            ]
+
+    def test_query_does_not_resolve_titles_without_flag(self):
+        data_svc, analytics_svc = self._mock_services()
+        analytics_svc.reports.return_value.query.return_value.execute.return_value = {
+            "columnHeaders": [
+                {"name": "video", "columnType": "DIMENSION", "dataType": "STRING"},
+                {"name": "views", "columnType": "METRIC", "dataType": "INTEGER"},
+            ],
+            "rows": [["vid1", 100]],
+        }
+        with (
+            patch("ytstudio.commands.analytics.get_data_service", return_value=data_svc),
+            patch("ytstudio.commands.analytics.get_analytics_service", return_value=analytics_svc),
+        ):
+            result = runner.invoke(
+                app,
+                [
+                    "analytics",
+                    "query",
+                    "-m",
+                    "views",
+                    "-d",
+                    "video",
+                    "--sort",
+                    "-views",
+                    "-n",
+                    "1",
+                    "-o",
+                    "json",
+                ],
+            )
+            assert result.exit_code == 0
+            assert json.loads(result.output) == [{"video": "vid1", "views": 100}]
+            data_svc.videos.return_value.list.assert_not_called()
+
+    def test_fetch_snippet_titles_empty_ids_skips_api(self):
+        data_svc = MagicMock()
+        assert _fetch_snippet_titles(data_svc, "video", []) == {}
+        data_svc.videos.assert_not_called()
+
+    def test_fetch_snippet_titles_rejects_unknown_resource(self):
+        with pytest.raises(ValueError, match="Unsupported resource"):
+            _fetch_snippet_titles(MagicMock(), "channel", ["UC_test"])
+
+    def test_fetch_snippet_titles_batches_large_video_lists(self):
+        data_svc = MagicMock()
+        responses = [
+            {"items": [{"id": "v0", "snippet": {"title": "Video 0"}}]},
+            {"items": [{"id": "v50", "snippet": {"title": "Video 50"}}]},
+        ]
+        data_svc.videos.return_value.list.return_value.execute.side_effect = responses
+
+        titles = _fetch_snippet_titles(data_svc, "video", [f"v{i}" for i in range(51)])
+
+        assert titles == {"v0": "Video 0", "v50": "Video 50"}
+        calls = data_svc.videos.return_value.list.call_args_list
+        assert len(calls) == 2
+        assert calls[0].kwargs["id"] == ",".join(f"v{i}" for i in range(50))
+        assert calls[1].kwargs["id"] == "v50"
+
+    def test_resolve_query_dimension_titles_no_rows_returns_original_response(self):
+        response = {
+            "columnHeaders": [{"name": "video", "columnType": "DIMENSION"}],
+            "rows": [],
+        }
+        assert _resolve_query_dimension_titles(MagicMock(), response) is response
+
+    def test_resolve_query_dimension_titles_no_resolvable_dimension_returns_original_response(self):
+        response = {
+            "columnHeaders": [{"name": "country", "columnType": "DIMENSION"}],
+            "rows": [["NL"]],
+        }
+        assert _resolve_query_dimension_titles(MagicMock(), response) is response
+
+    def test_resolve_query_dimension_titles_multiple_dimensions_preserves_order(self):
+        data_svc = MagicMock()
+        data_svc.videos.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "vid1", "snippet": {"title": "Video one"}}]
+        }
+        data_svc.playlists.return_value.list.return_value.execute.return_value = {
+            "items": [{"id": "pl1", "snippet": {"title": "Playlist one"}}]
+        }
+        response = {
+            "columnHeaders": [
+                {"name": "playlist", "columnType": "DIMENSION"},
+                {"name": "video", "columnType": "DIMENSION"},
+                {"name": "views", "columnType": "METRIC"},
+            ],
+            "rows": [["pl1", "vid1", 10]],
+        }
+
+        resolved = _resolve_query_dimension_titles(data_svc, response)
+
+        assert [h["name"] for h in resolved["columnHeaders"]] == [
+            "playlist",
+            "playlistTitle",
+            "video",
+            "videoTitle",
+            "views",
+        ]
+        assert resolved["rows"] == [["pl1", "Playlist one", "vid1", "Video one", 10]]
 
     def test_query_with_filter(self):
         data_svc, analytics_svc = self._mock_services()
