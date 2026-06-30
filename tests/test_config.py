@@ -1,6 +1,6 @@
 import json
 import stat
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -173,6 +173,48 @@ class TestMigration:
 
         assert config.migrate_legacy_credentials() is False
         assert config.LEGACY_CREDENTIALS_FILE.exists()
+
+
+class TestCrossPlatformLock:
+    def test_config_lock_roundtrip(self, temp_config):
+        """The lock acquires and releases without error on the host platform."""
+        with config._config_lock():
+            pass
+        assert (temp_config / ".lock").exists()
+
+    def test_lock_uses_msvcrt_when_fcntl_absent(self, temp_config):
+        """On Windows (no fcntl) the lock falls through to msvcrt.locking."""
+        fake_msvcrt = MagicMock()
+        fake_msvcrt.LK_LOCK = 1
+        fake_msvcrt.LK_UNLCK = 0
+        with (
+            patch.object(config, "fcntl", None),
+            patch.object(config, "msvcrt", fake_msvcrt),
+            config._config_lock(),
+        ):
+            pass
+        # msvcrt.locking(fd, mode, nbytes); fd is runtime-dependent so assert on mode/nbytes.
+        modes = [(call.args[1], call.args[2]) for call in fake_msvcrt.locking.call_args_list]
+        assert (fake_msvcrt.LK_LOCK, 1) in modes
+        assert (fake_msvcrt.LK_UNLCK, 1) in modes
+
+    def test_lock_degrades_without_any_primitive(self, temp_config):
+        """With neither fcntl nor msvcrt the lock is a no-op, not a crash."""
+        with (
+            patch.object(config, "fcntl", None),
+            patch.object(config, "msvcrt", None),
+            config._config_lock(),
+        ):
+            pass
+
+    def test_set_active_profile_under_simulated_windows(self, temp_config):
+        """A real state mutation works on the msvcrt code path."""
+        fake_msvcrt = MagicMock()
+        fake_msvcrt.LK_LOCK = 1
+        fake_msvcrt.LK_UNLCK = 0
+        with patch.object(config, "fcntl", None), patch.object(config, "msvcrt", fake_msvcrt):
+            config.set_active_profile("work")
+        assert config.get_active_profile() == "work"
 
 
 class TestAtomicState:

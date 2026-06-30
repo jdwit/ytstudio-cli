@@ -1,10 +1,18 @@
-import fcntl
 import json
 import os
 import re
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
+
+try:
+    import fcntl  # POSIX advisory locking
+except ImportError:  # Windows
+    fcntl = None
+try:
+    import msvcrt  # Windows advisory locking
+except ImportError:  # POSIX
+    msvcrt = None
 
 from rich.prompt import Prompt
 
@@ -30,7 +38,9 @@ def is_valid_profile_name(name: str) -> bool:
 
 def _ensure_private_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
-    path.chmod(0o700)
+    if os.name == "posix":
+        # On Windows chmod only toggles the read-only bit; owner-only is a POSIX guarantee.
+        path.chmod(0o700)
 
 
 def ensure_config_dir() -> None:
@@ -68,17 +78,34 @@ def _atomic_write_text(path: Path, text: str, mode: int = 0o644) -> None:
     tmp.replace(path)
 
 
+def _lock_file(fh) -> None:
+    if fcntl is not None:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+    elif msvcrt is not None:
+        fh.seek(0)
+        msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+    # else: no advisory locking primitive available; a single-user CLI degrades safely.
+
+
+def _unlock_file(fh) -> None:
+    if fcntl is not None:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+    elif msvcrt is not None:
+        fh.seek(0)
+        msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+
+
 @contextmanager
 def _config_lock():
     """Serialize state mutations and the legacy migration across CLI invocations."""
     ensure_config_dir()
     lock_path = CONFIG_DIR / ".lock"
     with lock_path.open("w") as fh:
+        _lock_file(fh)
         try:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
             yield
         finally:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            _unlock_file(fh)
 
 
 # --- client secrets (shared OAuth app, identical for every profile) ---
