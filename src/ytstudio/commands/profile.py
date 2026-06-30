@@ -1,3 +1,7 @@
+import os
+import subprocess
+from pathlib import Path
+
 import typer
 
 from ytstudio import config
@@ -94,3 +98,82 @@ def remove(
         raise typer.Exit()
     config.remove_profile(name)
     success_message(f"Profile '{name}' removed.")
+
+
+brand_app = typer.Typer(help="Manage per-channel brand voice (brand.md)")
+app.add_typer(brand_app, name="brand")
+
+_BRAND_TEMPLATE = """# Brand voice
+
+<!-- Describe the house style an agent should follow when authoring metadata.
+     This file is dropped into the agent's context verbatim. Delete these hints. -->
+
+## Audience
+
+## Voice and tone
+
+## Do / don't
+
+## Title conventions
+
+## Description template
+
+## Language
+"""
+
+
+def _resolve_brand_target(profile: str | None) -> str:
+    target = profile or config.get_active_profile()
+    if not config.profile_exists(target):
+        console.print(f"[red]No profile named '{target}'. See 'ytstudio profile list'.[/red]")
+        raise typer.Exit(1)
+    return target
+
+
+@brand_app.command("show")
+def brand_show(
+    profile: str = typer.Option(None, "--profile", "-p", help="Profile (default: active)"),
+):
+    """Print the brand voice for a profile"""
+    target = _resolve_brand_target(profile)
+    text = config.load_brand(target)
+    if not text:
+        console.print(
+            f"[yellow]No brand voice for '{target}'. Set one with "
+            f"'ytstudio profile brand edit' or '... brand set --file <path>'.[/yellow]"
+        )
+        raise typer.Exit(1)
+    # Raw stdout so an agent can capture the markdown verbatim for a system prompt.
+    print(text)
+
+
+@brand_app.command("set")
+def brand_set(
+    file: str = typer.Option(..., "--file", "-f", help="Path to a markdown file to import"),
+    profile: str = typer.Option(None, "--profile", "-p", help="Profile (default: active)"),
+):
+    """Set brand voice non-interactively from a file"""
+    target = _resolve_brand_target(profile)
+    src = Path(file)
+    if not src.is_file():
+        console.print(f"[red]File not found: {file}[/red]")
+        raise typer.Exit(1)
+    config.save_brand(target, src.read_text())
+    success_message(f"Brand voice set for '{target}'.")
+
+
+@brand_app.command("edit")
+def brand_edit(
+    profile: str = typer.Option(None, "--profile", "-p", help="Profile (default: active)"),
+):
+    """Open the brand voice in $EDITOR"""
+    target = _resolve_brand_target(profile)
+    if config.load_brand(target) is None:
+        config.save_brand(target, _BRAND_TEMPLATE)
+    path = config.brand_path(target)
+    editor = os.environ.get("EDITOR", "vi")
+    subprocess.run([editor, str(path)], check=False)
+    # An editor may rewrite the file with looser permissions; re-assert owner-only.
+    if os.name == "posix":
+        path.chmod(0o600)
+    success_message(f"Brand voice saved for '{target}'.")

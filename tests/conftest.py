@@ -66,6 +66,35 @@ MOCK_PLAYLIST_ITEM = {
     },
 }
 
+MOCK_CAPTION_STANDARD = {
+    "id": "cap_std_nl",
+    "snippet": {
+        "videoId": "test_video_123",
+        "language": "nl",
+        "name": "Nederlands",
+        "trackKind": "standard",
+        "isDraft": False,
+        "lastUpdated": "2026-01-20T00:00:00Z",
+    },
+}
+
+MOCK_CAPTION_ASR = {
+    "id": "cap_asr_en",
+    "snippet": {
+        "videoId": "test_video_123",
+        "language": "en",
+        "name": "",
+        "trackKind": "ASR",
+        "isDraft": False,
+        "lastUpdated": "2026-01-21T00:00:00Z",
+    },
+}
+
+MOCK_SRT = (
+    b"1\n00:00:00,000 --> 00:00:02,000\nHello world\n\n"
+    b"2\n00:00:02,000 --> 00:00:04,000\nThis is the video\n"
+)
+
 MOCK_COMMENT = {
     "id": "UgwComment123",
     "snippet": {
@@ -144,6 +173,14 @@ def create_mock_service():
     videos_update = MagicMock()
     videos_update.execute.return_value = MOCK_VIDEO
     service.videos.return_value.update.return_value = videos_update
+
+    captions_list = MagicMock()
+    captions_list.execute.return_value = {"items": [MOCK_CAPTION_STANDARD, MOCK_CAPTION_ASR]}
+    service.captions.return_value.list.return_value = captions_list
+
+    captions_download = MagicMock()
+    captions_download.execute.return_value = MOCK_SRT
+    service.captions.return_value.download.return_value = captions_download
 
     comments_list = MagicMock()
     comments_list.execute.return_value = {

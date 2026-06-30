@@ -207,6 +207,10 @@ def _meta_path(name: str) -> Path:
     return profile_dir(name) / "meta.json"
 
 
+def brand_path(name: str | None = None) -> Path:
+    return profile_dir(name or get_active_profile()) / "brand.md"
+
+
 def list_profiles() -> list[str]:
     if not PROFILES_DIR.exists():
         return []
@@ -265,6 +269,19 @@ def load_profile_meta(name: str) -> dict:
         return json.loads(path.read_text())
     except json.JSONDecodeError:
         return {}
+
+
+def load_brand(name: str | None = None) -> str | None:
+    path = brand_path(name)
+    if not path.exists():
+        return None
+    return path.read_text()
+
+
+def save_brand(name: str, text: str) -> None:
+    _ensure_profile_dir(name)
+    # Owner-only, same as credentials: brand voice can carry private channel strategy.
+    _write_private(brand_path(name), text)
 
 
 def migrate_legacy_credentials() -> bool:
