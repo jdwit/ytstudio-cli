@@ -142,6 +142,41 @@ json` returns a flat object with fields such as `title`, `published_at`,
 10). Preview the dry-run, confirm the match set is what the user intended, then
 add `--execute`.
 
+### authoring metadata - transcript-grounded, on-brand
+
+Writing a good title or description is per-video creative work. The CLI supplies
+the two raw materials an agent needs to do it well; you write the copy, and the
+existing `videos update` path applies it.
+
+```bash
+ytstudio profile brand show                   # house style / tone (system context)
+ytstudio videos captions <id> -o json         # list caption tracks, pick a language/kind
+ytstudio videos transcript <id> --lang nl     # spoken content, the source of truth for claims
+ytstudio videos show <id> -o json             # current title/description/tags
+ytstudio videos update <id> --title "..." --description "..." --tags a,b,c   # dry-run preview
+ytstudio videos update <id> --title "..." --execute                          # apply
+```
+
+The authoring loop and its rules:
+
+- **The brand file is the source of truth for tone; the transcript is the source
+  of truth for claims.** Never state anything the transcript does not support,
+  and never invent content.
+- Set the brand voice once per channel with `ytstudio profile brand edit` (opens
+  `$EDITOR`) or `... brand set --file <path>`; it is stored at
+  `profiles/<name>/brand.md` and printed verbatim by `brand show`.
+- Prefer a `standard` (human) caption track over `ASR`; use `videos captions` to
+  choose `--lang` on multi-language channels. `transcript` defaults to clean
+  plain text; `-o json` adds the track metadata.
+- If there is no usable transcript (no tracks, or a track exists but is not
+  downloadable - common for restricted ASR), **tell the user instead of
+  authoring from nothing.**
+- Draft, then **preview with `videos update` (dry-run), show the user when the
+  change is consequential, then `--execute`** (see the two-rules-first section).
+
+`videos captions` (~50 units) and `videos transcript` (~200 units) cost more
+than ordinary reads, so author per-video rather than scanning a whole channel.
+
 ### videos upload - batch upload from YAML sidecars
 
 `ytstudio videos upload <path>` pairs each video file with a sibling YAML
@@ -255,6 +290,8 @@ resetting at midnight Pacific. Rough costs:
 | Operation | Cost |
 |---|---|
 | Read (list/show videos, comments, playlists; analytics) | ~1 unit |
+| Caption list (`videos captions`) | ~50 units |
+| Caption download (`videos transcript`) | ~200 units |
 | Write (update video, moderate comment, playlist insert/reorder, schedule broadcast) | ~50 units |
 | Search (`playlists add --from-search`) | ~100 units/call |
 | Upload (`videos upload`) | ~1600 units |

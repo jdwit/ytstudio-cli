@@ -42,6 +42,16 @@ class Video:
     scheduled_publish_at: str | None = None
 
 
+@dataclass
+class CaptionTrack:
+    id: str
+    language: str
+    name: str
+    track_kind: str  # "standard" | "ASR" | "forced"
+    is_draft: bool
+    last_updated: str
+
+
 def format_duration(iso_duration: str) -> str:
     """Format ISO 8601 duration (PT1M19S -> 1:19)"""
     if not iso_duration:
@@ -320,6 +330,140 @@ def show(
         console.print(f"\n[dim]tags:[/dim] {', '.join(video.tags[:15])}")
 
     console.print(f"\n[bold]description:[/bold]\n{video.description}")
+
+
+def fetch_caption_tracks(service, video_id: str) -> list[CaptionTrack]:
+    response = api(service.captions().list(part="snippet", videoId=video_id))
+    tracks = []
+    for item in response.get("items", []):
+        snippet = item["snippet"]
+        tracks.append(
+            CaptionTrack(
+                id=item["id"],
+                language=snippet.get("language", ""),
+                name=snippet.get("name", ""),
+                track_kind=snippet.get("trackKind", "standard"),
+                is_draft=snippet.get("isDraft", False),
+                last_updated=snippet.get("lastUpdated", ""),
+            )
+        )
+    return tracks
+
+
+def _select_track(tracks: list[CaptionTrack], lang: str | None) -> CaptionTrack | None:
+    """Pick a track: honour --lang if given, else prefer human (standard) over ASR."""
+    candidates = [t for t in tracks if t.language == lang] if lang else list(tracks)
+    if not candidates:
+        return None
+    standard = [t for t in candidates if t.track_kind == "standard"]
+    return standard[0] if standard else candidates[0]
+
+
+_SRT_INDEX_RE = re.compile(r"^\d+$")
+_SRT_TIMING_RE = re.compile(r"-->")
+_SRT_TAG_RE = re.compile(r"<[^>]+>")  # inline <c>/<00:00:00.000> styling in ASR tracks
+
+
+def srt_to_text(srt: str, dedup_consecutive: bool = False) -> str:
+    """Parse an SRT body into clean plain text, one line per cue.
+
+    Splits on blank lines and drops the structural lines (leading index, timecode)
+    per block, so cue text that is itself numeric (a countdown, a year) survives.
+    dedup_consecutive collapses repeated adjacent cues (ASR rolling captions); leave
+    it off for human tracks where a repeated line ("Run! Run!") is real content.
+    """
+    normalized = srt.replace("\r\n", "\n").replace("\r", "\n")
+    cues: list[str] = []
+    for block in re.split(r"\n\s*\n", normalized.strip()):
+        texts = []
+        for i, raw in enumerate(block.splitlines()):
+            line = raw.strip()
+            if not line or _SRT_TIMING_RE.search(line):
+                continue
+            if i == 0 and _SRT_INDEX_RE.match(line):
+                continue
+            cleaned = _SRT_TAG_RE.sub("", line).strip()
+            if cleaned:
+                texts.append(cleaned)
+        cue = " ".join(texts)
+        if cue and not (dedup_consecutive and cues and cues[-1] == cue):
+            cues.append(cue)
+    return "\n".join(cues)
+
+
+def _download_caption_body(service, track: CaptionTrack) -> str:
+    try:
+        data = service.captions().download(id=track.id, tfmt="srt").execute()
+    except HttpError as e:
+        reason = e.error_details[0].get("reason", "") if e.error_details else ""
+        # 403/404 means the track itself is restricted (often ASR) - but quota also
+        # returns 403, so let handle_api_error own quotaExceeded and other statuses.
+        if e.resp.status in (403, 404) and reason != "quotaExceeded":
+            console.print(
+                f"[yellow]Caption track '{track.language}' ({track.track_kind}) exists but is "
+                f"not downloadable.[/yellow] Auto-generated (ASR) tracks are often restricted by "
+                f"YouTube; run 'ytstudio videos captions <video-id>' to pick another track."
+            )
+            raise typer.Exit(1) from None
+        handle_api_error(e)
+    return data.decode("utf-8") if isinstance(data, bytes) else data
+
+
+@app.command()
+def captions(
+    video_id: str = typer.Argument(..., help="Video ID"),
+    output: str = typer.Option("table", "--output", "-o", help="Output format: table, json"),
+):
+    """List caption tracks for a video"""
+    service = get_data_service()
+    tracks = fetch_caption_tracks(service, video_id)
+
+    if output == "json":
+        print(json.dumps([asdict(t) for t in tracks], indent=2))
+        return
+
+    if not tracks:
+        console.print(f"[yellow]No caption tracks for {video_id}[/yellow]")
+        return
+
+    table = create_table()
+    table.add_column("language", style="yellow")
+    table.add_column("kind")
+    table.add_column("name")
+    table.add_column("draft")
+    for t in tracks:
+        table.add_row(t.language, t.track_kind, t.name or dim("-"), "yes" if t.is_draft else "")
+    console.print(table)
+
+
+@app.command()
+def transcript(
+    video_id: str = typer.Argument(..., help="Video ID"),
+    lang: str = typer.Option(None, "--lang", help="Track language code (e.g. nl, en)"),
+    output: str = typer.Option("text", "--output", "-o", help="Output format: text, json"),
+):
+    """Download a caption track as clean plain text"""
+    service = get_data_service()
+    tracks = fetch_caption_tracks(service, video_id)
+    if not tracks:
+        console.print(f"[red]No caption tracks for {video_id}[/red]")
+        raise typer.Exit(1)
+
+    track = _select_track(tracks, lang)
+    if track is None:
+        available = ", ".join(sorted({t.language for t in tracks if t.language}))
+        console.print(f"[red]No track for language '{lang}'. Available: {available}[/red]")
+        raise typer.Exit(1)
+
+    body = _download_caption_body(service, track)
+    text = srt_to_text(body, dedup_consecutive=track.track_kind == "ASR")
+
+    if output == "json":
+        payload = asdict(track)
+        payload["transcript"] = text
+        print(json.dumps(payload, indent=2))
+        return
+    print(text)
 
 
 @app.command()

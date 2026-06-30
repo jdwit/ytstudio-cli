@@ -1,3 +1,5 @@
+import os
+import stat
 from unittest.mock import patch
 
 import pytest
@@ -124,3 +126,96 @@ class TestProfileStatus:
     def test_status_missing_profile_exits(self, temp_config):
         result = runner.invoke(app, ["profile", "status", "ghost"])
         assert result.exit_code == 1
+
+
+class TestProfileBrand:
+    def test_brand_path_helper(self, temp_config):
+        path = config.brand_path("work")
+        assert path.name == "brand.md"
+        assert path.parent == config.profile_dir("work")
+
+    def test_set_and_show(self, temp_config, tmp_path):
+        _make_profile("work")
+        config.set_active_profile("work")
+        src = tmp_path / "brand.md"
+        src.write_text("# Voice\nPlayful and concise.")
+
+        set_result = runner.invoke(app, ["profile", "brand", "set", "--file", str(src)])
+        assert set_result.exit_code == 0
+
+        show_result = runner.invoke(app, ["profile", "brand", "show"])
+        assert show_result.exit_code == 0
+        assert "Playful and concise." in show_result.stdout
+
+    def test_set_targets_named_profile(self, temp_config, tmp_path):
+        _make_profile("work")
+        _make_profile("home")
+        config.set_active_profile("home")
+        src = tmp_path / "b.md"
+        src.write_text("work voice")
+
+        result = runner.invoke(app, ["profile", "brand", "set", "--file", str(src), "-p", "work"])
+        assert result.exit_code == 0
+        assert config.load_brand("work") == "work voice"
+        assert config.load_brand("home") is None
+
+    def test_show_missing(self, temp_config):
+        _make_profile("work")
+        config.set_active_profile("work")
+        result = runner.invoke(app, ["profile", "brand", "show"])
+        assert result.exit_code == 1
+        assert "No brand voice" in result.stdout
+
+    def test_set_bad_profile(self, temp_config, tmp_path):
+        src = tmp_path / "b.md"
+        src.write_text("x")
+        result = runner.invoke(app, ["profile", "brand", "set", "--file", str(src), "-p", "ghost"])
+        assert result.exit_code == 1
+        assert "No profile named" in result.stdout
+
+    def test_set_missing_file(self, temp_config):
+        _make_profile("work")
+        config.set_active_profile("work")
+        result = runner.invoke(app, ["profile", "brand", "set", "--file", "/nope/x.md"])
+        assert result.exit_code == 1
+        assert "File not found" in result.stdout
+
+    def test_edit_seeds_template_and_perms(self, temp_config):
+        _make_profile("work")
+        config.set_active_profile("work")
+        with patch("ytstudio.commands.profile.subprocess.run") as run:
+            result = runner.invoke(app, ["profile", "brand", "edit"])
+        assert result.exit_code == 0
+        run.assert_called_once()
+        path = config.brand_path("work")
+        assert path.exists()
+        assert "Brand voice" in path.read_text()
+        if os.name == "posix":
+            assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+    def test_edit_keeps_existing_content(self, temp_config, tmp_path):
+        _make_profile("work")
+        config.set_active_profile("work")
+        config.save_brand("work", "existing voice")
+        with patch("ytstudio.commands.profile.subprocess.run"):
+            result = runner.invoke(app, ["profile", "brand", "edit"])
+        assert result.exit_code == 0
+        assert config.load_brand("work") == "existing voice"
+
+    def test_edit_reasserts_owner_only_perms(self, temp_config):
+        if os.name != "posix":
+            pytest.skip("POSIX permissions only")
+        _make_profile("work")
+        config.set_active_profile("work")
+        path = config.brand_path("work")
+
+        def loosen(*args, **kwargs):
+            # Simulate an editor that rewrites the file with world-readable perms.
+            path.write_text("edited by editor")
+            path.chmod(0o644)
+
+        with patch("ytstudio.commands.profile.subprocess.run", side_effect=loosen):
+            result = runner.invoke(app, ["profile", "brand", "edit"])
+        assert result.exit_code == 0
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
+        assert path.read_text() == "edited by editor"

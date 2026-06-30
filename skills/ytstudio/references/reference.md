@@ -92,6 +92,8 @@ $ ytstudio videos [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List your YouTube videos
 * `show`: Show details for a specific video
+* `captions`: List caption tracks for a video
+* `transcript`: Download a caption track as clean plain text
 * `update`: Update a video's metadata
 * `search-replace`: Bulk update videos using search and replace
 * `categories`: List YouTube video categories assignable...
@@ -136,6 +138,45 @@ $ ytstudio videos show [OPTIONS] VIDEO_ID
 **Options**:
 
 * `-o, --output TEXT`: Output format: table, json  [default: table]
+* `--help`: Show this message and exit.
+
+### `ytstudio videos captions`
+
+List caption tracks for a video
+
+**Usage**:
+
+```console
+$ ytstudio videos captions [OPTIONS] VIDEO_ID
+```
+
+**Arguments**:
+
+* `VIDEO_ID`: Video ID  [required]
+
+**Options**:
+
+* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `--help`: Show this message and exit.
+
+### `ytstudio videos transcript`
+
+Download a caption track as clean plain text
+
+**Usage**:
+
+```console
+$ ytstudio videos transcript [OPTIONS] VIDEO_ID
+```
+
+**Arguments**:
+
+* `VIDEO_ID`: Video ID  [required]
+
+**Options**:
+
+* `--lang TEXT`: Track language code (e.g. nl, en)
+* `-o, --output TEXT`: Output format: text, json  [default: text]
 * `--help`: Show this message and exit.
 
 ### `ytstudio videos update`
@@ -862,6 +903,7 @@ $ ytstudio profile [OPTIONS] COMMAND [ARGS]...
 * `use`: Switch the active profile
 * `status`: Show authentication status for a profile
 * `remove`: Remove a profile and its stored credentials
+* `brand`: Manage per-channel brand voice (brand.md)
 
 ### `ytstudio profile add`
 
@@ -949,4 +991,70 @@ $ ytstudio profile remove [OPTIONS] NAME
 **Options**:
 
 * `-f, --force`: Skip confirmation
+* `--help`: Show this message and exit.
+
+### `ytstudio profile brand`
+
+Manage per-channel brand voice (brand.md)
+
+**Usage**:
+
+```console
+$ ytstudio profile brand [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `show`: Print the brand voice for a profile
+* `set`: Set brand voice non-interactively from a file
+* `edit`: Open the brand voice in $EDITOR
+
+#### `ytstudio profile brand show`
+
+Print the brand voice for a profile
+
+**Usage**:
+
+```console
+$ ytstudio profile brand show [OPTIONS]
+```
+
+**Options**:
+
+* `-p, --profile TEXT`: Profile (default: active)
+* `--help`: Show this message and exit.
+
+#### `ytstudio profile brand set`
+
+Set brand voice non-interactively from a file
+
+**Usage**:
+
+```console
+$ ytstudio profile brand set [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: Path to a markdown file to import  [required]
+* `-p, --profile TEXT`: Profile (default: active)
+* `--help`: Show this message and exit.
+
+#### `ytstudio profile brand edit`
+
+Open the brand voice in $EDITOR
+
+**Usage**:
+
+```console
+$ ytstudio profile brand edit [OPTIONS]
+```
+
+**Options**:
+
+* `-p, --profile TEXT`: Profile (default: active)
 * `--help`: Show this message and exit.
