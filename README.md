@@ -36,37 +36,12 @@ command line.
 - Comments moderation: list, reply, approve, reject, and ban from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 - Playlists: bulk-add by search and reorder by views with one command.
-- [Agentic authoring](#agentic-authoring): edit descriptions and metadata with the help of an AI
-  agent, grounded in the video's actual transcript and shaped by a per-channel brand voice.
+- Agentic authoring: use your LLM to write descriptions and edit metadata, based on the actual
+  video transcript and guided by a per-channel tone of voice.
 
 ## Documentation
 
 See the [full documentation](https://jdwit.github.io/ytstudio-cli/) for installation, OAuth setup, and the command reference.
-
-## Agentic authoring
-
-Writing a good title or description is a creative, per-video task. Instead of adding an
-"AI" command, this CLI gives an agent the raw materials to do it well and stay honest,
-then applies the result through the ordinary update path:
-
-- **Transcript grounding.** `videos captions <id>` lists a video's caption tracks and
-  `videos transcript <id> [--lang nl]` pulls one as clean plain text (timestamps and
-  SRT markup stripped), so the copy is based on what was actually said rather than a
-  hallucination.
-- **Per-channel brand voice.** `profile brand edit` (opens `$EDITOR`) or
-  `profile brand set --file <path>` store a free-form `brand.md` next to each profile,
-  holding the house style (audience, tone, title conventions) an agent should follow so
-  output sounds on-brand instead of generic.
-- **Apply it.** The agent drafts the metadata and applies it through the existing
-  `videos update <id> --title ... --description ...` path (dry-run by default, then
-  `--execute`).
-
-The CLI itself never calls a model: it supplies the inputs and applies the change,
-while a skill-aware AI agent (such as [Claude Code](https://claude.com/claude-code) or Pi)
-writes the copy by running the [agent skill](skills/ytstudio/SKILL.md) below. The transcript is the source of truth for
-claims and the brand file is the source of truth for tone, so the agent never states
-anything the transcript does not support. There is no LLM or API key to configure here;
-that lives with whichever agent you run.
 
 ## Agent skill
 
