@@ -25,6 +25,8 @@ not eat into the table below.
 | `liveBroadcasts.list`                        | 1 unit             |
 | `playlists.list`                             | 1 unit             |
 | `playlistItems.list`                         | 1 unit             |
+| `captions.list` (`videos captions`)          | 50 units           |
+| `captions.download` (`videos transcript`)    | 200 units          |
 | `search.list`                                | 100 units          |
 | `videos.update`                              | 50 units           |
 | `comments.setModerationStatus`               | 50 units           |
@@ -40,6 +42,12 @@ not eat into the table below.
 At ~1600 units per upload, the default 10 000-unit daily budget covers about
 six new videos per day. Use `ytstudio videos upload --max N` to cap a run
 and avoid burning the budget you need for the rest of the day.
+
+Captions are the other pricey read: `videos transcript` first lists the tracks
+(`captions.list`, 50 units) and then downloads the chosen one
+(`captions.download`, 200 units), so a single transcript spends about 250 units.
+Author metadata per video rather than pulling transcripts across a whole
+channel.
 
 ## Increasing the quota
 
