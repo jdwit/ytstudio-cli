@@ -24,6 +24,30 @@ state.
 YTSTUDIO_PROFILE=work ytstudio videos list
 ```
 
+## Brand voice
+
+Each profile can carry a **brand voice**: a markdown file describing the house
+style an agent should follow when authoring video metadata. It is stored next
+to the profile's credentials and fed verbatim into an agent's context by
+[metadata authoring](videos.md#authoring-metadata).
+
+```bash
+ytstudio profile brand show                  # print the active profile's brand voice
+ytstudio profile brand edit                  # create/open brand.md in $EDITOR
+ytstudio profile brand set --file style.md   # import a brand file non-interactively
+ytstudio profile brand show --profile work   # target a specific profile
+```
+
+`brand edit` seeds a template on first use and opens `$EDITOR`; `brand set`
+imports an existing markdown file. All three accept `--profile/-p` to target a
+profile other than the active one. `brand show` prints the raw markdown to
+stdout so an agent can capture it into a system prompt, and exits non-zero when
+no brand voice is set yet.
+
+The file lives at `profiles/<name>/brand.md` and is written owner-only
+(`0600`), the same as credentials, because a brand voice can encode private
+channel strategy.
+
 ## Storage
 
 ```
@@ -36,7 +60,8 @@ YTSTUDIO_PROFILE=work ytstudio videos list
     │   └── meta.json
     └── work/
         ├── credentials.json
-        └── meta.json
+        ├── meta.json
+        └── brand.md            # optional; per-channel brand voice (0600)
 ```
 
 Profile directories are `0700`; credential files are `0600`. State writes go

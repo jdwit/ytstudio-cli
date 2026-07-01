@@ -59,6 +59,77 @@ Flags:
     touches 200 videos eats the default daily quota (10 000 units). See
     [API quota](api-quota.md) before kicking off large jobs.
 
+## Captions and transcripts
+
+Read a video's caption tracks, or pull one down as clean plain text. This is
+the raw material for [metadata authoring](#authoring-metadata) below and for
+any workflow that needs the spoken content of a video.
+
+```bash
+ytstudio videos captions <video-id>              # list tracks (language, kind, draft)
+ytstudio videos captions <video-id> -o json      # same, parseable
+ytstudio videos transcript <video-id>            # best track as plain text
+ytstudio videos transcript <video-id> --lang nl  # a specific language
+ytstudio videos transcript <video-id> -o json    # transcript plus track metadata
+```
+
+`captions` lists every track with its `language`, `track_kind` (`standard`
+for human-authored, `ASR` for auto-generated, `forced`), and whether it is a
+draft. `transcript` downloads one track and strips the SRT timing and markup,
+leaving one cue per line.
+
+Without `--lang`, `transcript` prefers a `standard` (human) track over `ASR`
+across all languages, which may not be the language you want on a
+multi-language channel. List the tracks first and pass the exact code; if the
+requested language has no track, the command exits with the available codes.
+Auto-generated (ASR) tracks are often restricted by YouTube and may not be
+downloadable; `transcript` then prints a warning and exits non-zero, so fall
+back to `captions` and pick another track.
+
+!!! warning "Quota cost"
+
+    Listing caption tracks costs about 50 units and downloading a transcript
+    about 200, both well above ordinary 1-unit reads. Author per video rather
+    than scanning a whole channel. See [API quota](api-quota.md).
+
+## Authoring metadata
+
+Writing a good title or description is per-video creative work. ytstudio does
+not generate copy for you; it supplies the two inputs you need to write it
+well, and the existing `videos update` path applies the result:
+
+- the channel's **brand voice** (`ytstudio profile brand show`) as the source
+  of truth for tone and house style; and
+- the video's **transcript** (`ytstudio videos transcript`) as the source of
+  truth for what the video actually says.
+
+A single-video loop:
+
+```bash
+ytstudio profile brand show                     # house style / tone
+ytstudio videos captions <id> -o json           # pick a language and track kind
+ytstudio videos transcript <id> --lang nl        # spoken content
+ytstudio videos show <id> -o json                # current title/description/tags
+ytstudio videos update <id> --title "..." --description "..."   # dry-run preview
+ytstudio videos update <id> --title "..." --execute             # apply
+```
+
+The rules that keep the output honest:
+
+- **Brand file for tone, transcript for claims.** Never state anything the
+  transcript does not support, and never invent content. If there is no usable
+  transcript, tell the user rather than authoring from nothing.
+- **Gate the expensive call.** Run `captions` first and skip `transcript` for
+  any video without a usable track; a caption list is about 50 units against
+  200 for a download.
+- **Preview, then execute.** `videos update` is dry-run by default; show the
+  user consequential changes before re-running with `--execute`.
+
+Set the brand voice once per channel; see [Brand voice](profiles.md#brand-voice).
+The [agent skill](https://github.com/jdwit/ytstudio-cli/tree/main/skills/ytstudio)
+bundled with this repo drives the same loop, including bulk backfill across a
+set of videos.
+
 ## Upload a batch from sidecars
 
 `videos upload` takes a video file or a directory, pairs each `.mp4`/`.mov`

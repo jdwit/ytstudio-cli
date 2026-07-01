@@ -95,7 +95,7 @@ nav:
   - Guides:
       - Multi-channel profiles: profiles.md
       - Live broadcasts: livestreams.md
-      - Videos (bulk update, upload): videos.md
+      - Videos (bulk update, upload, authoring): videos.md
       - Playlists: playlists.md
       - Analytics: analytics.md
       - Comments: comments.md
