@@ -165,17 +165,85 @@ The authoring loop and its rules:
 - Set the brand voice once per channel with `ytstudio profile brand edit` (opens
   `$EDITOR`) or `... brand set --file <path>`; it is stored at
   `profiles/<name>/brand.md` and printed verbatim by `brand show`.
-- Prefer a `standard` (human) caption track over `ASR`; use `videos captions` to
-  choose `--lang` on multi-language channels. `transcript` defaults to clean
-  plain text; `-o json` adds the track metadata.
+- **Prefer a `standard` (human) track over `ASR` (auto-generated).** `videos
+  captions -o json` returns one object per track with `language`, `track_kind`
+  (`standard`/`ASR`/`forced`), and `is_draft`; pick the `standard` track in the
+  language you want. `transcript` defaults to clean plain text; `-o json` adds
+  the track metadata.
+- **Multi-language channels: pass `--lang` explicitly.** Without `--lang`,
+  `transcript` auto-picks (preferring `standard` over `ASR`) across all tracks,
+  which may not be the language you mean. Read the `language` codes from
+  `videos captions` first, then pass the exact one, e.g. `--lang nl`. If the
+  requested language has no track, `transcript` exits with an error listing the
+  available codes - re-run with one of those.
+- **When only ASR exists, use it but treat claims with extra care**, since
+  auto-generated text is noisier; the brand-vs-transcript rule still holds.
 - If there is no usable transcript (no tracks, or a track exists but is not
-  downloadable - common for restricted ASR), **tell the user instead of
-  authoring from nothing.**
+  downloadable - common for restricted ASR, where `transcript` prints a yellow
+  warning and exits non-zero), fall back to `videos captions` to pick another
+  track, and if none is usable **tell the user instead of authoring from
+  nothing.**
 - Draft, then **preview with `videos update` (dry-run), show the user when the
   change is consequential, then `--execute`** (see the two-rules-first section).
 
 `videos captions` (~50 units) and `videos transcript` (~200 units) cost more
 than ordinary reads, so author per-video rather than scanning a whole channel.
+
+**Bound the batch against the 10,000 units/day budget.** Per fully-authored
+video the worst case is ~50 (captions gate) + ~250 (transcript, which itself
+lists then downloads) + ~50 (update) = ~350 units, so roughly 28 videos exhaust
+a fresh daily budget on their own. The captions gate still pays for itself: it
+skips the ~250-unit transcript entirely for videos with no usable track (its
+only redundancy is the cheap list call, paid twice when a track does exist).
+Estimate `candidates x 350` before you start, subtract any quota already spent
+that day, and **warn the user before a run that could blow the budget** rather
+than discovering `quotaExceeded` (HTTP 403) mid-batch. If you do hit it, the
+budget is spent until the next midnight-Pacific reset; report how many videos
+you finished so the rest can resume after reset.
+
+#### Bulk authoring - backfill across a set of videos
+
+Authoring is per-video, but you often want it across many videos at once
+(backfill empty descriptions, rewrite titles for a topic). Do it as a loop with
+one cheap selection pass up front, not a channel-wide transcript scan.
+
+```bash
+# 1. Select candidates cheaply (~1 unit). Weak metadata shows up in JSON fields:
+ytstudio videos list -n 100 -o json     # then filter client-side on:
+#   description == ""    -> missing description
+#   tags == []           -> no tags
+#   default_audio_language == null / localizations == {}   -> language gaps
+
+# 2. Per candidate, check tracks BEFORE paying for a transcript (~50 vs ~200 units):
+ytstudio videos captions <id> -o json   # any standard track? any track at all?
+
+# 3. Only if a usable track exists, pull grounding and current state:
+ytstudio videos transcript <id> --lang nl -o json   # ~200 units
+ytstudio videos show <id> -o json
+
+# 4. Draft on-brand, then preview each change (dry-run):
+ytstudio videos update <id> --description "..." --tags a,b,c
+
+# 5. Batch-confirm the whole set with the user, then apply each:
+ytstudio videos update <id> --description "..." --tags a,b,c --execute
+```
+
+The bulk loop and its rules:
+
+- **Select once, author per video.** Run `videos list -o json` a single time and
+  filter the array yourself; do not call it per video. The fields that flag weak
+  metadata are `description` (empty string), `tags` (empty list),
+  `default_audio_language` / `default_language` (null), and `localizations`
+  (empty dict).
+- **Gate the expensive call.** Always run `videos captions` first; skip
+  `videos transcript` for any video with no usable track. Captions list is ~50
+  units, a transcript download is ~200 - the gate is most of the quota saving.
+- **Collect all dry-run previews, then ask once.** Show the user the full set of
+  proposed changes in one batch (not one prompt per video), get a single
+  go-ahead, then re-run each `videos update` with `--execute`.
+- **Skip rather than invent.** Any video without a usable transcript stays
+  untouched and is reported to the user, per the single-video rules above; never
+  backfill from nothing.
 
 ### videos upload - batch upload from YAML sidecars
 
