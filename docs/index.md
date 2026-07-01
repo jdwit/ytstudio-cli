@@ -28,6 +28,10 @@ and plug your channel into AI agent workflows.
 - **Batch upload** from a directory of YAML
   sidecars with resumable, quota-aware behaviour. See
   [Upload a batch from sidecars](videos.md#upload-a-batch-from-sidecars).
+- **Inputs for transcript-grounded, on-brand authoring**:
+  read caption tracks, pull a clean transcript, and store a per-channel brand
+  voice, so an agent can write titles and descriptions and apply them via
+  `videos update`. See [Authoring metadata](videos.md#authoring-metadata).
 - **Scripted analytics** with table or JSON output.
   See [Analytics](analytics.md).
 - **Live broadcast control** for the full lifecycle:
