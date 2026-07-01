@@ -30,15 +30,14 @@ command line.
 
 - Bulk update video metadata across hundreds of videos in one pass (search-replace titles,
   descriptions, tags).
-- Supply the inputs for transcript-grounded, on-brand metadata authoring: read caption tracks, pull
-  a transcript as clean text, and store a per-channel brand voice, so an agent (or you) can write
-  the copy and apply it with `videos update`.
 - Upload videos from a directory using YAML sidecars for metadata and thumbnails.
 - Schedule, start, stop, and update YouTube livestream broadcasts, including RTMP ingest details.
 - Multi-channel profiles: manage several channels from one machine and switch per command.
 - Comments moderation: list, reply, approve, reject, and ban from the CLI.
 - Channel analytics queries via the YouTube Analytics API.
 - Playlists: bulk-add by search and reorder by views with one command.
+- Agentic authoring: use your LLM to write descriptions and edit metadata, based on the actual
+  video transcript and guided by a per-channel tone of voice.
 
 ## Documentation
 
