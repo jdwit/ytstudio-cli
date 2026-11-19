@@ -118,6 +118,8 @@ def fetch_videos(
     uploads_playlist_id = get_channel_uploads_playlist(data_service)
 
     all_videos = []
+    # The uploads playlist can repeat a video across pages (#58). Keep the first copy.
+    seen_ids: set[str] = set()
     current_page_token = page_token
     total_results = None
     next_page_token = None
@@ -139,20 +141,26 @@ def fetch_videos(
         if total_results is None:
             total_results = playlist_response.get("pageInfo", {}).get("totalResults", 0)
 
-        items = playlist_response.get("items", [])
-        if not items:
+        page_items = playlist_response.get("items", [])
+        if not page_items:
             break
 
-        video_ids = [item["contentDetails"]["videoId"] for item in items]
+        items = []
+        for item in page_items:
+            video_id = item["contentDetails"]["videoId"]
+            if video_id not in seen_ids:
+                seen_ids.add(video_id)
+                items.append(item)
 
-        videos_response = api(
-            data_service.videos().list(
-                part=parts,
-                id=",".join(video_ids),
+        stats_map = {}
+        if items:
+            videos_response = api(
+                data_service.videos().list(
+                    part=parts,
+                    id=",".join(item["contentDetails"]["videoId"] for item in items),
+                )
             )
-        )
-
-        stats_map = {v["id"]: v for v in videos_response.get("items", [])}
+            stats_map = {v["id"]: v for v in videos_response.get("items", [])}
 
         for item in items:
             video_id = item["contentDetails"]["videoId"]
@@ -532,6 +540,7 @@ def search_replace(
     service = get_data_service()
 
     changes = []
+    seen_ids: set[str] = set()
     page_token = None
 
     while True:
@@ -549,7 +558,18 @@ def search_replace(
         if not items:
             break
 
-        video_ids = [item["id"]["videoId"] for item in items]
+        video_ids = []
+        for item in items:
+            video_id = item["id"]["videoId"]
+            if video_id not in seen_ids:
+                seen_ids.add(video_id)
+                video_ids.append(video_id)
+
+        if not video_ids:
+            page_token = search_response.get("nextPageToken")
+            if not page_token:
+                break
+            continue
 
         videos_response = api(
             service.videos().list(

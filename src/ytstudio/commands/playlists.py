@@ -137,6 +137,7 @@ def _fetch_playlist(service, playlist_id: str) -> Playlist | None:
 def _fetch_all_items(service, playlist_id: str, limit: int | None = None) -> list[PlaylistItem]:
     """Paginate through playlistItems, capping at `limit` if provided."""
     items: list[PlaylistItem] = []
+    seen_ids: set[str] = set()
     page_token: str | None = None
 
     while True:
@@ -157,8 +158,14 @@ def _fetch_all_items(service, playlist_id: str, limit: int | None = None) -> lis
             or {}
         )
 
+        # Pages can overlap. Dedupe on the playlist item id, not the video id:
+        # a playlist can hold the same video twice on purpose.
         for raw in response.get("items", []):
-            items.append(_parse_playlist_item(raw))
+            item = _parse_playlist_item(raw)
+            if item.id and item.id in seen_ids:
+                continue
+            seen_ids.add(item.id)
+            items.append(item)
 
         page_token = response.get("nextPageToken")
         if not page_token:
@@ -545,6 +552,7 @@ def items(
 def _resolve_search_video_ids(service, query: str, limit: int) -> list[tuple[str, str]]:
     """Return [(video_id, title)] from search().list, capped at `limit`."""
     results: list[tuple[str, str]] = []
+    seen_ids: set[str] = set()
     page_token: str | None = None
 
     while len(results) < limit:
@@ -566,8 +574,9 @@ def _resolve_search_video_ids(service, query: str, limit: int) -> list[tuple[str
         for item in response.get("items", []):
             vid_field = item.get("id") or {}
             video_id = vid_field.get("videoId") if isinstance(vid_field, dict) else None
-            if not video_id:
+            if not video_id or video_id in seen_ids:
                 continue
+            seen_ids.add(video_id)
             title = (item.get("snippet") or {}).get("title", "")
             results.append((video_id, title))
             if len(results) >= limit:
