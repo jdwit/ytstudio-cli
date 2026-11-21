@@ -17,6 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
@@ -99,6 +100,7 @@ ignore = [
     "E501",     # line too long (handled by formatter)
     "B008",     # function call in default argument (typer pattern)
     "PLR0913",  # too many arguments
+    "PLR0917",  # too many positional arguments (typer pattern)
     "PLR0912",  # too many branches
     "PLR0915",  # too many statements
     "PLR2004",  # magic value comparison

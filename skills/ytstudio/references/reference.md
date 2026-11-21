@@ -42,7 +42,7 @@ $ ytstudio init [OPTIONS]
 
 **Options**:
 
-* `-c, --client-secrets TEXT`: Path to Google OAuth client secrets JSON file
+* `-c, --client-secrets <str>`: Path to Google OAuth client secrets JSON file
 * `--help`: Show this message and exit.
 
 ## `ytstudio login`
@@ -111,13 +111,13 @@ $ ytstudio videos list [OPTIONS]
 
 **Options**:
 
-* `-n, --limit INTEGER`: Number of videos to list  [default: 20]
-* `-p, --page-token TEXT`: Page token for pagination
-* `-s, --sort TEXT`: Sort by: date, views, likes  [default: date]
-* `-o, --output TEXT`: Output format: table, json, csv  [default: table]
-* `--audio-lang TEXT`: Filter by audio language (e.g., en, nl)
-* `--meta-lang TEXT`: Filter by metadata language (e.g., en, nl)
-* `--has-localization TEXT`: Filter by available translation (e.g., en, nl)
+* `-n, --limit <int>`: Number of videos to list  [default: 20]
+* `-p, --page-token <str>`: Page token for pagination
+* `-s, --sort <str>`: Sort by: date, views, likes  [default: date]
+* `-o, --output <str>`: Output format: table, json, csv  [default: table]
+* `--audio-lang <str>`: Filter by audio language (e.g., en, nl)
+* `--meta-lang <str>`: Filter by metadata language (e.g., en, nl)
+* `--has-localization <str>`: Filter by available translation (e.g., en, nl)
 * `--scheduled`: Only show videos scheduled for future publish
 * `--help`: Show this message and exit.
 
@@ -128,16 +128,16 @@ Show details for a specific video
 **Usage**:
 
 ```console
-$ ytstudio videos show [OPTIONS] VIDEO_ID
+$ ytstudio videos show [OPTIONS] {video_id}
 ```
 
 **Arguments**:
 
-* `VIDEO_ID`: Video ID  [required]
+* `video_id <str>`: Video ID  [required]
 
 **Options**:
 
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio videos captions`
@@ -147,16 +147,16 @@ List caption tracks for a video
 **Usage**:
 
 ```console
-$ ytstudio videos captions [OPTIONS] VIDEO_ID
+$ ytstudio videos captions [OPTIONS] {video_id}
 ```
 
 **Arguments**:
 
-* `VIDEO_ID`: Video ID  [required]
+* `video_id <str>`: Video ID  [required]
 
 **Options**:
 
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio videos transcript`
@@ -166,17 +166,17 @@ Download a caption track as clean plain text
 **Usage**:
 
 ```console
-$ ytstudio videos transcript [OPTIONS] VIDEO_ID
+$ ytstudio videos transcript [OPTIONS] {video_id}
 ```
 
 **Arguments**:
 
-* `VIDEO_ID`: Video ID  [required]
+* `video_id <str>`: Video ID  [required]
 
 **Options**:
 
-* `--lang TEXT`: Track language code (e.g. nl, en)
-* `-o, --output TEXT`: Output format: text, json  [default: text]
+* `--lang <str>`: Track language code (e.g. nl, en)
+* `-o, --output <str>`: Output format: text, json  [default: text]
 * `--help`: Show this message and exit.
 
 ### `ytstudio videos update`
@@ -186,18 +186,18 @@ Update a video's metadata
 **Usage**:
 
 ```console
-$ ytstudio videos update [OPTIONS] VIDEO_ID
+$ ytstudio videos update [OPTIONS] {video_id}
 ```
 
 **Arguments**:
 
-* `VIDEO_ID`: Video ID  [required]
+* `video_id <str>`: Video ID  [required]
 
 **Options**:
 
-* `-t, --title TEXT`: New title
-* `-d, --description TEXT`: New description
-* `--tags TEXT`: Comma-separated tags
+* `-t, --title <str>`: New title
+* `-d, --description <str>`: New description
+* `--tags <str>`: Comma-separated tags
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -213,11 +213,11 @@ $ ytstudio videos search-replace [OPTIONS]
 
 **Options**:
 
-* `-s, --search TEXT`: Text to search for  [required]
-* `-r, --replace TEXT`: Text to replace with  [required]
-* `-f, --field TEXT`: Field to update: title, description  [required]
+* `-s, --search <str>`: Text to search for  [required]
+* `-r, --replace <str>`: Text to replace with  [required]
+* `-f, --field <str>`: Field to update: title, description  [required]
 * `--regex`: Treat search as regex
-* `-n, --limit INTEGER`: Max matches to find  [default: 10]
+* `-n, --limit <int>`: Max matches to find  [default: 10]
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -233,8 +233,8 @@ $ ytstudio videos categories [OPTIONS]
 
 **Options**:
 
-* `-r, --region TEXT`: Region code (ISO 3166-1 alpha-2)  [default: US]
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-r, --region <str>`: Region code (ISO 3166-1 alpha-2)  [default: US]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio videos upload`
@@ -244,17 +244,17 @@ Upload one or more videos described by yaml sidecars.
 **Usage**:
 
 ```console
-$ ytstudio videos upload [OPTIONS] PATH
+$ ytstudio videos upload [OPTIONS] {path}
 ```
 
 **Arguments**:
 
-* `PATH`: Video file or directory of videos with yaml sidecars  [required]
+* `path <path>`: Video file or directory of videos with yaml sidecars  [required]
 
 **Options**:
 
 * `--execute`: Actually upload (default is dry-run)
-* `-m, --max INTEGER`: Maximum number of uploads in this run (0 = no limit)  [default: 0]
+* `-m, --max <int>`: Maximum number of uploads in this run (0 = no limit)  [default: 0]
 * `--help`: Show this message and exit.
 
 ## `ytstudio analytics`
@@ -291,9 +291,9 @@ $ ytstudio analytics overview [OPTIONS]
 
 **Options**:
 
-* `-d, --days INTEGER`: Number of days to analyze  [default: 28]
+* `-d, --days <int>`: Number of days to analyze  [default: 28]
 * `--compare / --no-compare`: Compare each metric to the previous equal-length window  [default: compare]
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio analytics video`
@@ -303,17 +303,17 @@ Get analytics for a specific video
 **Usage**:
 
 ```console
-$ ytstudio analytics video [OPTIONS] VIDEO_ID
+$ ytstudio analytics video [OPTIONS] {video_id}
 ```
 
 **Arguments**:
 
-* `VIDEO_ID`: Video ID  [required]
+* `video_id <str>`: Video ID  [required]
 
 **Options**:
 
-* `-d, --days INTEGER`: Number of days to analyze  [default: 28]
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-d, --days <int>`: Number of days to analyze  [default: 28]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio analytics query`
@@ -346,16 +346,16 @@ $ ytstudio analytics query [OPTIONS]
 
 **Options**:
 
-* `-m, --metrics TEXT`: Comma-separated metrics (e.g. views,likes,shares)  [required]
-* `-d, --dimensions TEXT`: Comma-separated dimensions (e.g. day,country)
-* `-f, --filter TEXT`: Filter in key==value format (repeatable, e.g. -f video==ID -f country==NL)
-* `-s, --start TEXT`: Start date (YYYY-MM-DD). Defaults to --days ago
-* `-e, --end TEXT`: End date (YYYY-MM-DD). Defaults to today
-* `--days INTEGER`: Number of days (used if --start not set)  [default: 28]
-* `--sort TEXT`: Sort field (prefix with - for descending)
-* `-n, --limit INTEGER`: Maximum number of rows
-* `--currency TEXT`: Currency code for revenue (e.g. EUR)
-* `-o, --output TEXT`: Output format: table, json, csv  [default: table]
+* `-m, --metrics <str>`: Comma-separated metrics (e.g. views,likes,shares)  [required]
+* `-d, --dimensions <str>`: Comma-separated dimensions (e.g. day,country)
+* `-f, --filter <list[str]>`: Filter in key==value format (repeatable, e.g. -f video==ID -f country==NL)
+* `-s, --start <str>`: Start date (YYYY-MM-DD). Defaults to --days ago
+* `-e, --end <str>`: End date (YYYY-MM-DD). Defaults to today
+* `--days <int>`: Number of days (used if --start not set)  [default: 28]
+* `--sort <str>`: Sort field (prefix with - for descending)
+* `-n, --limit <int>`: Maximum number of rows
+* `--currency <str>`: Currency code for revenue (e.g. EUR)
+* `-o, --output <str>`: Output format: table, json, csv  [default: table]
 * `--raw`: Show raw numbers instead of human-readable
 * `--resolve`: Resolve video/playlist dimension IDs to title columns
 * `--help`: Show this message and exit.
@@ -378,8 +378,8 @@ $ ytstudio analytics metrics [OPTIONS]
 
 **Options**:
 
-* `-g, --group TEXT`: Filter by group
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-g, --group <str>`: Filter by group
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio analytics dimensions`
@@ -397,17 +397,17 @@ Examples:
 **Usage**:
 
 ```console
-$ ytstudio analytics dimensions [OPTIONS] [NAME]
+$ ytstudio analytics dimensions [OPTIONS] [name]
 ```
 
 **Arguments**:
 
-* `[NAME]`: Show details for a specific dimension
+* `name <str>`: Show details for a specific dimension
 
 **Options**:
 
-* `-g, --group TEXT`: Filter by group
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-g, --group <str>`: Filter by group
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ## `ytstudio comments`
@@ -443,11 +443,11 @@ $ ytstudio comments list [OPTIONS]
 
 **Options**:
 
-* `-v, --video TEXT`: Filter by video ID
-* `--status [published|held|spam]`: Moderation status: published, held, spam  [default: published]
-* `-n, --limit INTEGER`: Number of comments  [default: 20]
-* `-s, --sort [relevance|time]`: Sort order  [default: time]
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-v, --video <str>`: Filter by video ID
+* `--status <published|held|spam>`: Moderation status: published, held, spam  [default: published]
+* `-n, --limit <int>`: Number of comments  [default: 20]
+* `-s, --sort <relevance|time>`: Sort order  [default: time]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio comments publish`
@@ -457,12 +457,12 @@ Publish held comments (approve for public display)
 **Usage**:
 
 ```console
-$ ytstudio comments publish [OPTIONS] COMMENT_IDS...
+$ ytstudio comments publish [OPTIONS] {comment_ids}...
 ```
 
 **Arguments**:
 
-* `COMMENT_IDS...`: Comment IDs to publish  [required]
+* `comment_ids... <list[str]>`: Comment IDs to publish  [required]
 
 **Options**:
 
@@ -475,12 +475,12 @@ Reject comments (hide from public display)
 **Usage**:
 
 ```console
-$ ytstudio comments reject [OPTIONS] COMMENT_IDS...
+$ ytstudio comments reject [OPTIONS] {comment_ids}...
 ```
 
 **Arguments**:
 
-* `COMMENT_IDS...`: Comment IDs to reject  [required]
+* `comment_ids... <list[str]>`: Comment IDs to reject  [required]
 
 **Options**:
 
@@ -497,16 +497,16 @@ Replies are flat on YouTube: COMMENT_ID must be a top-level comment id
 **Usage**:
 
 ```console
-$ ytstudio comments reply [OPTIONS] COMMENT_ID
+$ ytstudio comments reply [OPTIONS] {comment_id}
 ```
 
 **Arguments**:
 
-* `COMMENT_ID`: Top-level comment ID to reply to (from 'comments list')  [required]
+* `comment_id <str>`: Top-level comment ID to reply to (from 'comments list')  [required]
 
 **Options**:
 
-* `-t, --text TEXT`: Reply text  [required]
+* `-t, --text <str>`: Reply text  [required]
 * `--help`: Show this message and exit.
 
 ## `ytstudio livestreams`
@@ -544,10 +544,10 @@ $ ytstudio livestreams list [OPTIONS]
 
 **Options**:
 
-* `-s, --status [all|active|completed|upcoming]`: Filter: all, upcoming, active, completed  [default: upcoming]
-* `-n, --limit INTEGER RANGE`: Number of broadcasts  [default: 20; 1<=x<=50]
-* `-p, --page-token TEXT`: Page token for pagination
-* `-o, --output [table|json]`: Output format: table or json  [default: table]
+* `-s, --status <all|active|completed|upcoming>`: Filter: all, upcoming, active, completed  [default: upcoming]
+* `-n, --limit <int range>`: Number of broadcasts  [default: 20; 1<=x<=50]
+* `-p, --page-token <str>`: Page token for pagination
+* `-o, --output <table|json>`: Output format: table or json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio livestreams show`
@@ -557,18 +557,18 @@ Show details for a specific broadcast.
 **Usage**:
 
 ```console
-$ ytstudio livestreams show [OPTIONS] BROADCAST_ID
+$ ytstudio livestreams show [OPTIONS] {broadcast_id}
 ```
 
 **Arguments**:
 
-* `BROADCAST_ID`: Broadcast ID  [required]
+* `broadcast_id <str>`: Broadcast ID  [required]
 
 **Options**:
 
 * `--ingest`: Also fetch and display the bound stream's ingest URL (key is redacted by default)
 * `--show-key`: Reveal the bound stream key (implies --ingest). Treat output as a secret.
-* `-o, --output [table|json]`: Output format: table or json  [default: table]
+* `-o, --output <table|json>`: Output format: table or json  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio livestreams start`
@@ -578,16 +578,16 @@ Transition a broadcast to testing or live.
 **Usage**:
 
 ```console
-$ ytstudio livestreams start [OPTIONS] BROADCAST_ID
+$ ytstudio livestreams start [OPTIONS] {broadcast_id}
 ```
 
 **Arguments**:
 
-* `BROADCAST_ID`: Broadcast ID  [required]
+* `broadcast_id <str>`: Broadcast ID  [required]
 
 **Options**:
 
-* `--to [testing|live]`: Target state: testing (monitor only) or live (publish to viewers).  [default: live]
+* `--to <testing|live>`: Target state: testing (monitor only) or live (publish to viewers).  [default: live]
 * `--help`: Show this message and exit.
 
 ### `ytstudio livestreams stop`
@@ -597,12 +597,12 @@ Stop a live broadcast (transition to complete).
 **Usage**:
 
 ```console
-$ ytstudio livestreams stop [OPTIONS] BROADCAST_ID
+$ ytstudio livestreams stop [OPTIONS] {broadcast_id}
 ```
 
 **Arguments**:
 
-* `BROADCAST_ID`: Broadcast ID  [required]
+* `broadcast_id <str>`: Broadcast ID  [required]
 
 **Options**:
 
@@ -620,11 +620,11 @@ $ ytstudio livestreams schedule [OPTIONS]
 
 **Options**:
 
-* `-t, --title TEXT`: Broadcast title  [required]
-* `--scheduled-start TEXT`: Scheduled start time, ISO 8601 (e.g. 2026-06-01T19:00:00+02:00)  [required]
-* `--scheduled-end TEXT`: Scheduled end time, ISO 8601
-* `-d, --description TEXT`: Broadcast description
-* `--privacy [public|private|unlisted]`: public, private, or unlisted  [default: public]
+* `-t, --title <str>`: Broadcast title  [required]
+* `--scheduled-start <str>`: Scheduled start time, ISO 8601 (e.g. 2026-06-01T19:00:00+02:00)  [required]
+* `--scheduled-end <str>`: Scheduled end time, ISO 8601
+* `-d, --description <str>`: Broadcast description
+* `--privacy <public|private|unlisted>`: public, private, or unlisted  [default: public]
 * `--made-for-kids / --not-made-for-kids`: COPPA self-declaration; required by YouTube on every broadcast.  [default: not-made-for-kids]
 * `--execute`: Create the broadcast (default is dry-run preview)
 * `--help`: Show this message and exit.
@@ -640,28 +640,28 @@ resulting video resource afterwards.
 **Usage**:
 
 ```console
-$ ytstudio livestreams update [OPTIONS] BROADCAST_ID
+$ ytstudio livestreams update [OPTIONS] {broadcast_id}
 ```
 
 **Arguments**:
 
-* `BROADCAST_ID`: Broadcast ID  [required]
+* `broadcast_id <str>`: Broadcast ID  [required]
 
 **Options**:
 
-* `-t, --title TEXT`: New title
-* `-d, --description TEXT`: New description
-* `--privacy [public|private|unlisted]`: New privacy status
-* `--scheduled-start TEXT`: New scheduled start, ISO 8601
-* `--scheduled-end TEXT`: New scheduled end, ISO 8601
+* `-t, --title <str>`: New title
+* `-d, --description <str>`: New description
+* `--privacy <public|private|unlisted>`: New privacy status
+* `--scheduled-start <str>`: New scheduled start, ISO 8601
+* `--scheduled-end <str>`: New scheduled end, ISO 8601
 * `--auto-start / --no-auto-start`: Auto-start when stream begins
 * `--auto-stop / --no-auto-stop`: Auto-stop when stream ends
 * `--dvr / --no-dvr`: Enable DVR controls
 * `--embed / --no-embed`: Allow embedding
 * `--record-from-start / --no-record-from-start`: Record broadcast for archive
-* `--closed-captions [closedCaptionsDisabled|closedCaptionsHttpPost|closedCaptionsEmbedded]`: Closed-caption mode
-* `--latency [normal|low|ultraLow]`: Latency: normal, low, ultraLow
-* `--projection [rectangular|360]`: Projection: rectangular or 360
+* `--closed-captions <closedCaptionsDisabled|closedCaptionsHttpPost|closedCaptionsEmbedded>`: Closed-caption mode
+* `--latency <normal|low|ultraLow>`: Latency: normal, low, ultraLow
+* `--projection <rectangular|360>`: Projection: rectangular or 360
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -703,10 +703,10 @@ $ ytstudio playlists list [OPTIONS]
 
 **Options**:
 
-* `-n, --limit INTEGER`: Number of playlists to list  [default: 50]
-* `-p, --page-token TEXT`: Page token for pagination
-* `-s, --sort TEXT`: Sort by: date, title, count  [default: date]
-* `-o, --output TEXT`: Output format: table, json, csv  [default: table]
+* `-n, --limit <int>`: Number of playlists to list  [default: 50]
+* `-p, --page-token <str>`: Page token for pagination
+* `-s, --sort <str>`: Sort by: date, title, count  [default: date]
+* `-o, --output <str>`: Output format: table, json, csv  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio playlists show`
@@ -716,16 +716,16 @@ Show details for a specific playlist.
 **Usage**:
 
 ```console
-$ ytstudio playlists show [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists show [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `-o, --output TEXT`: Output format: table, json  [default: table]
+* `-o, --output <str>`: Output format: table, json  [default: table]
 * `-i, --items`: Also fetch and render the first 50 items
 * `--help`: Show this message and exit.
 
@@ -741,10 +741,10 @@ $ ytstudio playlists create [OPTIONS]
 
 **Options**:
 
-* `-t, --title TEXT`: Playlist title  [required]
-* `-d, --description TEXT`: Playlist description
-* `--privacy TEXT`: Privacy: private, public, unlisted  [default: private]
-* `--language TEXT`: Default language tag (e.g. en, nl)
+* `-t, --title <str>`: Playlist title  [required]
+* `-d, --description <str>`: Playlist description
+* `--privacy <str>`: Privacy: private, public, unlisted  [default: private]
+* `--language <str>`: Default language tag (e.g. en, nl)
 * `--execute`: Create the playlist (default dry-run)
 * `--help`: Show this message and exit.
 
@@ -755,19 +755,19 @@ Update a playlist's metadata.
 **Usage**:
 
 ```console
-$ ytstudio playlists update [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists update [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `-t, --title TEXT`: New title
-* `-d, --description TEXT`: New description
-* `--privacy TEXT`: New privacy: private, public, unlisted
-* `--language TEXT`: New default language
+* `-t, --title <str>`: New title
+* `-d, --description <str>`: New description
+* `--privacy <str>`: New privacy: private, public, unlisted
+* `--language <str>`: New default language
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -778,12 +778,12 @@ Delete a playlist.
 **Usage**:
 
 ```console
-$ ytstudio playlists delete [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists delete [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
@@ -798,18 +798,18 @@ List the items in a playlist.
 **Usage**:
 
 ```console
-$ ytstudio playlists items [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists items [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `-n, --limit INTEGER`: Number of items to list  [default: 50]
-* `-p, --page-token TEXT`: Page token for pagination
-* `-o, --output TEXT`: Output format: table, json, csv  [default: table]
+* `-n, --limit <int>`: Number of items to list  [default: 50]
+* `-p, --page-token <str>`: Page token for pagination
+* `-o, --output <str>`: Output format: table, json, csv  [default: table]
 * `--help`: Show this message and exit.
 
 ### `ytstudio playlists add`
@@ -823,20 +823,20 @@ Quota is 50 units per inserted video; a running counter is printed.
 **Usage**:
 
 ```console
-$ ytstudio playlists add [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists add [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `-v, --video TEXT`: Video ID to add (repeatable)
-* `--from-search TEXT`: Add the top results from a search of your videos
-* `-n, --limit INTEGER`: Max videos to add per invocation (search mode)  [default: 50]
-* `--position INTEGER`: Insert at this position
-* `--note TEXT`: Set contentDetails.note on each item
+* `-v, --video <list[str]>`: Video ID to add (repeatable)
+* `--from-search <str>`: Add the top results from a search of your videos
+* `-n, --limit <int>`: Max videos to add per invocation (search mode)  [default: 50]
+* `--position <int>`: Insert at this position
+* `--note <str>`: Set contentDetails.note on each item
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -847,17 +847,17 @@ Remove items from a playlist by item id or video id.
 **Usage**:
 
 ```console
-$ ytstudio playlists remove [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists remove [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `-i, --item TEXT`: Playlist item ID (PLPLI...) to remove (repeatable)
-* `-v, --video TEXT`: Video ID to remove (repeatable). Resolves to all playlist items for that video; duplicates are all removed.
+* `-i, --item <list[str]>`: Playlist item ID (PLPLI...) to remove (repeatable)
+* `-v, --video <list[str]>`: Video ID to remove (repeatable). Resolves to all playlist items for that video; duplicates are all removed.
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -868,17 +868,17 @@ Reorder a playlist by one of views, likes, published, title.
 **Usage**:
 
 ```console
-$ ytstudio playlists reorder [OPTIONS] PLAYLIST_ID
+$ ytstudio playlists reorder [OPTIONS] {playlist_id}
 ```
 
 **Arguments**:
 
-* `PLAYLIST_ID`: Playlist ID  [required]
+* `playlist_id <str>`: Playlist ID  [required]
 
 **Options**:
 
-* `--by TEXT`: Sort by: views, likes, published, title  [default: views]
-* `--order TEXT`: Order: asc, desc  [default: desc]
+* `--by <str>`: Sort by: views, likes, published, title  [default: views]
+* `--order <str>`: Order: asc, desc  [default: desc]
 * `--execute`: Apply changes (default is dry-run)
 * `--help`: Show this message and exit.
 
@@ -912,12 +912,12 @@ Authenticate a new profile and switch to it
 **Usage**:
 
 ```console
-$ ytstudio profile add [OPTIONS] NAME
+$ ytstudio profile add [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Name for the new profile  [required]
+* `name <str>`: Name for the new profile  [required]
 
 **Options**:
 
@@ -945,12 +945,12 @@ Switch the active profile
 **Usage**:
 
 ```console
-$ ytstudio profile use [OPTIONS] NAME
+$ ytstudio profile use [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Profile to make active  [required]
+* `name <str>`: Profile to make active  [required]
 
 **Options**:
 
@@ -963,12 +963,12 @@ Show authentication status for a profile
 **Usage**:
 
 ```console
-$ ytstudio profile status [OPTIONS] [NAME]
+$ ytstudio profile status [OPTIONS] [name]
 ```
 
 **Arguments**:
 
-* `[NAME]`: Profile name (default: active)
+* `name <str>`: Profile name (default: active)
 
 **Options**:
 
@@ -981,12 +981,12 @@ Remove a profile and its stored credentials
 **Usage**:
 
 ```console
-$ ytstudio profile remove [OPTIONS] NAME
+$ ytstudio profile remove [OPTIONS] {name}
 ```
 
 **Arguments**:
 
-* `NAME`: Profile to remove  [required]
+* `name <str>`: Profile to remove  [required]
 
 **Options**:
 
@@ -1025,7 +1025,7 @@ $ ytstudio profile brand show [OPTIONS]
 
 **Options**:
 
-* `-p, --profile TEXT`: Profile (default: active)
+* `-p, --profile <str>`: Profile (default: active)
 * `--help`: Show this message and exit.
 
 #### `ytstudio profile brand set`
@@ -1040,8 +1040,8 @@ $ ytstudio profile brand set [OPTIONS]
 
 **Options**:
 
-* `-f, --file TEXT`: Path to a markdown file to import  [required]
-* `-p, --profile TEXT`: Profile (default: active)
+* `-f, --file <str>`: Path to a markdown file to import  [required]
+* `-p, --profile <str>`: Profile (default: active)
 * `--help`: Show this message and exit.
 
 #### `ytstudio profile brand edit`
@@ -1056,5 +1056,5 @@ $ ytstudio profile brand edit [OPTIONS]
 
 **Options**:
 
-* `-p, --profile TEXT`: Profile (default: active)
+* `-p, --profile <str>`: Profile (default: active)
 * `--help`: Show this message and exit.
