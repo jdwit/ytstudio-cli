@@ -8,6 +8,7 @@ from googleapiclient.errors import HttpError
 from typer.testing import CliRunner
 
 from tests.conftest import MOCK_PLAYLIST, MOCK_PLAYLIST_ITEM_FULL
+from ytstudio.commands.playlists import _fetch_all_items
 from ytstudio.main import app
 
 runner = CliRunner()
@@ -703,3 +704,48 @@ class TestPlaylistsReviewFixes:
         assert result.exit_code == 1
         assert "Session expired" in result.stdout
         assert "ytstudio login" in result.stdout
+
+
+class TestPagingDuplicates:
+    """Overlapping API pages must not repeat rows or writes (#58)."""
+
+    def _item(self, item_id, video_id):
+        return {
+            "id": item_id,
+            "snippet": {"title": video_id, "position": 0, "resourceId": {"videoId": video_id}},
+            "contentDetails": {"videoId": video_id},
+        }
+
+    def test_items_dedupes_on_item_id_not_video_id(self, mock_auth):
+        _set_playlist_items_list_side_effect(
+            mock_auth,
+            [
+                {"items": [self._item("i1", "v1"), self._item("i2", "v2")], "nextPageToken": "t"},
+                # i2 repeats; i3 is the same video as i1 but a separate entry, so it stays.
+                {"items": [self._item("i2", "v2"), self._item("i3", "v1")]},
+            ],
+        )
+        items = _fetch_all_items(mock_auth, "PL_test_123")
+
+        assert [i.id for i in items] == ["i1", "i2", "i3"]
+
+    def test_add_from_search_adds_each_video_once(self, mock_auth):
+        search_mock = MagicMock()
+        search_mock.execute.side_effect = [
+            {
+                "items": [{"id": {"videoId": "a"}}, {"id": {"videoId": "b"}}],
+                "nextPageToken": "t",
+            },
+            {"items": [{"id": {"videoId": "a"}}, {"id": {"videoId": "c"}}]},
+        ]
+        mock_auth.search.return_value.list.return_value = search_mock
+
+        result = runner.invoke(
+            app,
+            ["playlists", "add", "PL_test_123", "--from-search", "q", "-n", "10", "--execute"],
+        )
+
+        assert result.exit_code == 0
+        calls = mock_auth.playlistItems.return_value.insert.call_args_list
+        ids = [c.kwargs["body"]["snippet"]["resourceId"]["videoId"] for c in calls]
+        assert ids == ["a", "b", "c"]

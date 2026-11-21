@@ -375,3 +375,110 @@ class TestSearchReplace:
         )
         assert result.exit_code == 0
         assert "NewName Old Video" in result.stdout
+
+
+def _uploads_item(video_id):
+    return {
+        "snippet": {"title": f"Title {video_id}", "publishedAt": "2025-01-01T00:00:00Z"},
+        "contentDetails": {"videoId": video_id},
+    }
+
+
+def _install_paged_uploads(mock_service, entries):
+    """Fake uploads playlist whose entries repeat videos, like the live API in #58.
+
+    The page token is the offset into `entries`, so pages behave like real
+    offset-based tokens for any maxResults.
+    """
+
+    def playlist_items_list(**kwargs):
+        start = int(kwargs.get("pageToken") or 0)
+        end = start + kwargs["maxResults"]
+        request = MagicMock()
+        request.execute.return_value = {
+            "items": [_uploads_item(v) for v in entries[start:end]],
+            "nextPageToken": str(end) if end < len(entries) else None,
+            "pageInfo": {"totalResults": len(entries)},
+        }
+        return request
+
+    def videos_list(**kwargs):
+        ids = kwargs["id"].split(",")
+        assert len(ids) == len(set(ids)) <= 50
+        request = MagicMock()
+        request.execute.return_value = {"items": [make_search_video(v, f"Title {v}") for v in ids]}
+        return request
+
+    mock_service.playlistItems.return_value.list.side_effect = playlist_items_list
+    mock_service.videos.return_value.list.side_effect = videos_list
+
+
+# 115 uploads entries for 110 videos over three 50-item pages. v1..v5 come back
+# again on later pages, as the live API did in #58.
+UNIQUE = [f"v{i}" for i in range(1, 111)]
+ENTRIES = [*UNIQUE[:48], "v1", "v2", *UNIQUE[48:96], "v3", "v4", "v5", *UNIQUE[96:]]
+
+
+class TestListDuplicates:
+    """Regression for #58: the uploads playlist can repeat videos across pages."""
+
+    def test_json_has_no_duplicates_and_keeps_order(self, mock_auth):
+        _install_paged_uploads(mock_auth, ENTRIES)
+
+        result = runner.invoke(app, ["videos", "list", "-n", "500", "-o", "json"])
+
+        assert result.exit_code == 0
+        ids = [v["id"] for v in json.loads(result.stdout)["videos"]]
+        assert ids == UNIQUE
+
+    def test_limit_counts_unique_videos(self, mock_auth):
+        _install_paged_uploads(mock_auth, ENTRIES)
+
+        result = runner.invoke(app, ["videos", "list", "-n", "100", "-o", "json"])
+
+        assert result.exit_code == 0
+        ids = [v["id"] for v in json.loads(result.stdout)["videos"]]
+        assert ids == UNIQUE[:100]
+
+    def test_csv_has_one_row_per_video(self, mock_auth):
+        _install_paged_uploads(mock_auth, ENTRIES)
+
+        result = runner.invoke(app, ["videos", "list", "-n", "500", "-o", "csv"])
+
+        assert result.exit_code == 0
+        rows = result.stdout.strip().splitlines()[1:]
+        assert [r.split(",")[0] for r in rows] == UNIQUE
+
+    def test_search_replace_updates_each_video_once(self, mock_auth):
+        pages = iter(
+            [
+                {
+                    "items": [{"id": {"videoId": "a"}}, {"id": {"videoId": "b"}}],
+                    "nextPageToken": "t",
+                },
+                {"items": [{"id": {"videoId": "b"}}, {"id": {"videoId": "a"}}]},
+            ]
+        )
+        search_list = MagicMock()
+        search_list.execute.side_effect = lambda: next(pages)
+        mock_auth.search.return_value.list.return_value = search_list
+
+        def videos_list(**kwargs):
+            request = MagicMock()
+            request.execute.return_value = {
+                "items": [make_search_video(v, f"old {v}") for v in kwargs["id"].split(",")]
+            }
+            return request
+
+        mock_auth.videos.return_value.list.side_effect = videos_list
+
+        result = runner.invoke(
+            app,
+            ["videos", "search-replace", "-s", "old", "-r", "new", "-f", "title", "--execute"],
+        )
+
+        assert result.exit_code == 0
+        updated = [
+            c.kwargs["body"]["id"] for c in mock_auth.videos.return_value.update.call_args_list
+        ]
+        assert updated == ["a", "b"]
